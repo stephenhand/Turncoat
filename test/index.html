@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Mocha Spec Runner</title>
+  <link rel="stylesheet" href="lib/mocha/mocha.css">
+</head>
+<body>
+  <div id="mocha"></div>
+  <script src="lib/mocha/mocha.js"></script>
+  <script src="lib/jsmockito.js"></script>
+  <script>mocha.setup('tdd')</script>
+
+  <!-- assertion framework -->
+  
+  <script src="lib/chai.js"></script>
+  <script>
+      expect = chai.expect;
+      //add jsmockito to global scope
+      JsMockito.Integration.importTo(window);
+  </script>
+  <!-- trigger the mocha runner -->
+  <script src="lib/require.js" data-main='runner/bootstrap'></script>
+</body>
+</html>
