@@ -15,7 +15,8 @@ module.exports = function( grunt ) {
       compile: {
         files: {
           'temp/scripts/*.js': 'app/scripts/**/*.coffee',
-          'temp/spec/*.js':'test/spec/**/*.coffee'
+          'temp/spec/*.js':'test/spec/**/*.coffee',
+          'temp/runner/*.js':'test/runner/**/*.coffee'
         },
         options: {
         }
@@ -50,7 +51,8 @@ module.exports = function( grunt ) {
     watch: {
       coffee: {
         files: ['app/scripts/**/*.coffee',
-                'test/spec/**/*.coffee'],
+                'test/spec/**/*.coffee',
+                'test/runner/**/*.coffee'],
         tasks: 'coffee reload'
       },
       compass: {
@@ -183,7 +185,7 @@ module.exports = function( grunt ) {
         grunt.task.run('server:phantom mocha');
     });
 
-    // Alias the `test` task to run the `mocha` task instead
+    // run test in browser for debugging
     grunt.registerTask('browser-test', function(){
         grunt.config.set('server.port', 3502);
         grunt.task.run('server:test');

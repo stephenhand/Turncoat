@@ -11,12 +11,27 @@ require.config({
     paths: {
         expect: '../lib/expect',
         chai: '../lib/chai',
+        testUtils: '../runner/testUtils',
         spec:'../spec',
         hm: 'vendor/hm',
         esprima: 'vendor/esprima',
         jquery: 'vendor/jquery.min',
         underscore: 'vendor/underscore',
-        backbone: 'vendor/backbone'
+        backbone: 'vendor/backbone',
+        rivets: 'vendor/rivets'
+
+    },
+    shim:{
+        'underscore':{
+            exports:"_"
+        },
+        'backbone':{
+            deps:['underscore'],
+            exports:"Backbone"
+        },
+        'rivets':{
+            exports:"rivets"
+        }
     }
 });
 
