@@ -1,4 +1,4 @@
-define(["Underscore","Backbone"],(_, Backbone)->
+define(["underscore","backbone"],(_, Backbone)->
     class Move
         constructor:->
             _.extend(@,Backbone.Events)

@@ -11,6 +11,8 @@ require.config({
     paths: {
         expect: '../lib/expect',
         chai: '../lib/chai',
+        isolate: "../runner/isolate",
+        configureIsolate: "../runner/configureIsolate",
         testUtils: '../runner/testUtils',
         spec:'../spec',
         hm: 'vendor/hm',
@@ -35,11 +37,18 @@ require.config({
     }
 });
 
-require(['spec/AppTest'], function(){
+//Isolate = require("");
 
+require(["isolate","configureIsolate"], function(Isolate){
+    window.isolate = Isolate;
+    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jquery','BaseView','App',/spec\/.*/])
+});
+
+
+require(['spec/AppTest','spec/UI/BaseViewTest'], function(){
     setTimeout(function () {
         console.log("Bootstrapping");
         require(['../runner/mocha']);
     })
 
-})
+});

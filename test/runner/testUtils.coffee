@@ -27,4 +27,8 @@ define(['underscore'],(_)->
                 )
             )
             context
+
+        defineIsolatedModule:(mocks, name, deps, callback)->
+
+
 )

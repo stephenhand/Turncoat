@@ -1,4 +1,4 @@
-define(["Underscore", "Backbone"], (Underscore, Backbone)->
+define(["underscore", "backbone"], (_, Backbone)->
     BaseView=Backbone.View.extend(
         initialize: (options)->
             if options?
@@ -6,10 +6,10 @@ define(["Underscore", "Backbone"], (Underscore, Backbone)->
                 @rootSelector = options.rootSelector;
 
         render:()->
-
+            rivets.bind(@rootSelector, @model)
     )
 
-
+    BaseView
 )
 
 

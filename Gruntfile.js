@@ -52,7 +52,8 @@ module.exports = function( grunt ) {
       coffee: {
         files: ['app/scripts/**/*.coffee',
                 'test/spec/**/*.coffee',
-                'test/runner/**/*.coffee'],
+                'test/runner/**/*.coffee',
+            'test/lib/**/*.coffee'],
         tasks: 'coffee reload'
       },
       compass: {
