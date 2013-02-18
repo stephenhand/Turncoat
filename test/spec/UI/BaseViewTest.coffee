@@ -2,6 +2,8 @@
 
 define(["isolate!UI/BaseView"], (BaseView)->
     #BaseViewTest.coffee test file    
+
+    mocks = window.mockLibrary["UI/BaseView"];
     suite("BaseView", ()->
         suite("constructor", ()->
             test("setsTemplate", ()->
@@ -20,10 +22,12 @@ define(["isolate!UI/BaseView"], (BaseView)->
             )
         )
         suite("render", ()->
-            test("",()->
+            test("bindsUsingRootSelector",()->
               bv = new BaseView(
                rootSelector:"TEST_SELECTOR"
               )
+              bv.render();
+              verify(mocks.rivets.bind)("TEST_SELECTOR",JsHamcrest.Matchers.anything())
             )
         )
     )
