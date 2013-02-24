@@ -1,8 +1,12 @@
 define(["underscore","backbone"],(_, Backbone)->
-    class Move
-        constructor:->
-            _.extend(@,Backbone.Events)
+    Move = Backbone.Collection.extend(
+      initialize: (options)->
+
+      loadState:(state)->
+        @state = state
 
 
+
+    )
     Move
 )

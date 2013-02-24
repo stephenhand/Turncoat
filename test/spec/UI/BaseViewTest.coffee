@@ -26,7 +26,7 @@ define(["isolate!UI/BaseView"], (BaseView)->
               bv = new BaseView(
                rootSelector:"TEST_SELECTOR"
               )
-              bv.render();
+              bv.render()
               verify(mocks.rivets.bind)("TEST_SELECTOR",JsHamcrest.Matchers.anything())
             )
         )

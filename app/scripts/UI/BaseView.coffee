@@ -1,4 +1,4 @@
-define(["underscore", "backbone"], (_, Backbone)->
+define(["underscore", "backbone", "rivets"], (_, Backbone, rivets)->
     BaseView=Backbone.View.extend(
         initialize: (options)->
             if options?

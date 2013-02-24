@@ -70,6 +70,10 @@
     # standin implementation.
     processDependency: (path, actual, parent_module_path)=>
       handler = @findMatchingHandler path, actual
+      if (!handler? && @defaultMock = 'ACTUAL')
+        handler = (path, actual, parent_module_path)=>
+          actual
+
       throw Error "Failed to generate fake for module [#{path}] of type [#{getType actual}] while isolating module [#{parent_module_path}]" unless handler?
       return handler actual, path, parent_module_path
 
