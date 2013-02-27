@@ -7,5 +7,7 @@ define(['underscore', 'backbone','State'], (_, Backbone, State)->
       _.extend(@,JSON.parse(input))
 
 
+
+
   ManOWarState
 )

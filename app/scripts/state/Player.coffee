@@ -1,4 +1,4 @@
-define(['underscore', 'backbone'], (_, Backbone)->
+define(['underscore', 'backbone', 'lib/state/Fleet'], (_, Backbone, Fleet)->
   Player = Backbone.Model.extend(
 
   )
