@@ -1,4 +1,4 @@
-define(['underscore', 'backbone','State'], (_, Backbone, State)->
+define(['underscore', 'backbone', 'State', 'StateRegistry'], (_, Backbone, State, StateRegistry)->
   class ManOWarState extends State
     toString:()->
       JSON.stringify(this)
@@ -8,6 +8,6 @@ define(['underscore', 'backbone','State'], (_, Backbone, State)->
 
 
 
-
+  StateRegistry.registerType("ManOWarState", ManOWarState)
   ManOWarState
 )

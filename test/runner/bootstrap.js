@@ -45,7 +45,7 @@ require(["isolate","configureIsolate"], function(Isolate){
 });
 
 
-require(['spec/AppTest', 'spec/UI/BaseViewTest', 'spec/lib/2D/PolygonToolsTest', 'spec/lib/2D/TransformBearingsTest'], function(){
+require(['spec/AppTest', 'spec/UI/BaseViewTest', 'spec/lib/2D/PolygonToolsTest', 'spec/lib/2D/TransformBearingsTest', 'spec/lib/StateRegistryTest'], function(){
     setTimeout(function () {
         console.log("Bootstrapping");
         require(['../runner/mocha']);
