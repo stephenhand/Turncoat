@@ -10,16 +10,16 @@ define(["isolate!lib/StateRegistry"], (StateRegistry)->
         StateRegistry.registerType("testGameStateType",testGameStateType)
         testObj = new StateRegistry["testGameStateType"]()
         chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
-          )
+      )
 
       test("constructingUnregisteredTypeThrows", ()->
 
         chai.assert.throws(()=>
           new StateRegistry["missingGameStateType"]()
-                          )
-          )
-         )
-       )
+        )
+      )
+    )
+  )
 
 
-       )
+)
