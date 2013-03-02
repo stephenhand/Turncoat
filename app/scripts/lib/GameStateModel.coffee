@@ -1,12 +1,19 @@
-define(['underscore', 'backbone'], (_, Backbone)->
+define(['underscore', 'backbone', 'lib/Factory'], (_, Backbone, Factory)->
+
   GameStateModel = Backbone.Model.extend(
+    initialize:(attributes, options)->
+      GameStateModel.marshaller ?= Factory.buildStateMarshaller()
 
-    toJSON:()->
-      throw new Error("Not implemented")
+      #super(attributes, options)
 
-    fromString:(input)->
-      throw new Error("Not implemented")
+
+
+    toString:()->
+      GameStateModel.marshaller.marshalState(@)
+
   )
+  GameStateModel.fromString = (state)->
+    @marshaller.unmarshalState(state)
 
 
   GameStateModel

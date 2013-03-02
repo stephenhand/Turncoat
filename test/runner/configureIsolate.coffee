@@ -62,6 +62,30 @@ define(["isolate"], (Isolate)->
     mockPolygonTools
   )
 
+  Isolate.mapAsFactory("lib/Factory", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+    switch requestingModulePath
+
+      when "lib/GameStateModel"
+        mockFactory =
+          buildStateMarshaller:mockFunction()
+        mockMarshaller = mockFunction()
+        JsMockito.when(mockMarshaller)(JsHamcrest.Matchers.anything()).then(
+          ()->
+            "MOCK_MARSHALLER_OUTPUT"
+        )
+        JsMockito.when(mockFactory.buildStateMarshaller)().then(
+          ()->
+            marshalState:mockMarshaller
+        )
+      else
+        mockFactory = actual
+
+
+    window.mockLibrary[requestingModulePath]["lib/Factory"]=mockFactory
+    mockFactory
+  )
 
 #  Isolate.mapAsFactory("lib/2D/TransformBearings", (actual, modulePath, requestingModulePath)->
 #    if (!window.mockLibrary[requestingModulePath])
