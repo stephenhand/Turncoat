@@ -87,6 +87,24 @@ define(["isolate"], (Isolate)->
     mockFactory
   )
 
+
+  Isolate.mapAsFactory("lib/turncoat/StateRegistry", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+    switch requestingModulePath
+
+      when "lib/marshallers/JSONMarshaller"
+        mockStateRegistry =
+          reverse:[]
+
+      else
+        mockStateRegistry = actual
+
+
+    window.mockLibrary[requestingModulePath]["lib/turncoat/StateRegistry"]=mockStateRegistry
+    mockStateRegistry
+  )
+
 #  Isolate.mapAsFactory("lib/2D/TransformBearings", (actual, modulePath, requestingModulePath)->
 #    if (!window.mockLibrary[requestingModulePath])
 #      window.mockLibrary[requestingModulePath] = {}

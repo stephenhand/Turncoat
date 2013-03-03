@@ -18,6 +18,23 @@ define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
           new StateRegistry["missingGameStateType"]()
         )
       )
+      test("registeringTypePopulatesReverseRegistry", ()->
+        class testGameStateType
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+
+        StateRegistry.registerType("testGameStateType",testGameStateType)
+        testType = StateRegistry.reverse[testGameStateType]
+        chai.assert.equal(testType, "testGameStateType")
+      )
+
+      test("lookingUpUnregisteredConstructorReturnsUndefined", ()->
+        class anotherGameStateType
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+        lookup = StateRegistry.reverse[anotherGameStateType]
+        chai.assert.isUndefined(lookup)
+      )
     )
   )
 
