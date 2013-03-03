@@ -1,4 +1,4 @@
-define(["isolate!lib/StateRegistry"], (StateRegistry)->
+define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
   #StateRegistryTest.coffee test file
   suite("StateRegistryTest", ()->
     suite("registerType", ()->

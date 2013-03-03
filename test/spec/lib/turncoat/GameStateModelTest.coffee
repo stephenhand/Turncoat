@@ -1,4 +1,4 @@
-define(["isolate!lib/GameStateModel"], (GameStateModel)->
+define(["isolate!lib/turncoat/GameStateModel"], (GameStateModel)->
   #GameStateModelTest.coffee test file    
   suite("GameStateModelTest", ()->
     mockMarshaller ={}

@@ -1,4 +1,4 @@
-define(["isolate!lib/Factory"], (Factory)->
+define(["isolate!lib/turncoat/Factory"], (Factory)->
   #FactoryTest.coffee test file    
   suite("Factory", ()->
     suite("registerStateMarshaller", ()->

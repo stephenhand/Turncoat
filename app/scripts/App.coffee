@@ -1,4 +1,4 @@
-define(['rivets','lib/Game'], (rivets, Game)->
+define(['rivets','lib/turncoat/Game'], (rivets, Game)->
     App =
         start:()->
             @game = new Game()

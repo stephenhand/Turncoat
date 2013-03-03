@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'lib/StateRegistry'], (_, Backbone, StateRegistry)->
+define(['underscore', 'backbone', 'lib/turncoat/StateRegistry'], (_, Backbone, StateRegistry)->
   Player = Backbone.Model.extend(
 
   )

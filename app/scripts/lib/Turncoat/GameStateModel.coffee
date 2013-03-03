@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'lib/Factory'], (_, Backbone, Factory)->
+define(['underscore', 'backbone', 'lib/turncoat/Factory'], (_, Backbone, Factory)->
 
   GameStateModel = Backbone.Model.extend(
     initialize:(attributes, options)->

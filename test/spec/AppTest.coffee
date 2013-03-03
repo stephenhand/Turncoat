@@ -21,7 +21,7 @@ define(["isolate!App"],(App)->
       suite("start", ()->
         test("initialises", ()->
           App.start()
-          chai.assert.equal(App.game, mocks["lib/Game"]())
+          chai.assert.equal(App.game, mocks["lib/turncoat/Game"]())
         )
 
       )

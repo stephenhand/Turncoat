@@ -29,7 +29,7 @@ define(["isolate"], (Isolate)->
     stubRivets
   )
 
-  Isolate.mapAsFactory("lib/Game", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/Game", (actual, modulePath, requestingModulePath)->
     if (!window.mockLibrary[requestingModulePath])
       window.mockLibrary[requestingModulePath] = {}
     mockConstructedGame =
@@ -42,7 +42,7 @@ define(["isolate"], (Isolate)->
           mockConstructedGame
 
 
-    window.mockLibrary[requestingModulePath]["lib/Game"]=mockGame
+    window.mockLibrary[requestingModulePath]["lib/turncoat/Game"]=mockGame
     mockGame
   )
 
@@ -62,12 +62,12 @@ define(["isolate"], (Isolate)->
     mockPolygonTools
   )
 
-  Isolate.mapAsFactory("lib/Factory", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/Factory", (actual, modulePath, requestingModulePath)->
     if (!window.mockLibrary[requestingModulePath])
       window.mockLibrary[requestingModulePath] = {}
     switch requestingModulePath
 
-      when "lib/GameStateModel"
+      when "lib/turncoat/GameStateModel"
         mockFactory =
           buildStateMarshaller:mockFunction()
         mockMarshaller = mockFunction()
@@ -83,7 +83,7 @@ define(["isolate"], (Isolate)->
         mockFactory = actual
 
 
-    window.mockLibrary[requestingModulePath]["lib/Factory"]=mockFactory
+    window.mockLibrary[requestingModulePath]["lib/turncoat/Factory"]=mockFactory
     mockFactory
   )
 

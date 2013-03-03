@@ -49,9 +49,9 @@ require(['spec/AppTest',
     'spec/UI/BaseViewTest',
     'spec/lib/2D/PolygonToolsTest',
     'spec/lib/2D/TransformBearingsTest',
-    'spec/lib/StateRegistryTest',
-    'spec/lib/FactoryTest',
-    'spec/lib/GameStateModelTest'], function(){
+    'spec/lib/turncoat/StateRegistryTest',
+    'spec/lib/turncoat/FactoryTest',
+    'spec/lib/turncoat/GameStateModelTest'], function(){
     setTimeout(function () {
         console.log("Bootstrapping");
         require(['../runner/mocha']);
