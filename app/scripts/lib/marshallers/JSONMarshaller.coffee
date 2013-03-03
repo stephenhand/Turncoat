@@ -1,15 +1,29 @@
 define(["lib/turncoat/StateRegistry"], (StateRegistry)->
+  vivify = (dataObject, type)->
+
+  recordType = (stateObject)->
+    recordType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when typeof(stateObject.attributes[subObject])=="object" and stateObject.attributes[subObject].set? and stateObject.attributes[subObject].attributes?
+    stateObject.set(
+      "_type" : StateRegistry.reverse[stateObject.constructor]
+    )
+
+
+  forgetType = (stateObject)->
+    forgetType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when typeof(stateObject.attributes[subObject])=="object" and stateObject.attributes[subObject].set? and stateObject.attributes[subObject].attributes?
+    stateObject.unset("_type")
+
   class JSONMarshaller
     marshalState:(stateObject)->
-      stateObject.set(
-        "_type" : StateRegistry.reverse[stateObject.constructor]
-      )
+      recordType(stateObject)
       marshalled = JSON.stringify(stateObject)
-      stateObject.unset("_type")
+
       marshalled
 
     unmarshalState:(stateString)->
-      throw new Error("Not implemented")
+      dataObject = JSON.parse(stateString)
+
+
+
     marshalAction:(actionObject)->
       throw new Error("Not implemented")
     unmarshalAction:(actionString)->

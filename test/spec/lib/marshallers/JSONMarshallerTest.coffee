@@ -2,8 +2,32 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
   #JSONMarshallerTest.coffee test file    
   suite("JSONMarshaller", ()->
     marshaller = {}
+    mockType = Backbone.Model.extend(
+      attributes:
+        A:"A"
+        B:"B"
+        C:"C"
+      mockMethod:()->
+        "CHEESE"
+    )
+    mockMarshalledType ="{"+
+      "_type:\"MOCK_TYPE\","+
+      "propA:\"valA\" ,"+
+      "propB:\"valB\","+
+      "unknownObject:{"+
+        "propC:4"+
+        "propD:\"valD\""+
+      "}"+
+      "knownObject:{"+
+        "_type:\"MOCK_TYPE\""+
+        "propE:4"+
+        "propF:\"valF\""+
+      "}"
+    "}"
     setup(()->
       marshaller = new JSONMarshaller()
+      mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"]["MOCK_TYPE"]=mockType
+      mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[mockType]="MOCK_TYPE"
     )
     suite("marshalState", ()->
       test("correctlyMarshalsBackboneModelsAttributes", ()->
@@ -22,21 +46,75 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         chai.assert.equal(parsedModel.propB, 42)
       )
       test("correctlyPreservesTypeIn_typeAttribute", ()->
-        testModelType = Backbone.Model.extend(
-          toString:mockFunction()
-          initialize:()->
-        )
-        testModel = new testModelType()
+
+        testModel = new mockType()
         testModel.set(
           propA:"TEST_STRING"
           propB:42
         )
-        mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
 
         json = marshaller.marshalState(testModel)
         parsedModel = JSON.parse(json)
         chai.assert.equal(parsedModel._type, "MOCK_TYPE")
       )
+      test("correctlyPreservesTypeIn_typeAttribute1LevelDeep", ()->
+
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:42
+          propC:new mockType()
+        )
+
+
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        chai.assert.equal(parsedModel.propC._type, "MOCK_TYPE")
+      )
+
+      test("correctlyPreservesTypeIn_typeAttribute3LevelsDeep", ()->
+
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:42
+          propC:new mockType()
+        )
+
+        testModel.get("propC").set(
+          propD:"TEST_STRING"
+          propE:""
+          propF:new mockType()
+        )
+
+
+        testModel.get("propC").get("propF").set(
+          propG:"TEST_STRING"
+          propH:""
+          propI:new mockType()
+        )
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        chai.assert.equal(parsedModel.propC.propF.propI._type, "MOCK_TYPE")
+      )
+
+      test("recursiveTypeRecordingIgnoresNonModelObjects", ()->
+
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:{innerProp:"ANYTHING"}
+          propC:new mockType()
+        )
+
+
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        chai.assert.isUndefined(parsedModel.propB._type)
+        chai.assert.equal(parsedModel.propB.innerProp, "ANYTHING")
+      )
+
+
       test("leavesAttributesUnmodified", ()->
         testModelType = Backbone.Model.extend(
           toString:mockFunction()
@@ -47,22 +125,65 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
           propA:"TEST_STRING"
           propB:42
         )
-        mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
+        #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
         origAttr = {}
         origAttrCount = 0
         for attrToCopy, attrName of testModel.attributes
           origAttr[attrName] = attrToCopy
           origAttrCount++
         json = marshaller.marshalState(testModel)
-        parsedModel = JSON.parse(json)
         newAttrCount = 0
         for attrToCheck, attrName of origAttr
           chai.assert.equal(attrToCheck, testModel.attributes[attrName])
           newAttrCount++
         chai.assert.equal(origAttrCount, newAttrCount)
       )
+
+      test("leavesAttributesUnmodified3LevelsDeep", ()->
+
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:42
+          propC:new mockType()
+        )
+
+        testModel.get("propC").set(
+          propD:"TEST_STRING"
+          propE:""
+          propF:new mockType()
+        )
+
+
+        testModel.get("propC").get("propF").set(
+          propG:"TEST_STRING"
+          propH:""
+          propI:new mockType()
+        )
+        json = marshaller.marshalState(testModel)
+        origAttr = {}
+        origAttrCount = 0
+        for attrToCopy, attrName of testModel.get("propC").get("propF").attributes
+          origAttr[attrName] = attrToCopy
+          origAttrCount++
+        json = marshaller.marshalState(testModel)
+        newAttrCount = 0
+        for attrToCheck, attrName of origAttr
+          chai.assert.equal(attrToCheck, testModel.get("propC").get("propF").attributes[attrName])
+          newAttrCount++
+        chai.assert.equal(origAttrCount, newAttrCount)
+      )
+
     )
 
+
+
+    suite("unmarshalState", ()->
+      test("CorrectlyUnmarshalsKnownTypeToCorrectType", ()->
+
+      )
+
+    )
 
   )
 
