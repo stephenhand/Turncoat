@@ -128,13 +128,13 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
         origAttr = {}
         origAttrCount = 0
-        for attrToCopy, attrName of testModel.attributes
-          origAttr[attrName] = attrToCopy
+        for attrName, attrVal of testModel.attributes
+          origAttr[attrName] = attrVal
           origAttrCount++
         json = marshaller.marshalState(testModel)
         newAttrCount = 0
-        for attrToCheck, attrName of origAttr
-          chai.assert.equal(attrToCheck, testModel.attributes[attrName])
+        for attrName, attrVal of testModel.attributes
+          chai.assert.equal(attrVal, origAttr[attrName])
           newAttrCount++
         chai.assert.equal(origAttrCount, newAttrCount)
       )
@@ -160,16 +160,15 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
           propH:""
           propI:new mockType()
         )
-        json = marshaller.marshalState(testModel)
         origAttr = {}
         origAttrCount = 0
-        for attrToCopy, attrName of testModel.get("propC").get("propF").attributes
-          origAttr[attrName] = attrToCopy
+        for attrName, attrVal of testModel.get("propC").get("propF").attributes
+          origAttr[attrName] = attrVal
           origAttrCount++
         json = marshaller.marshalState(testModel)
         newAttrCount = 0
-        for attrToCheck, attrName of origAttr
-          chai.assert.equal(attrToCheck, testModel.get("propC").get("propF").attributes[attrName])
+        for attrName, attrVal of testModel.get("propC").get("propF").attributes
+          chai.assert.equal(attrVal, origAttr[attrName])
           newAttrCount++
         chai.assert.equal(origAttrCount, newAttrCount)
       )

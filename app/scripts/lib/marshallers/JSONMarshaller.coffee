@@ -16,7 +16,7 @@ define(["lib/turncoat/StateRegistry"], (StateRegistry)->
     marshalState:(stateObject)->
       recordType(stateObject)
       marshalled = JSON.stringify(stateObject)
-
+      forgetType(stateObject)
       marshalled
 
     unmarshalState:(stateString)->
