@@ -10,20 +10,20 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
       mockMethod:()->
         "CHEESE"
     )
-    mockMarshalledType ="{"+
-      "_type:\"MOCK_TYPE\","+
-      "propA:\"valA\" ,"+
-      "propB:\"valB\","+
-      "unknownObject:{"+
-        "propC:4"+
-        "propD:\"valD\""+
-      "}"+
-      "knownObject:{"+
-        "_type:\"MOCK_TYPE\""+
-        "propE:4"+
-        "propF:\"valF\""+
-      "}"
-    "}"
+    mockMarshalledType ="{ "+
+      "\"_type\":\"MOCK_TYPE\","+
+      "\"propA\":\"valA\" ,"+
+      "\"propB\":\"valB\","+
+      "\"unknownObject\":{"+
+        "\"propC\":4,"+
+        "\"propD\":\"valD\""+
+      " },"+
+      "\"knownObject\":{"+
+        "\"_type\":\"MOCK_TYPE\","+
+        "\"propE\":4,"+
+        "\"propF\":\"valF\""+
+      " }"+
+    " }"
     setup(()->
       marshaller = new JSONMarshaller()
       mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"]["MOCK_TYPE"]=mockType
@@ -176,10 +176,47 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
     )
 
 
-
     suite("unmarshalState", ()->
-      test("CorrectlyUnmarshalsKnownTypeToCorrectType", ()->
-
+      test("createsBackboneModel", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.isFunction(ut.set)
+        chai.assert.isFunction(ut.unset)
+        chai.assert.isFunction(ut.get)
+        chai.assert.isObject(ut.attributes)
+      )
+      test("createsBackboneModelForUnknownSubType", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.isFunction(ut.get("unknownObject").set)
+        chai.assert.isFunction(ut.get("unknownObject").unset)
+        chai.assert.isFunction(ut.get("unknownObject").get)
+        chai.assert.isObject(ut.get("unknownObject").attributes)
+      )
+      test("createsBackboneModelForKnownSubType", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.isFunction(ut.get("knownObject").set)
+        chai.assert.isFunction(ut.get("knownObject").unset)
+        chai.assert.isFunction(ut.get("knownObject").get)
+        chai.assert.isObject(ut.get("knownObject").attributes)
+      )
+      test("preservesMarshalledData", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.equal(ut.get("propA"),"valA")
+        chai.assert.equal(ut.get("propB"),"valB")
+      )
+      test("preservesMarshalledDataInUnknownObject1Deep", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.equal(ut.get("unknownObject").get("propC"),4)
+        chai.assert.equal(ut.get("unknownObject").get("propD"),"valD")
+      )
+      test("preservesMarshalledDataInKnownObject1Deep", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.equal(ut.get("knownObject").get("propE"),4)
+        chai.assert.equal(ut.get("knownObject").get("propF"),"valF")
+      )
+      test("correctlyUnmarshalsKnownTypeToCorrectType", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.isFunction(ut.mockMethod)
+        chai.assert.equal(ut.mockMethod(),"CHEESE")
       )
 
     )
