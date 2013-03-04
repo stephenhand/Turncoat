@@ -1,26 +1,24 @@
 {
-    _type:"ManOWarState",
-    players:[
-        _type:"Players"
+    "_type":"ManOWarState",
+    "players":[
         {
-            _type:"Player"
-            name:"Dead Ted",
-            fleet:{
-                _type:"Fleet"
+            "_type":"Player",
+            "name":"Dead Ted",
+            "fleet":{
+                "_type":"Fleet"
                 [
                     {
-                        _type:"FleetAsset"
-                        movementTypes:[
+                        "_type":"FleetAsset",
+                        "movementTypes":[
                             {
-                                _type:""
-
+                                "_type":""
                             }
-                        ]
-                        position:{
-                            _type:"AssetPosition"
-                            x:100,
-                            y:100,
-                            bearing:45
+                        ],
+                        "position":{
+                            "_type":"AssetPosition",
+                            "x":100,
+                            "y":100,
+                            "bearing":45
                         }
                     }
                 ]

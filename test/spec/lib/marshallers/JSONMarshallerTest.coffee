@@ -21,7 +21,12 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
       "\"knownObject\":{"+
         "\"_type\":\"MOCK_TYPE\","+
         "\"propE\":4,"+
-        "\"propF\":\"valF\""+
+        "\"propF\":\"valF\","+
+        "\"collection\":["+
+          "{\"propG\":\"valG\"},"+
+          "{\"propH\":\"valH\"},"+
+          "{\"_type\":\"MOCK_TYPE\",\"propI\":\"valH\"}"+
+        "]"+
       " }"+
     " }"
     setup(()->
@@ -173,8 +178,87 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         chai.assert.equal(origAttrCount, newAttrCount)
       )
 
-    )
+      test("createsArraysFromCollections", ()->
+        testModelType = Backbone.Model.extend(
+          toString:mockFunction()
+          initialize:()->
+        )
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:42
+        )
+        modelA =  new mockType()
+        modelA.set(
+          propA:"TEST_STRING"
+          propB:11
+        )
+        modelB =  new mockType()
+        modelB.set(
+          propA:"TEST_STRING"
+          propB:22
+        )
+        modelC =  new mockType()
+        modelC.set(
+          propA:"TEST_STRING"
+          propB:33
+        )
+        col = new Backbone.Collection([
+          modelA
+        ,
+          modelB
+        ,
+          modelC
+        ])
+        testModel.set("propC", col)
+        #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
 
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        chai.assert.equal(parsedModel.propC.length, 3)
+        chai.assert.equal(parsedModel.propC[1].propB, 22)
+      )
+
+      test("sets_typeForKnownTypesInArrays", ()->
+        testModelType = Backbone.Model.extend(
+          toString:mockFunction()
+          initialize:()->
+        )
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:42
+        )
+        modelA =  new mockType()
+        modelA.set(
+          propA:"TEST_STRING"
+          propB:11
+        )
+        modelB =  new mockType()
+        modelB.set(
+          propA:"TEST_STRING"
+          propB:22
+        )
+        modelC =  new mockType()
+        modelC.set(
+          propA:"TEST_STRING"
+          propB:33
+        )
+        col = new Backbone.Collection([
+          modelA
+        ,
+          modelB
+        ,
+          modelC
+        ])
+        testModel.set("propC", col)
+        #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
+
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        chai.assert.equal(parsedModel.propC[1]._type, "MOCK_TYPE")
+      )
+    )
 
     suite("unmarshalState", ()->
       test("createsBackboneModel", ()->
@@ -217,6 +301,23 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         ut = marshaller.unmarshalState(mockMarshalledType)
         chai.assert.isFunction(ut.mockMethod)
         chai.assert.equal(ut.mockMethod(),"CHEESE")
+      )
+      test("createsBackboneCollectionFromArray", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.isFunction(ut.get("knownObject").get("collection").unshift)
+        chai.assert.isFunction(ut.get("knownObject").get("collection").shift)
+      )
+      test("vivifiesUnknownCollectionMembersAsBackboneModels", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.isFunction(ut.get("knownObject").get("collection").at(0).set)
+        chai.assert.isFunction(ut.get("knownObject").get("collection").at(0).unset)
+        chai.assert.isFunction(ut.get("knownObject").get("collection").at(0).get)
+        chai.assert.isObject(ut.get("knownObject").get("collection").at(0).attributes)
+      )
+      test("vivifiesKnownCollectionMembersAsCorrectType", ()->
+        ut = marshaller.unmarshalState(mockMarshalledType)
+        chai.assert.isFunction(ut.get("knownObject").get("collection").at(2).mockMethod)
+        chai.assert.equal(ut.get("knownObject").get("collection").at(2).mockMethod(),"CHEESE")
       )
 
     )
