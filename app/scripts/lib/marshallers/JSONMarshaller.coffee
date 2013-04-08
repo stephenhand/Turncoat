@@ -16,10 +16,14 @@ define(["lib/turncoat/StateRegistry","backbone"], (StateRegistry, Backbone)->
         new Backbone.Model(dataObject)
 
   recordType = (stateObject)->
-    recordType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when typeof(stateObject.attributes[subObject])=="object" and stateObject.attributes[subObject].set? and stateObject.attributes[subObject].attributes?
-    stateObject.set(
-      "_type" : StateRegistry.reverse[stateObject.constructor]
-    )
+    if (stateObject instanceof Backbone.Collection)
+      recordType(subObject) for subObject in stateObject.models when subObject instanceof Backbone.Collection or subObject instanceof Backbone.Model
+
+    recordType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when stateObject.attributes[subObject] instanceof Backbone.Collection or stateObject.attributes[subObject] instanceof Backbone.Model
+    if (stateObject instanceof Backbone.Model)
+      stateObject.set(
+        "_type" : StateRegistry.reverse[stateObject.constructor]
+      )
 
 
   forgetType = (stateObject)->

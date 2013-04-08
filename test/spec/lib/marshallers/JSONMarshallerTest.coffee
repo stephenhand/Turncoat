@@ -219,7 +219,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         chai.assert.equal(parsedModel.propC[1].propB, 22)
       )
 
-      test("sets_typeForKnownTypesInArrays", ()->
+      test("setsTypeForKnownTypesInArrays", ()->
         testModelType = Backbone.Model.extend(
           toString:mockFunction()
           initialize:()->
