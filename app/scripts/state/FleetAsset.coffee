@@ -1,7 +1,7 @@
 define(['underscore', 'backbone', 'StateRegistry'], (_, Backbone, StateRegistry)->
-  FleetAsset = Backbone.Model.extend(
+  class FleetAsset extends ManOWarStateObject
+    Position : new AssetPosition()
 
-  )
 
   StateRegistry.registerType("FleetAsset", FleetAsset)
   FleetAsset

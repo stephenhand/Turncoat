@@ -1,5 +1,5 @@
 define(['underscore', 'backbone', 'State', 'StateRegistry'], (_, Backbone, State, StateRegistry)->
-  class ManOWarState extends State
+  class ManOWarStateObject extends State
     toString:()->
       JSON.stringify(this)
 
