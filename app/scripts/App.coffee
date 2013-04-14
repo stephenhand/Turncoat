@@ -1,8 +1,11 @@
-define(['rivets','lib/turncoat/Game'], (rivets, Game)->
+define(['rivets','lib/turncoat/Game', 'lib/turncoat/Factory', 'text!data/testInitialState.txt', 'text!data/config.txt'], (rivets, Game, Factory, testInitialState, configText)->
     App =
         start:()->
+            config = JSON.parse(configText)
+            Factory.setDefaultMarshaller(config.defaultMarshaller)
+
             @game = new Game()
-            @game.loadState({})
+            @game.loadState(testInitialState)
         render:()->
         configureRivets:()->
             rivets.configure(

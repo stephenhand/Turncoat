@@ -46,6 +46,25 @@ define(["isolate"], (Isolate)->
     mockGame
   )
 
+
+  Isolate.mapAsFactory("lib/turncoat/GameStateModel", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+    mockConstructedGameStateModel = {}
+
+    switch requestingModulePath
+      when "lib/turncoat/Game"
+        mockGameStateModel = ()->
+          mockConstructedGameStateModel
+      else
+        mockGameStateModel = actual
+
+
+    mockGameStateModel.fromString = mockFunction()
+    window.mockLibrary[requestingModulePath]["lib/turncoat/GameStateModel"]=mockGameStateModel
+    mockGameStateModel
+  )
+
   Isolate.mapAsFactory("lib/2D/PolygonTools", (actual, modulePath, requestingModulePath)->
     if (!window.mockLibrary[requestingModulePath])
       window.mockLibrary[requestingModulePath] = {}

@@ -9,7 +9,8 @@ require.config({
     backbone: 'vendor/backbone',
     rivets: 'vendor/rivets',
     text: 'vendor/text',
-    templates : '../templates'
+    templates : '../templates',
+    data : '../data'
   },
   shim:{
       'underscore':{
@@ -26,7 +27,7 @@ require.config({
 
 });
  
-require(['app','backbone'], function(app, backbone) {
+require(['app','backbone','lib/marshallers/JSONMarshaller'], function(app, backbone, jsonMarshaller) {
   // use app here
   app.start();
 });

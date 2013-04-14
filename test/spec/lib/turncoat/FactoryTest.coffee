@@ -78,6 +78,19 @@ define(["isolate!lib/turncoat/Factory"], (Factory)->
         chai.assert.equal("MOCK_PARAM_PROPERTY_VALUE", testObj.mockProperty)
       )
     )
+    suite("setDefaultMarshaller", ()->
+      test("", ()->
+        #implement test
+        class testStateMarshaller
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+
+        Factory.registerStateMarshaller("testStateMarshaller",testStateMarshaller)
+        Factory.setDefaultMarshaller("testStateMarshaller")
+        testObj = Factory.buildStateMarshaller()
+        chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
+      )
+    )
 
   )
 

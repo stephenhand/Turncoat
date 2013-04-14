@@ -1,4 +1,4 @@
-define(["lib/turncoat/StateRegistry","backbone"], (StateRegistry, Backbone)->
+define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (StateRegistry, Backbone, Factory)->
   vivify = (dataObject)->
     if (Array.isArray(dataObject))
       dataObject[index] = vivify(subObject) for subObject, index in dataObject when (typeof(subObject)=="object")
@@ -47,5 +47,6 @@ define(["lib/turncoat/StateRegistry","backbone"], (StateRegistry, Backbone)->
     unmarshalAction:(actionString)->
       throw new Error("Not implemented")
 
+  Factory.registerStateMarshaller("JSONMarshaller",JSONMarshaller)
   JSONMarshaller
 )

@@ -1,6 +1,6 @@
-define(['underscore', 'backbone', 'lib/turncoat/StateRegistry','state/FleetAsset'], (_, Backbone, StateRegistry, FleetAsset)->
-  class Player extends ManOWarStateObject
-    Fleet:new Backbone.Collection.extend(
+define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/StateRegistry', 'state/FleetAsset'], (_, Backbone, GameStateModel, StateRegistry, FleetAsset)->
+  class Player extends GameStateModel
+    fleet:new Backbone.Collection.extend(
       model:FleetAsset
     )
 

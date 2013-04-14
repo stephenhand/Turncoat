@@ -1,4 +1,4 @@
-define(["underscore", "backbone"], (Underscore, Backbone)->
+define(["underscore", "backbone"], (_, Backbone)->
     ManOWarTableTopViewModel=Backbone.Model.extend(
         initialize: (options)->
 

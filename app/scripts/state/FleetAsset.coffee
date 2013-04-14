@@ -1,7 +1,6 @@
-define(['underscore', 'backbone', 'StateRegistry'], (_, Backbone, StateRegistry)->
-  class FleetAsset extends ManOWarStateObject
-    Position : new AssetPosition()
-
+define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/StateRegistry', 'state/AssetPosition'], (_, Backbone, GameStateModel, StateRegistry, AssetPosition)->
+  class FleetAsset extends GameStateModel
+    position : new AssetPosition()
 
   StateRegistry.registerType("FleetAsset", FleetAsset)
   FleetAsset

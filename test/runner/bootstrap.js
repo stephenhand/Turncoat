@@ -20,8 +20,8 @@ require.config({
         jquery: 'vendor/jquery.min',
         underscore: 'vendor/underscore',
         backbone: 'vendor/backbone',
-        rivets: 'vendor/rivets'
-
+        rivets: 'vendor/rivets',
+        data:'../data'
     },
     shim:{
         'underscore':{
@@ -41,7 +41,7 @@ require.config({
 
 require(["isolate","configureIsolate"], function(Isolate){
     window.isolate = Isolate;
-    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jquery','BaseView','App',/spec\/.*/])
+    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jquery','BaseView','App',/text!.+/,/spec\/.*/])
 });
 
 
