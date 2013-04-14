@@ -11,12 +11,20 @@ define(["underscore"], (_)->
       key = undefined
     new factory[type][key ? (factory.defaults[type])](opts)
 
+  setDefaultFactory = (factory, type, key)->
+    factory.defaults[type] = key
+
   Factory =
+    defaults:{}
     buildStateMarshaller:(key, opts)->
       buildFactoryType(@, "stateMarshaller", key, opts)
 
     registerStateMarshaller:(key, marshallerClass)->
       registerFactoryType(@, "stateMarshaller", key, marshallerClass)
+
+    setDefaultMarshaller:(marshallerClassKey)->
+      setDefaultFactory(@, "stateMarshaller", marshallerClassKey)
+
 
 
 
