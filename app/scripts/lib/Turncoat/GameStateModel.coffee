@@ -10,6 +10,7 @@ define(['underscore', 'backbone', 'lib/turncoat/Factory'], (_, Backbone, Factory
 
   )
   GameStateModel.fromString = (state)->
+    GameStateModel.marshaller ?= Factory.buildStateMarshaller()
     @marshaller.unmarshalState(state)
 
 

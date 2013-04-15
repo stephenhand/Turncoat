@@ -14,16 +14,21 @@ define(["isolate"], (Isolate)->
 
     switch requestingModulePath
       when "App"
-          rivetConfig = null
-          stubRivets =
-            configure:(opts)=>
-              rivetConfig = opts
-            getRivetConfig:()->
-              rivetConfig
+        rivetConfig = null
+        stubRivets =
+          configure:(opts)=>
+            rivetConfig = opts
+          getRivetConfig:()->
+            rivetConfig
 
       when "UI/BaseView"
-          stubRivets =
-            bind:mockFunction()
+        stubRivets =
+          bind:mockFunction()
+        _when(stubRivets.bind)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
+          (selector, model)->
+            id:"MOCK_RIVETS_VIEW"
+            selector:selector
+        )
 
     window.mockLibrary[requestingModulePath]["rivets"]=stubRivets
     stubRivets

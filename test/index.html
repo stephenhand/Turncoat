@@ -20,6 +20,7 @@
       expect = chai.expect;
       //add jsmockito to global scope
       JsMockito.Integration.importTo(window);
+      _when = window.when;
   </script>
   <!-- trigger the mocha runner -->
   <script src="lib/require.js" data-main='runner/bootstrap'></script>
