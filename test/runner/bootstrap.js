@@ -21,6 +21,7 @@ require.config({
         underscore: 'vendor/underscore',
         backbone: 'vendor/backbone',
         rivets: 'vendor/rivets',
+        templates:'../templates',
         data:'../data'
     },
     shim:{
@@ -47,6 +48,7 @@ require(["isolate","configureIsolate"], function(Isolate){
 
 require(['spec/AppTest',
     'spec/UI/BaseViewTest',
+    'spec/UI/ManOWarTableTopViewTest',
     'spec/lib/2D/PolygonToolsTest',
     'spec/lib/2D/TransformBearingsTest',
     'spec/lib/turncoat/StateRegistryTest',

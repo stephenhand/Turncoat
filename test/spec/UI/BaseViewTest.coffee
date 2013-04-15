@@ -22,21 +22,21 @@ define(["isolate!UI/BaseView"], (BaseView)->
             )
         )
         suite("render", ()->
-            test("bindsUsingRootSelector",()->
-                bv = new BaseView(
-                 rootSelector:"TEST_SELECTOR"
-                )
-                bv.render()
-                verify(mocks.rivets.bind)("TEST_SELECTOR",JsHamcrest.Matchers.anything())
+          test("bindsUsingRootSelector",()->
+            bv = new BaseView(
+             rootSelector:"TEST_SELECTOR"
             )
-            test("setsView", ()->
-                bv = new BaseView(
-                  rootSelector:"TEST_SELECTOR"
-                )
-                bv.render()
-                chai.assert.equal(bv.view.id, "MOCK_RIVETS_VIEW")
-                chai.assert.equal(bv.view.selector, "TEST_SELECTOR")
+            bv.render()
+            verify(mocks.rivets.bind)("TEST_SELECTOR",JsHamcrest.Matchers.anything())
+          )
+          test("setsView", ()->
+            bv = new BaseView(
+              rootSelector:"TEST_SELECTOR"
             )
+            bv.render()
+            chai.assert.equal(bv.view.id, "MOCK_RIVETS_VIEW")
+            chai.assert.equal(bv.view.selector, "TEST_SELECTOR")
+          )
         )
         suite("createModel", ()->
           test("throwsIfNotOverriden", ()->

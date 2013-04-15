@@ -129,6 +129,23 @@ define(["isolate"], (Isolate)->
     mockStateRegistry
   )
 
+  Isolate.mapAsFactory("UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+    switch requestingModulePath
+
+      when "UI/ManOWarTableTopView"
+        mockPlayAreaView = ()->
+          mockId:"MOCK_PLAYAREAVIEW"
+
+      else
+        mockPlayAreaView = actual
+
+
+    window.mockLibrary[requestingModulePath]["UI/PlayAreaView"]=mockPlayAreaView
+    mockPlayAreaView
+  )
+
 #  Isolate.mapAsFactory("lib/2D/TransformBearings", (actual, modulePath, requestingModulePath)->
 #    if (!window.mockLibrary[requestingModulePath])
 #      window.mockLibrary[requestingModulePath] = {}

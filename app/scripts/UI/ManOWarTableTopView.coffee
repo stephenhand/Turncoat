@@ -1,6 +1,14 @@
-define(['underscore', 'backbone', ], (_, Backbone, BaseView)->
+define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'text!templates/ManOWarTableTop.html'], (_, Backbone, BaseView, PlayAreaView, templateText)->
   class ManOWarTableTopView extends BaseView
+    initialize: (options)->
+      options?={}
+      options.template = templateText
+      options.rootSelector = "#tableTop"
+      super(options)
+      @playAreaView = new PlayAreaView(
+        gameState:options.gameState
 
+      )
 
   ManOWarTableTopView
 )
