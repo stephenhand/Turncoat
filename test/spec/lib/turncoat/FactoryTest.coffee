@@ -79,7 +79,7 @@ define(["isolate!lib/turncoat/Factory"], (Factory)->
       )
     )
     suite("setDefaultMarshaller", ()->
-      test("", ()->
+      test("settingDefaultMarshallerUsesDefaultMarshallerInParameterlessBuildStateMarshaller", ()->
         #implement test
         class testStateMarshaller
           constructor:()->
