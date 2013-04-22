@@ -9,6 +9,7 @@ require.config({
     backbone: 'vendor/backbone',
     rivets: 'vendor/rivets',
     text: 'vendor/text',
+    sprintf: 'vendor/sprintf',
     templates : '../templates',
     data : '../data'
   },
@@ -22,6 +23,9 @@ require.config({
       },
       'rivets':{
           exports:"Rivets"
+      },
+      'sprintf':{
+          exports:"sprintf"
       }
   }
 

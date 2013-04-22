@@ -3,7 +3,7 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'text!templa
     initialize: (options)->
       options?={}
       options.template = templateText
-      options.rootSelector = "#tableTop"
+      options.rootSelector = "body"
       super(options)
       @playAreaView = new PlayAreaView(
         gameState:options.gameState
