@@ -1,9 +1,11 @@
-define(['underscore', 'backbone', 'lib/turncoat/Factory'], (_, Backbone, Factory)->
+define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, Factory, UUID)->
 
   GameStateModel = Backbone.Model.extend(
     initialize:(attributes, options)->
       GameStateModel.marshaller ?= Factory.buildStateMarshaller()
       #super(attributes, options)
+      if !@get("uuid")?
+        @set("uuid", UUID())
 
     toString:()->
       GameStateModel.marshaller.marshalState(@)
