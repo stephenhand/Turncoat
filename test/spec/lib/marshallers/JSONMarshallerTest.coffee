@@ -37,7 +37,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
     suite("marshalState", ()->
       test("correctlyMarshalsBackboneModelsAttributes", ()->
         testModelType = Backbone.Model.extend(
-          toString:mockFunction()
+          toString:JsMockito.mockFunction()
           initialize:()->
         )
         testModel = new testModelType()
@@ -122,7 +122,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
 
       test("leavesAttributesUnmodified", ()->
         testModelType = Backbone.Model.extend(
-          toString:mockFunction()
+          toString:JsMockito.mockFunction()
           initialize:()->
         )
         testModel = new testModelType()
@@ -180,7 +180,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
 
       test("createsArraysFromCollections", ()->
         testModelType = Backbone.Model.extend(
-          toString:mockFunction()
+          toString:JsMockito.mockFunction()
           initialize:()->
         )
         testModel = new mockType()
@@ -221,7 +221,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
 
       test("setsTypeForKnownTypesInArrays", ()->
         testModelType = Backbone.Model.extend(
-          toString:mockFunction()
+          toString:JsMockito.mockFunction()
           initialize:()->
         )
         testModel = new mockType()

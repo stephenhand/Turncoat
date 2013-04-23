@@ -1,14 +1,17 @@
-define(["underscore", "backbone", "rivets"], (_, Backbone, rivets)->
+define(["underscore", "backbone", "rivets", "jquery"], (_, Backbone, rivets, $)->
     BaseView=Backbone.View.extend(
       initialize: (options)->
         if options?
           @template = options.template
           @rootSelector = options.rootSelector
           @gameState = options.gameState
+          @rootContext = (options?.context)
       createModel:()->
         throw(new Error("createModel method required for BaseViews"))
       render:()->
-        @view = rivets.bind(@rootSelector, @model)
+        rootJQ = $(@rootSelector, @rootContext)
+        rootJQ.html(@template)
+        @view = rivets.bind(rootJQ, @model)
     )
 
     BaseView

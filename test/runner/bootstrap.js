@@ -25,6 +25,9 @@ require.config({
         data:'../data'
     },
     shim:{
+        'jquery':{
+            exports:'$'
+        },
         'underscore':{
             exports:"_"
         },
@@ -42,7 +45,7 @@ require.config({
 
 require(["isolate","configureIsolate"], function(Isolate){
     window.isolate = Isolate;
-    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jquery','BaseView','App',/text!.+/,/spec\/.*/])
+    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','BaseView','App',/text!.+/,/spec\/.*/])
 });
 
 

@@ -1,6 +1,8 @@
 define(['underscore', 'backbone', 'rivets'], (_, Backbone, Rivets)->
   RivetsExtensions =
-    formatters:{}
+    formatters:
+      rotateCss:(input)->
+        return "rotate("+input+"deg)"
     binders:
       style_top:(el, value)->
         el.style.top = value

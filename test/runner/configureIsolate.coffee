@@ -8,6 +8,38 @@ define(["isolate"], (Isolate)->
     )
   )
   window.mockLibrary = {};
+
+  Isolate.mapAsFactory("jquery", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+
+    mockJQuery = JsMockito.mockFunction()
+    JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything()).then(
+      (selector, context)->
+        mockJQueryObj = JsMockito.mock(actual)
+        window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
+        mockJQueryObj
+    )
+    JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
+      (selector)->
+        mockJQueryObj = JsMockito.mock(actual)
+        if context?
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
+        else
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
+        mockJQueryObj
+    )
+    #_.extend(mockJQuery,mockJQueryObj)
+    switch requestingModulePath
+      when "UI/BaseView"
+        mockJQuery
+
+
+    window.mockLibrary[requestingModulePath]["jquery"]=mockJQuery
+    window.mockLibrary[requestingModulePath]["jqueryObjects"]={}
+    mockJQuery
+  )
+
   Isolate.mapAsFactory("rivets", (actual, modulePath, requestingModulePath)->
     if (!window.mockLibrary[requestingModulePath])
       window.mockLibrary[requestingModulePath] = {}
@@ -23,8 +55,8 @@ define(["isolate"], (Isolate)->
 
       when "UI/BaseView"
         stubRivets =
-          bind:mockFunction()
-        _when(stubRivets.bind)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
+          bind:JsMockito.mockFunction()
+        JsMockito.when(stubRivets.bind)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
           (selector, model)->
             id:"MOCK_RIVETS_VIEW"
             selector:selector
@@ -69,7 +101,7 @@ define(["isolate"], (Isolate)->
         mockGameStateModel = actual
 
 
-    mockGameStateModel.fromString = mockFunction()
+    mockGameStateModel.fromString = JsMockito.mockFunction()
     window.mockLibrary[requestingModulePath]["lib/turncoat/GameStateModel"]=mockGameStateModel
     mockGameStateModel
   )
@@ -97,8 +129,8 @@ define(["isolate"], (Isolate)->
 
       when "lib/turncoat/GameStateModel"
         mockFactory =
-          buildStateMarshaller:mockFunction()
-        mockMarshaller = mockFunction()
+          buildStateMarshaller:JsMockito.mockFunction()
+        mockMarshaller = JsMockito.mockFunction()
         JsMockito.when(mockMarshaller)(JsHamcrest.Matchers.anything()).then(
           ()->
             "MOCK_MARSHALLER_OUTPUT"

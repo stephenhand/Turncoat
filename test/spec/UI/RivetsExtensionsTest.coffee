@@ -17,6 +17,35 @@ define(['isolate!UI/RivetsExtensions'], (RivetsExtensions)->
         )
       )
     )
+    suite("formatters", ()->
+      suite("rotateCss", ()->
+        test("formatsStringInputAsCssRotateDegrees", ()->
+          chai.assert.equal(RivetsExtensions.formatters.rotateCss("MOCK_VALUE"),"rotate(MOCK_VALUEdeg)")
+        )
+        test("formatsIntegerInputAsCssRotateDegrees", ()->
+          chai.assert.equal(RivetsExtensions.formatters.rotateCss(123),"rotate(123deg)")
+
+        )
+        test("formatsFloatingPointInputAsCssRotateDegrees", ()->
+          chai.assert.equal(RivetsExtensions.formatters.rotateCss(1.23),"rotate(1.23deg)")
+
+        )
+        test("formatsFloatingPointInputLosesTrailingZeros", ()->
+          chai.assert.equal(RivetsExtensions.formatters.rotateCss(1.2300),"rotate(1.23deg)")
+
+        )
+        test("usesValueOfInComplexObject", ()->
+          chai.assert.equal(RivetsExtensions.formatters.rotateCss(
+            a:
+              b:{}
+            c:9
+            valueOf:()->"VALUEOF_VAL"
+          ),"rotate(VALUEOF_VALdeg)")
+        )
+
+
+      )
+    )
   )
 
 )

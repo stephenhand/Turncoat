@@ -27,7 +27,16 @@ define(["isolate!UI/BaseView"], (BaseView)->
              rootSelector:"TEST_SELECTOR"
             )
             bv.render()
-            verify(mocks.rivets.bind)("TEST_SELECTOR",JsHamcrest.Matchers.anything())
+            JsMockito.verify(mocks.rivets.bind)(mocks.jqueryObjects["TEST_SELECTOR"],JsHamcrest.Matchers.anything())
+            JsMockito.verify(mocks.jquery)("TEST_SELECTOR")
+          )
+          test("attachesTemplateToRootSelectorNode", ()->
+            bv = new BaseView(
+              rootSelector:"TEST_SELECTOR"
+              template:"MOCK_TEMPLATE"
+            )
+            bv.render()
+            JsMockito.verify(mocks.jqueryObjects["TEST_SELECTOR"]).html("MOCK_TEMPLATE")
           )
           test("setsView", ()->
             bv = new BaseView(
@@ -35,7 +44,7 @@ define(["isolate!UI/BaseView"], (BaseView)->
             )
             bv.render()
             chai.assert.equal(bv.view.id, "MOCK_RIVETS_VIEW")
-            chai.assert.equal(bv.view.selector, "TEST_SELECTOR")
+            chai.assert.equal(bv.view.selector, mocks.jqueryObjects["TEST_SELECTOR"])
           )
         )
         suite("createModel", ()->
