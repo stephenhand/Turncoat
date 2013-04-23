@@ -47,6 +47,7 @@ require(["isolate","configureIsolate"], function(Isolate){
 
 
 require(['spec/AppTest',
+    'spec/UI/RivetsExtensionsTest',
     'spec/UI/BaseViewTest',
     'spec/UI/ManOWarTableTopViewTest',
     'spec/lib/2D/PolygonToolsTest',

@@ -34,7 +34,8 @@ require.config({
 require(['app',
          'backbone',
          'lib/marshallers/JSONMarshaller',
-        'state/ManOWarGameState'
+        'state/ManOWarGameState',
+        'UI/RivetsExtensions'
 ], function(app, backbone, jsonMarshaller, player, fleetAsset) {
   // use app here
   app.start();

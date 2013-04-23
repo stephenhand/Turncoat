@@ -29,6 +29,10 @@ define(["isolate"], (Isolate)->
             id:"MOCK_RIVETS_VIEW"
             selector:selector
         )
+      when "UI/RivetsExtensions"
+        stubRivets =
+          binders:{}
+          formatters:{}
 
     window.mockLibrary[requestingModulePath]["rivets"]=stubRivets
     stubRivets
