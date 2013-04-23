@@ -21,6 +21,7 @@ require.config({
         underscore: 'vendor/underscore',
         backbone: 'vendor/backbone',
         rivets: 'vendor/rivets',
+        uuid:'vendor/uuid',
         templates:'../templates',
         data:'../data'
     },

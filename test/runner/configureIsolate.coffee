@@ -39,7 +39,11 @@ define(["isolate"], (Isolate)->
     window.mockLibrary[requestingModulePath]["jqueryObjects"]={}
     mockJQuery
   )
-
+  #Isolate.mapAsFactory("uuid", (actual, modulePath, requestingModulePath)->
+  #  if (!window.mockLibrary[requestingModulePath])
+  #    window.mockLibrary[requestingModulePath] = {}
+  #  actual
+  #)
   Isolate.mapAsFactory("rivets", (actual, modulePath, requestingModulePath)->
     if (!window.mockLibrary[requestingModulePath])
       window.mockLibrary[requestingModulePath] = {}

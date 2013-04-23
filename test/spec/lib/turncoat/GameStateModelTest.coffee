@@ -7,6 +7,17 @@ define(["isolate!lib/turncoat/GameStateModel"], (GameStateModel)->
         unmarshalState:JsMockito.mockFunction()
         marshalState:JsMockito.mockFunction()
     )
+    suite("constructor", ()->
+      test("generatesValidUuidIfNotSupplied", ()->
+        gsm = new GameStateModel()
+        chai.assert.isString(gsm.get("uuid"))
+        chai.assert.isTrue(/[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[ab89][a-f0-9]{3}-[a-f0-9]{12}/i.test(gsm.get("uuid")))
+      )
+      test("doesntOverwriteSuppliedUUIDEvenIfNonCompliant", ()->
+        gsm = new GameStateModel(uuid:"MOCK_NON_COMPLIANT_UUID")
+        chai.assert.equal(gsm.get("uuid"), "MOCK_NON_COMPLIANT_UUID")
+      )
+    )
     suite("fromString", ()->
       test("callsMarshallersUnmarshalState", ()->
 

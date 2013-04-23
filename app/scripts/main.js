@@ -9,6 +9,7 @@ require.config({
     backbone: 'vendor/backbone',
     rivets: 'vendor/rivets',
     text: 'vendor/text',
+     uuid:'vendor/uuid',
     sprintf: 'vendor/sprintf',
     templates : '../templates',
     data : '../data'
