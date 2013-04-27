@@ -10,6 +10,15 @@ define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, 
     toString:()->
       GameStateModel.marshaller.marshalState(@)
 
+    searchChildren:(modelChecker, deep)->
+      recRes = []
+      for gsmAtt of @attributes when @attributes[gsmAtt] instanceof GameStateModel
+        gsm = @attributes[gsmAtt]
+        recRes = recRes.concat(gsm.searchChildren(modelChecker))
+        if (!modelChecker? || modelChecker(gsm)) then recRes.push(gsm)
+      recRes
+
+
   )
   GameStateModel.fromString = (state)->
     GameStateModel.marshaller ?= Factory.buildStateMarshaller()
