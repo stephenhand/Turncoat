@@ -1,4 +1,4 @@
-define(["isolate!lib/turncoat/GameStateModel"], (GameStateModel)->
+define(["isolate!lib/turncoat/GameStateModel", "backbone"], (GameStateModel, Backbone)->
   #GameStateModelTest.coffee test file    
   suite("GameStateModelTest", ()->
     mockMarshaller ={}
@@ -102,7 +102,6 @@ define(["isolate!lib/turncoat/GameStateModel"], (GameStateModel)->
         f:new GameStateModel()
       gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.c.attributes.f.val = 13
 
-
       gsmWithNoSubGSMs = new GameStateModel()
       gsmWithNoSubGSMs.attributes = {
         a:{}
@@ -111,6 +110,67 @@ define(["isolate!lib/turncoat/GameStateModel"], (GameStateModel)->
       gsmWithNoSubGSMs.attributes.a.val = 8
       gsmWithNoSubGSMs.attributes.b.val = 7
 
+
+      gsmWithGSMChildrenOfBackboneCollections = new GameStateModel()
+      gsmWithGSMChildrenOfBackboneCollections.attributes = {
+        a:new GameStateModel()
+        b:new GameStateModel()
+      }
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.val = 8
+      gsmWithGSMChildrenOfBackboneCollections.attributes.b.val = 7
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes =
+        c:new GameStateModel()
+        d:new GameStateModel()
+        dd:
+          dda:new GameStateModel()
+          ddb:new GameStateModel()
+        e:new GameStateModel()
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.val = 9
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.d.val = 10
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.dd.val = 11
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.dd.dda.val = 111
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.dd.ddb.val = 111
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.e.val = 12
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes =
+        f:new GameStateModel()
+        g:new Backbone.Collection([
+          new Backbone.Model()
+          new GameStateModel()
+          {val:142}
+          new GameStateModel()
+        ])
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.f.val = 13
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.g.at(0).val = 140
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.g.at(1).val = 141
+      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.g.at(3).val = 143
+
+      gsmWithNestedCollections = new GameStateModel()
+      gsmWithNestedCollections.attributes = {
+        a:new GameStateModel()
+        b:new Backbone.Collection([
+          new Backbone.Model(
+            bb:new Backbone.Collection([
+              new GameStateModel()
+              new Backbone.Model()
+            ])
+            bc:{val:14}
+          )
+          new Backbone.Model()
+          new GameStateModel()
+        ])
+        c:new Backbone.Model()
+      }
+
+      gsmWithNestedCollections.attributes.a.val = 5
+      gsmWithNestedCollections.attributes.b.val = 6
+      gsmWithNestedCollections.attributes.c.val = 7
+      gsmWithNestedCollections.attributes.b.at(0).val = 8
+      gsmWithNestedCollections.attributes.b.at(1).val = 9
+      gsmWithNestedCollections.attributes.b.at(2).val = 10
+      gsmWithNestedCollections.attributes.b.at(0).attributes.bb.val = 11
+      gsmWithNestedCollections.attributes.b.at(0).attributes.bb.at(0).val = 12
+      gsmWithNestedCollections.attributes.b.at(0).attributes.bb.at(1).val = 13
+
       test("noSearchFuncSet_findsGameStateModelsOnAttributes", ()->
         res = gsmWith1LevelSubGSms.searchChildren()
         chai.assert.equal(res.length, 2)
@@ -118,6 +178,7 @@ define(["isolate!lib/turncoat/GameStateModel"], (GameStateModel)->
         chai.assert.include(resVals, 8)
         chai.assert.include(resVals, 7)
       )
+      
       test("noSearchFuncSet_returnsEmptyArrayIfNothingToFind", ()->
         res = gsmWithNoSubGSMs.searchChildren()
         chai.assert.deepEqual(res, [])
@@ -147,6 +208,140 @@ define(["isolate!lib/turncoat/GameStateModel"], (GameStateModel)->
         chai.assert.include(resVals, 10)
         chai.assert.include(resVals, 12)
         chai.assert.include(resVals, 13)
+      )
+
+      test("deepExplicitFalseSetAsFirstParam_doesntFindGameStateModelsRecursively", ()->
+        res = gsmWith3LevelSubGSms.searchChildren(false)
+        chai.assert.equal(res.length, 2)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 8)
+        chai.assert.include(resVals, 7)
+      )
+
+      test("deepExplicitFalseSetAsSecondParam_doesntFindGameStateModelsRecursively", ()->
+        res = gsmWith3LevelSubGSms.searchChildren((model)->
+          true
+        , false)
+        chai.assert.equal(res.length, 2)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 8)
+        chai.assert.include(resVals, 7)
+      )
+
+      test("deepExplicitTrueSetAsFirstParam_doesFindGameStateModelsRecursively", ()->
+        res = gsmWith3LevelSubGSms.searchChildren(true)
+        chai.assert.equal(res.length, 6)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 8)
+        chai.assert.include(resVals, 7)
+        chai.assert.include(resVals, 9)
+        chai.assert.include(resVals, 10)
+        chai.assert.include(resVals, 12)
+        chai.assert.include(resVals, 13)
+      )
+
+      test("deepExplicitTrueSetAsSecondParam_doesFindGameStateModelsRecursively", ()->
+        res = gsmWith3LevelSubGSms.searchChildren((model)->
+          true
+        , true)
+        chai.assert.equal(res.length, 6)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 8)
+        chai.assert.include(resVals, 7)
+        chai.assert.include(resVals, 9)
+        chai.assert.include(resVals, 10)
+        chai.assert.include(resVals, 12)
+        chai.assert.include(resVals, 13)
+      )
+
+      test("modelCheckerSetAsOnlyParam_findsAndChecksGameStateModelsRecursively", ()->
+        res = gsmWith3LevelSubGSms.searchChildren((model)->
+          model.val%2 is 1
+        )
+        chai.assert.equal(res.length, 3)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 7)
+        chai.assert.include(resVals, 9)
+        chai.assert.include(resVals, 13)
+      )
+
+      test("modelCheckerSetWithExplicitDeepTrue_findsAndChecksGameStateModelsRecursively", ()->
+        res = gsmWith3LevelSubGSms.searchChildren((model)->
+          model.val%2 is 1
+        , true
+        )
+        chai.assert.equal(res.length, 3)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 7)
+        chai.assert.include(resVals, 9)
+        chai.assert.include(resVals, 13)
+      )
+
+      test("modelCheckerSetWithExplicitDeepFalse_findsAndChecksGameStateModelsNonRecursively", ()->
+        res = gsmWith3LevelSubGSms.searchChildren((model)->
+          model.val%2 is 1
+        , false
+        )
+        chai.assert.equal(res.length, 1)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 7)
+      )
+
+
+      test("noSearchFuncSet_findsModelsInBackboneCollections", ()->
+        res = gsmWithGSMChildrenOfBackboneCollections.searchChildren()
+        chai.assert.equal(res.length, 11)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 8)
+        chai.assert.include(resVals, 7)
+        chai.assert.include(resVals, 9)
+        chai.assert.include(resVals, 10)
+        chai.assert.include(resVals, 12)
+        chai.assert.include(resVals, 13)
+        chai.assert.include(resVals, 140)
+        chai.assert.include(resVals, 141)
+        chai.assert.include(resVals, 143)
+      )
+
+      test("noSearchFuncSet_findsModelsInNestedBackboneCollections", ()->
+        res = gsmWithNestedCollections.searchChildren()
+        chai.assert.equal(res.length, 9)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 5)
+        chai.assert.include(resVals, 6)
+        chai.assert.include(resVals, 7)
+        chai.assert.include(resVals, 8)
+        chai.assert.include(resVals, 9)
+        chai.assert.include(resVals, 10)
+        chai.assert.include(resVals, 11)
+        chai.assert.include(resVals, 12)
+        chai.assert.include(resVals, 13)
+      )
+
+      test("collectionsOnlySearchFunc_findsCollectionsInNestedBackboneCollections", ()->
+        res = gsmWithNestedCollections.searchChildren((item)->
+          item instanceof Backbone.Collection
+        )
+        chai.assert.equal(res.length, 2)
+        resVals = thisRes.val for thisRes in res
+        chai.assert.include(resVals, 8)
+        chai.assert.include(resVals, 11)
+      )
+
+      suite("searchGameStateModels", ()->
+        test("noSearchFuncSet_findsOnlyGSMsInBackboneCollections", ()->
+          res = gsmWithGSMChildrenOfBackboneCollections.searchGameStateModels()
+          chai.assert.equal(res.length, 8)
+          resVals = thisRes.val for thisRes in res
+          chai.assert.include(resVals, 8)
+          chai.assert.include(resVals, 7)
+          chai.assert.include(resVals, 9)
+          chai.assert.include(resVals, 10)
+          chai.assert.include(resVals, 12)
+          chai.assert.include(resVals, 13)
+          chai.assert.include(resVals, 140)
+          chai.assert.include(resVals, 143)
+        )
       )
     )
   )
