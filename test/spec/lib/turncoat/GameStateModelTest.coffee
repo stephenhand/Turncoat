@@ -344,6 +344,53 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone"], (GameStateModel, Bac
         )
       )
     )
+    suite("getOwnershipChain", ()->
+      gsmImmediateChild = new GameStateModel()
+      gsmImmediateChild.attributes = {
+        child:new GameStateModel()
+      }
+
+      gsmChildTwoLevelsDeep = new GameStateModel()
+      gsmChildTwoLevelsDeep.attributes = {
+        child:new Backbone.Model()
+      }
+      gsmChildTwoLevelsDeep.get("child").set("child", new GameStateModel())
+
+
+      gsmChildThreeLevelsDeep = new GameStateModel()
+      gsmChildThreeLevelsDeep.attributes = {
+        child:new Backbone.Model()
+      }
+      gsmChildThreeLevelsDeep.get("child").set("child", new Backbone.Collection([
+        new GameStateModel()
+      ]))
+
+      test("directChildSpecified_getsRootAndOwner", ()->
+        res = gsmImmediateChild.attributes.child.getOwnershipChain(gsmImmediateChild)
+        chai.assert.equal(res.length, 2)
+        chai.assert.equal(res[0], gsmImmediateChild.get("child"))
+        chai.assert.equal(res[1], gsmImmediateChild)
+
+      )
+
+      test("twoLevelChildSpecified_getsRootIntermediateLevelAndOwner", ()->
+        res = gsmChildTwoLevelsDeep.get("child").get("child").getOwnershipChain(gsmChildTwoLevelsDeep)
+        chai.assert.equal(res.length, 3)
+        chai.assert.equal(res[0], gsmChildTwoLevelsDeep.get("child").get("child"))
+        chai.assert.equal(res[1], gsmChildTwoLevelsDeep.get("child"))
+        chai.assert.equal(res[2], gsmChildTwoLevelsDeep)
+
+      )
+
+      test("threeLevelChildWithCollectionSpecified_getsRootIntermediateLevelsAndOwner", ()->
+        res = gsmChildThreeLevelsDeep.get("child").get("child").at(0).getOwnershipChain(gsmChildThreeLevelsDeep)
+        chai.assert.equal(res.length, 4)
+        chai.assert.equal(res[0], gsmChildThreeLevelsDeep.get("child").get("child").at(0))
+        chai.assert.equal(res[1], gsmChildThreeLevelsDeep.get("child").get("child"))
+        chai.assert.equal(res[2], gsmChildThreeLevelsDeep.get("child"))
+        chai.assert.equal(res[3], gsmChildThreeLevelsDeep)
+      )
+    )
   )
 
 

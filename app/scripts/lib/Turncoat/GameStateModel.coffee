@@ -1,9 +1,6 @@
 define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, Factory, UUID)->
 
-  recursiveSearch = (item, checker, deep)->
-    if (typeof checker is "boolean")
-      deep = checker
-      checker = null
+  recurseChildren = (item, processor, deep, earlyOut)->
     deep ?= true
     recRes = []
     searchSet
@@ -14,30 +11,45 @@ define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, 
     else throw new Error("Only Backbone.Models and Backbone.Collections support recursiveSearch")
 
     for setItem in searchSet
-      if deep then recRes = recRes.concat(recursiveSearch(setItem, checker))
-      if (!checker? || checker(setItem)) then recRes.push(setItem)
-    recRes
+      if deep then recurseChildren(setItem, processor)
+      earlyOut = {byRef:false}
+      processor(setItem, earlyOut)
+      if earlyOut.byRef then break
+
 
   GameStateModel = Backbone.Model.extend(
     initialize:(attributes, options)->
       GameStateModel.marshaller ?= Factory.buildStateMarshaller()
-      #super(attributes, options)
       if !@get("uuid")?
         @set("uuid", UUID())
 
     toString:()->
       GameStateModel.marshaller.marshalState(@)
 
-    searchChildren:(modelChecker, deep)->
-      recursiveSearch(@, modelChecker, deep)
+    searchChildren:(checker, deep)->
+      if (typeof checker is "boolean")
+        deep = checker
+        checker = null
+      recRes = []
+      recurseChildren(@, (item)->
+        if (!checker? || checker(item)) then recRes.push(item)
+      , deep)
+      recRes
 
     searchGameStateModels:(modelChecker, deep)->
-      recursiveSearch(@, (model)->
+      @searchChildren((model)->
         (model instanceof GameStateModel) and (!modelChecker? or modelChecker(model))
       , deep)
 
-
-
+    getOwnershipChain:(root)->
+      chain = []
+      root.searchChildren((model, earlyOut)=>
+        if model is @ or chain.length
+          chain.push(model)
+          if earlyOut? then earlyOut.byRef = true
+      , true)
+      if (chain.length) then chain.push(root) else chain = null
+      chain
   )
 
   GameStateModel.fromString = (state)->
