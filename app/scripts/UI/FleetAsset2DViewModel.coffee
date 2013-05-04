@@ -7,6 +7,13 @@ define(['underscore', 'backbone', 'UI/BaseViewModelItem'], (_, Backbone, BaseVie
           attributes:[
             "position"
           ]
+        ,
+          model:options.model.position
+          attributes:[
+            "x"
+            "y"
+            "bearing"
+          ]
         ])
 
   FleetAsset2DViewModel

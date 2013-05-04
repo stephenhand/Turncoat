@@ -1,35 +1,36 @@
 /*
- * JsHamcrest v0.5.2
- * http://jshamcrest.destaquenet.com
+ * JsHamcrest v0.7.0
+ * http://danielfm.github.com/jshamcrest/
  *
  * Library of matcher objects for JavaScript.
  *
- * Copyright (c) 2009 Daniel Fernandes Martins
+ * Copyright (c) 2009-2013 Daniel Fernandes Martins
  * Licensed under the BSD license.
  *
- * Revision: bcdc7c56734a27e67d13740b0d8502aa1198492c
- * Date:     Sun Jul 19 18:41:27 2009 -0300
+ * Revision: 13d2f6ac0272b6b679eca295514fe69c0a84251a
+ * Date:     Sat Jan 26 12:47:27 2013 -0200
  */
 
-/**
- * @fileOverview Provides the main namespace, along with core abstractions.
- */
-
-/**
- * Main namespace.
- * @namespace
- */
-JsHamcrest = {
-
+var JsHamcrest = {
     /**
      * Library version.
      */
-    version: '0.5.2',
+    version: '0.7.0',
+
+    /**
+     * Delegate function, useful when used to create a matcher that has a value-equalTo semantic
+     */
+    EqualTo: function (func) {
+        return function (matcherOrValue) {
+            if (!JsHamcrest.isMatcher(matcherOrValue)) {
+                return func(JsHamcrest.Matchers.equalTo(matcherOrValue));
+            }
+            return func(matcherOrValue);
+        };
+    },
 
     /**
      * Returns whether the given object is a matcher.
-     * @param {object} obj Object.
-     * @return {boolean} Whether the given object is a matcher.
      */
     isMatcher: function(obj) {
         return obj instanceof JsHamcrest.SimpleMatcher;
@@ -37,11 +38,8 @@ JsHamcrest = {
 
     /**
      * Returns whether the given arrays are equivalent.
-     * @param {array} array Array.
-     * @param {array} anotherArray Another array.
-     * @return {booelan} Whether the given arrays are equivalent.
      */
-    isArraysEqual: function(array, anotherArray) {
+    areArraysEqual: function(array, anotherArray) {
         if (array instanceof Array || anotherArray instanceof Array) {
             if (array.length != anotherArray.length) {
                 return false;
@@ -52,7 +50,9 @@ JsHamcrest = {
                 var b = anotherArray[i];
 
                 if (a instanceof Array || b instanceof Array) {
-                    return JsHamcrest.isArraysEqual(a, b);
+                    if(!JsHamcrest.areArraysEqual(a, b)) {
+                        return false;
+                    }
                 } else if (a != b) {
                     return false;
                 }
@@ -64,34 +64,149 @@ JsHamcrest = {
     },
 
     /**
-     * Creates a simple matcher.
-     * @class Builds a matcher object that uses external functions provided
-     * by the caller in order to define the current matching logic.
-     * @constructor
-     * @param {object} params Configuration object.
-     * @param {function} params.matches Matcher logic.
-     * @param {function} params.describeTo Self description logic. This
-     * function is used to create textual descriptions from matcher objects.
-     * @param {function} [params.describeValueTo] This function is used to
-     * describe the actual value of a test assertion. If not provided the
-     * actual value will be described as a literal.
+     * Returns whether the given Arrays are equivalent. This will return true if the objects
+     * inside the Arrays are equivalent i.e. they dont have to be the same object reference.
+     * Two objects with the same key value pairs will be equivalent eventhough they are not
+     * the same object.
+     *
+     * @param {type} expected A map of expected values.
+     * @param {type} actual A map of the actual values.
+     * @returns {Boolean} A Boolean signifing if the two Arrays are equivalent, true if they are.
+     */
+    areArraysEquivalent: function(expected, actual)
+    {
+        if (expected.length !== actual.length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < expected.length; i++)
+        {
+            var a = expected[i];
+            var b = actual[i];
+
+            if(JsHamcrest.areTwoEntitiesEquivalent(a, b) === false)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    },
+
+    /**
+     * Returns whether the given maps are equivalent. This will return true if the objects
+     * inside the maps are equivalent i.e. they dont have to be the same object reference.
+     * Two objects with the same key value pairs will be equivalent eventhough they are not
+     * the same object.
+     *
+     * @param {type} expected A map of expected values.
+     * @param {type} actual A map of the actual values.
+     * @returns {Boolean} A Boolean signifing if the two maps are equivalent, true if they are.
+     */
+    areMapsEquivalent: function(expected, actual)
+    {
+        // we need to do this both ways in case both maps have undefined values (which makes counting the number
+        // of keys a non-acceptable comparison).
+        if(JsHamcrest.simpleMapCompare(expected, actual) && JsHamcrest.simpleMapCompare(actual, expected))
+        {
+            return true;
+        }
+
+        return false;
+    },
+
+    simpleMapCompare: function(firstMap, secondMap)
+    {
+        for(var item in firstMap)
+        {
+            if(firstMap.hasOwnProperty(item))
+            {
+                if(!JsHamcrest.areTwoEntitiesEquivalent(firstMap[item], secondMap[item])) return false;
+            }
+        }
+
+        return true;
+    },
+
+    areTwoEntitiesEquivalent: function(expected, actual)
+    {
+        var expectedsMatcher = JsHamcrest.retreiveEntityMatcherFunction(expected);
+        var actualsMatcher = JsHamcrest.retreiveEntityMatcherFunction(actual);
+
+        if(expectedsMatcher === actualsMatcher && expectedsMatcher(expected, actual))
+        {
+            return true;
+        }
+
+        return false;
+    },
+
+    /**
+     * Returns the function that would be used to compare the entity with an entity of the same type.
+     *
+     * @param {type} entity A JavaScript entity, this method will try and figure out what type.
+     */
+    retreiveEntityMatcherFunction: function(entity) {
+        if ( (Array.isArray && Array.isArray(entity)) || entity instanceof Array ) return JsHamcrest.areArraysEquivalent;
+
+        if(entity instanceof Boolean) return JsHamcrest.areBooleansEqual;
+
+        if(entity instanceof Date) return JsHamcrest.areDatesEqual;
+
+        if(entity instanceof Function) return JsHamcrest.areFunctionsEqual;
+
+        if(entity instanceof Number || typeof entity === "number") return JsHamcrest.areNumbersEqual;
+
+        if(entity instanceof String || typeof entity === "string") return JsHamcrest.areStringsEqual;
+
+        if(entity instanceof RegExp) return JsHamcrest.areRegExpEqual;
+
+        if(entity instanceof Error) return JsHamcrest.areErrorsEqual;
+
+        if(typeof entity === "undefined") return JsHamcrest.areEntitiesUndefined;
+
+        if(entity === null) return JsHamcrest.areEntitiesNull;
+
+        if(entity.constructor === Object) return JsHamcrest.areMapsEquivalent;
+
+        return JsHamcrest.areEntitiesStrictlyEquals;
+    },
+
+    /**
+     * Simple comparator functions.
+     *
+     * @param {type} expected The Object that is expected to be present.
+     * @param {type} actual The Object that is actually present.
+     */
+    areBooleansEqual: function(expected, actual) { return expected.toString() === actual.toString(); },
+
+    areDatesEqual: function(expected, actual) {    return expected.toString() === actual.toString(); },
+
+    areFunctionsEqual: function(expected, actual) {    return expected === actual; },
+
+    areNumbersEqual: function(expected, actual) { return expected.valueOf() === actual.valueOf(); },
+
+    areStringsEqual: function(expected, actual) { return expected.valueOf() === actual.valueOf(); },
+
+    areRegExpEqual: function(expected, actual) { return expected.toString() === actual.toString(); },
+
+    areErrorsEqual: function(expected, actual) { return expected.constructor === actual.constructor && expected.message === actual.message; },
+
+    areEntitiesUndefined: function(expected, actual) { return expected === actual; },
+
+    areEntitiesNull: function(expected, actual) { return expected === actual; },
+
+    areEntitiesStrictlyEquals: function(expected, actual) { return expected === actual; },
+
+    /**
+     * Builds a matcher object that uses external functions provided by the
+     * caller in order to define the current matching logic.
      */
     SimpleMatcher: function(params) {
         params = params || {};
 
-        /**
-         * Checks if this matcher matches the actual value.
-         * @function
-         * @param {object} actual Actual value.
-         * @return {boolean} If they match or not.
-         */
         this.matches = params.matches;
-
-        /**
-         * Describes this matcher's tasks to the given descriptor.
-         * @function
-         * @param {object} descriptor Descriptor.
-         */
         this.describeTo = params.describeTo;
 
         // Replace the function to describe the actual value
@@ -101,13 +216,7 @@ JsHamcrest = {
     },
 
     /**
-     * Creates a combinable matcher.
-     * @class Matcher that provides an easy way to wrap several matchers into
-     * one.
-     * @param {object} params Configuration object.
-     * @param {function} params.matches Matcher logic.
-     * @param {function} params.describeTo Self description logic. This
-     * function is used to create textual descriptions from matcher objects.
+     * Matcher that provides an easy way to wrap several matchers into one.
      */
     CombinableMatcher: function(params) {
         // Call superclass' constructor
@@ -115,12 +224,6 @@ JsHamcrest = {
 
         params = params || {};
 
-        /**
-         * Wraps this matcher with the given one in such a way that both
-         * matchers must match the actual value to be successful.
-         * @param {object} anotherMatcher Another matcher.
-         * @return {JsHamcrest.CombinableMatcher} Combinable matcher.
-         */
         this.and = function(anotherMatcher) {
             var all = JsHamcrest.Matchers.allOf(this, anotherMatcher);
             return new JsHamcrest.CombinableMatcher({
@@ -132,12 +235,6 @@ JsHamcrest = {
             });
         };
 
-        /**
-         * Wraps this matcher with the given one in such a way that at least
-         * one of the matchers must match the actual value to be successful.
-         * @param {object} anotherMatcher Another matcher.
-         * @return {JsHamcrest.CombinableMatcher} Combinable matcher.
-         */
         this.or = function(anotherMatcher) {
             var any = JsHamcrest.Matchers.anyOf(this, anotherMatcher);
             return new JsHamcrest.CombinableMatcher({
@@ -151,47 +248,22 @@ JsHamcrest = {
     },
 
     /**
-     * Creates a description.
-     * @class Description is the object that builds assertion error messages.
-     * @constructor
+     * Class that builds assertion error messages.
      */
     Description: function() {
-        /**
-         * Current content of this description.
-         * @property
-         * @type string
-         * @private
-         */
         var value = '';
 
-        /**
-         * Gets the current content of this description.
-         * @return {string} Current content of this description.
-         */
         this.get = function() {
             return value;
         };
 
-        /**
-         * Appends the description a self describing object to this
-         * description.
-         * @param {object} selfDescribing Any object that have a
-         * <code>describeTo</code> method that accepts a description object as
-         * argument.
-         * @return {JsHamcrest.Description} this.
-         */
-        this.appendDescriptionOf = function(selfDescribing) {
-            if (selfDescribing) {
-                selfDescribing.describeTo(this);
+        this.appendDescriptionOf = function(selfDescribingObject) {
+            if (selfDescribingObject) {
+                selfDescribingObject.describeTo(this);
             }
             return this;
         };
 
-        /**
-         * Appends a text to this description.
-         * @param {string} text Text to append.
-         * @return {JsHamcrest.Description} this.
-         */
         this.append = function(text) {
             if (text != null) {
                 value += text;
@@ -199,12 +271,8 @@ JsHamcrest = {
             return this;
         };
 
-        /**
-         * Appends a JavaScript language's literals to this description.
-         * @param {object} literal Literal to append.
-         * @return {JsHamcrest.Description} this.
-         */
         this.appendLiteral = function(literal) {
+            var undefined;
             if (literal === undefined) {
                 this.append('undefined');
             } else if (literal === null) {
@@ -214,21 +282,13 @@ JsHamcrest = {
             } else if (typeof literal == 'string') {
                 this.append('"' + literal + '"');
             } else if (literal instanceof Function) {
-                this.append('Function');
+                this.append('Function' + (literal.name ? ' ' + literal.name : ''));
             } else {
                 this.append(literal);
             }
             return this;
         };
 
-        /**
-         * Appends a list of values to this description.
-         * @param {string} start Start string.
-         * @param {string} separator Separator string.
-         * @param {string} end End string.
-         * @param {array} list List of values.
-         * @return {JsHamcrest.Description} this.
-         */
         this.appendValueList = function(start, separator, end, list) {
             this.append(start);
             for (var i = 0; i < list.length; i++) {
@@ -241,16 +301,6 @@ JsHamcrest = {
             return this;
         };
 
-        /**
-         * Appends a list of self describing objects to this description.
-         * @param {string} start Start string.
-         * @param {string} separator Separator string.
-         * @param {string} end End string.
-         * @param {array} list List of self describing objects. These objects
-         * must that have a <code>describeTo</code> method that accepts a
-         * description object as argument.
-         * @return {JsHamcrest.Description} this.
-         */
         this.appendList = function(start, separator, end, list) {
             this.append(start);
             for (var i = 0; i < list.length; i++) {
@@ -267,12 +317,9 @@ JsHamcrest = {
 
 
 /**
- * Describes the actual value to the given descriptor.
- * This method is optional and, if it's not present,
- * the actual value will be described as a JavaScript
+ * Describes the actual value to the given description. This method is optional
+ * and, if it's not present, the actual value will be described as a JavaScript
  * literal.
- * @param {object} actual Actual value.
- * @param {object} descriptor Descriptor.
  */
 JsHamcrest.SimpleMatcher.prototype.describeValueTo = function(actual, description) {
     description.appendLiteral(actual);
@@ -282,29 +329,11 @@ JsHamcrest.SimpleMatcher.prototype.describeValueTo = function(actual, descriptio
 // CombinableMatcher is a specialization of SimpleMatcher
 JsHamcrest.CombinableMatcher.prototype = new JsHamcrest.SimpleMatcher();
 JsHamcrest.CombinableMatcher.prototype.constructor = JsHamcrest.CombinableMatcher;
-
-/**
- * @fileOverview Provides core matchers.
- */
-
-/**
- * Built-in matchers.
- * @namespace
- */
 JsHamcrest.Matchers = {};
 
 /**
  * The actual value must be any value considered truth by the JavaScript
- * engine. Ex: <p>
- *
- * <pre>
- * assertThat(10, truth());
- * assertThat({}, truth());
- * assertThat(0, not(truth()));
- * assertThat('', not(truth()));
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'truth' matcher.
+ * engine.
  */
 JsHamcrest.Matchers.truth = function() {
     return new JsHamcrest.SimpleMatcher({
@@ -319,22 +348,9 @@ JsHamcrest.Matchers.truth = function() {
 };
 
 /**
- * Delegate-only matcher frequently used to improve readability. Ex: <p>
- *
- * <pre>
- * assertThat(10, is(10));
- * assertThat(10, is(equalTo(10)));
- * </pre>
- *
- * @param {object} matcher Delegate matcher.
- * @return {JsHamcrest.SimpleMatcher} 'is' matcher.
+ * Delegate-only matcher frequently used to improve readability.
  */
-JsHamcrest.Matchers.is = function(matcher) {
-    // Uses 'equalTo' matcher if the given object is not a matcher
-    if (!JsHamcrest.isMatcher(matcher)) {
-        matcher = JsHamcrest.Matchers.equalTo(matcher);
-    }
-
+JsHamcrest.Matchers.is = JsHamcrest.EqualTo(function(matcher) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
             return matcher.matches(actual);
@@ -344,25 +360,12 @@ JsHamcrest.Matchers.is = function(matcher) {
             description.append('is ').appendDescriptionOf(matcher);
         }
     });
-};
+});
 
 /**
- * The delegate matcher must not match to be successful. Ex: <p>
- *
- * <pre>
- * assertThat(10, not(20));
- * assertThat(10, not(equalTo(20)));
- * </pre>
- *
- * @param {object} matcher Delegate matcher.
- * @return {JsHamcrest.SimpleMatcher} 'not' matcher.
+ * The actual value must not match the given matcher or value.
  */
-JsHamcrest.Matchers.not = function(matcher) {
-    // Uses 'equalTo' matcher if the given object is not a matcher
-    if (!JsHamcrest.isMatcher(matcher)) {
-        matcher = JsHamcrest.Matchers.equalTo(matcher);
-    }
-
+JsHamcrest.Matchers.not = JsHamcrest.EqualTo(function(matcher) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
             return !matcher.matches(actual);
@@ -372,24 +375,16 @@ JsHamcrest.Matchers.not = function(matcher) {
             description.append('not ').appendDescriptionOf(matcher);
         }
     });
-};
+});
 
 /**
- * The actual value must be equal to the given value to be successful.
- * Ex: <p>
- *
- * <pre>
- * assertThat(10, equalTo('10'));
- * </pre>
- *
- * @param {object} expected value.
- * @return {JsHamcrest.SimpleMatcher} 'equalTo' matcher.
+ * The actual value must be equal to the given value.
  */
 JsHamcrest.Matchers.equalTo = function(expected) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
             if (expected instanceof Array || actual instanceof Array) {
-                return JsHamcrest.isArraysEqual(expected, actual);
+                return JsHamcrest.areArraysEqual(expected, actual);
             }
             return actual == expected;
         },
@@ -401,14 +396,7 @@ JsHamcrest.Matchers.equalTo = function(expected) {
 };
 
 /**
- * Useless always-match matcher. Ex: <p>
- *
- * <pre>
- * assertThat(myObj, anything());
- * assertThat(null, anything());
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'anything' matcher.
+ * Useless always-match matcher.
  */
 JsHamcrest.Matchers.anything = function() {
     return new JsHamcrest.SimpleMatcher({
@@ -423,13 +411,7 @@ JsHamcrest.Matchers.anything = function() {
 };
 
 /**
- * The actual value must be null (or undefined) to be successful. Ex: <p>
- *
- * <pre>
- * assertThat(myObj, nil()); // myObj should be null or undefined
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'nil' matcher.
+ * The actual value must be null (or undefined).
  */
 JsHamcrest.Matchers.nil = function() {
     return new JsHamcrest.SimpleMatcher({
@@ -444,15 +426,7 @@ JsHamcrest.Matchers.nil = function() {
 };
 
 /**
- * The actual value must be the same as the given value to be successful.
- * Ex: <p>
- *
- * <pre>
- * assertThat(myObject, sameAs(anotherObj));
- * </pre>
- *
- * @param {object} expected Expected object.
- * @return {JsHamcrest.SimpleMatcher} 'sameAs' matcher.
+ * The actual value must be the same as the given value.
  */
 JsHamcrest.Matchers.sameAs = function(expected) {
     return new JsHamcrest.SimpleMatcher({
@@ -468,24 +442,7 @@ JsHamcrest.Matchers.sameAs = function(expected) {
 
 /**
  * The actual value is a function and, when invoked, it should thrown an
- * exception with the given name to be successful. Ex: <p>
- *
- * <pre>
- * var MyException = function(message) {
- *   this.name = 'MyException';
- *   this.message = message;
- * };
- *
- * var myFunction = function() {
- *   // Do something dangerous...
- *   throw new MyException('Unexpected error');
- * }
- *
- * assertThat(myFunction, raises('MyException'));
- * </pre>
- *
- * @param {string} exceptionName Name of the expected exception.
- * @return {JsHamcrest.SimpleMatcher} 'raises' matcher
+ * exception with the given name.
  */
 JsHamcrest.Matchers.raises = function(exceptionName) {
     return new JsHamcrest.SimpleMatcher({
@@ -509,61 +466,55 @@ JsHamcrest.Matchers.raises = function(exceptionName) {
 };
 
 /**
- * Creates a combinable matcher where the actual value must match all matchers
- * to be successful. Ex: <p>
- *
- * <pre>
- * assertThat(10, both(greaterThan(5)).and(lessThan(20)));
- * </pre>
- *
- * @param {object} matcher Matcher that should be turn into a combinable
- * matcher.
- * @return {JsHamcrest.CombinableMatcher} 'both' matcher.
+ * The actual value is a function and, when invoked, it should raise any
+ * exception.
  */
-JsHamcrest.Matchers.both = function(matcher) {
+JsHamcrest.Matchers.raisesAnything = function() {
+    return new JsHamcrest.SimpleMatcher({
+        matches: function(actualFunction) {
+            try {
+                actualFunction();
+            } catch (e) {
+                return true;
+            }
+            return false;
+        },
+
+        describeTo: function(description) {
+            description.append('raises anything');
+        }
+    });
+};
+
+/**
+ * Combinable matcher where the actual value must match both of the given
+ * matchers.
+ */
+JsHamcrest.Matchers.both = JsHamcrest.EqualTo(function(matcher) {
     return new JsHamcrest.CombinableMatcher({
         matches: matcher.matches,
         describeTo: function(description) {
             description.append('both ').appendDescriptionOf(matcher);
         }
     });
-};
+});
 
 /**
- * Creates a combinable matcher where the actual value must match at least one
- * matcher to be successful. Ex: <p>
- *
- * <pre>
- * assertThat(10, either(lessThan(20)).or(greaterThan(50)));
- * </pre>
- *
- * @param {object} matcher Matcher that should be turn into a combinable
- * matcher.
- * @return {JsHamcrest.CombinableMatcher} 'either' matcher.
+ * Combinable matcher where the actual value must match at least one of the
+ * given matchers.
  */
-JsHamcrest.Matchers.either = function(matcher) {
+JsHamcrest.Matchers.either = JsHamcrest.EqualTo(function(matcher) {
     return new JsHamcrest.CombinableMatcher({
         matches: matcher.matches,
         describeTo: function(description) {
             description.append('either ').appendDescriptionOf(matcher);
         }
     });
-};
+});
 
 /**
  * All the given values or matchers should match the actual value to be
- * sucessful. This matcher behaves pretty much like the JavaScript &&
- * operator (short-circuiting). Ex: <p>
- *
- * <pre>
- * assertThat(5, allOf([greaterThan(0), lessThan(10)]));
- * assertThat(5, allOf([5, lessThan(10)]));
- * assertThat(5, allOf(greaterThan(0), lessThan(10)));
- * assertThat(5, allOf(5, lessThan(10)));
- * </pre>
- *
- * @param {array} arguments List of delegate matchers.
- * @return {JsHamcrest.SimpleMatcher} 'allOf' matcher.
+ * sucessful. This matcher behaves pretty much like the && operator.
  */
 JsHamcrest.Matchers.allOf = function() {
     var args = arguments;
@@ -591,16 +542,8 @@ JsHamcrest.Matchers.allOf = function() {
 };
 
 /**
- * At least one of the given matchers should match the actual value to be
- * sucessful. This matcher behaves pretty much like the JavaScript ||
- * operator (short-circuiting). Ex: <p>
- *
- * <pre>
- * assertThat(5, not(anyOf(lessThan(0), greaterThan(100))));
- * </pre>
- *
- * @param {array} arguments List of delegate matchers.
- * @return {JsHamcrest.SimpleMatcher} 'anyOf' matcher.
+ * At least one of the given matchers should match the actual value. This
+ * matcher behaves pretty much like the || (or) operator.
  */
 JsHamcrest.Matchers.anyOf = function() {
     var args = arguments;
@@ -628,108 +571,67 @@ JsHamcrest.Matchers.anyOf = function() {
 };
 
 /**
- * @fileOverview Provides number-related matchers.
+ * The actual number must be greater than the expected number.
  */
-
-/**
- * Asserts that the actual number is greater than the given threshold. Ex: <p>
- *
- * <pre>
- * assertThat(10, greaterThan(5));
- * </pre>
- *
- * @param {number} threshold Threshold number.
- * @return {JsHamcrest.SimpleMatcher} 'greaterThan' matcher.
- */
-JsHamcrest.Matchers.greaterThan = function(threshold) {
+JsHamcrest.Matchers.greaterThan = function(expected) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            return actual > threshold;
+            return actual > expected;
         },
 
         describeTo: function(description) {
-            description.append('greater than ').appendLiteral(threshold);
+            description.append('greater than ').appendLiteral(expected);
         }
     });
 };
 
 /**
- * Asserts that the actual number is greater than or equal to the given
- * threshold. Ex: <p>
- *
- * <pre>
- * assertThat(10, greaterThanOrEqualTo(5));
- * </pre>
- *
- * @param {number} threshold Threshold number.
- * @return {JsHamcrest.SimpleMatcher} 'greaterThanOrEqualTo' matcher.
+ * The actual number must be greater than or equal to the expected number
  */
-JsHamcrest.Matchers.greaterThanOrEqualTo = function(threshold) {
+JsHamcrest.Matchers.greaterThanOrEqualTo = function(expected) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            return actual >= threshold;
+            return actual >= expected;
         },
 
         describeTo: function(description) {
-            description.append('greater than or equal to ')
-                .appendLiteral(threshold);
+            description.append('greater than or equal to ').appendLiteral(expected);
         }
     });
 };
 
 /**
- * Asserts that the actual number is less than the given threshold. Ex: <p>
- *
- * <pre>
- * assertThat(5, lessThan(10));
- * </pre>
- *
- * @param {number} threshold Threshold number.
- * @return {JsHamcrest.SimpleMatcher} 'lessThan' matcher.
+ * The actual number must be less than the expected number.
  */
-JsHamcrest.Matchers.lessThan = function(threshold) {
+JsHamcrest.Matchers.lessThan = function(expected) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            return actual < threshold;
+            return actual < expected;
         },
 
         describeTo: function(description) {
-            description.append('less than ').appendLiteral(threshold);
+            description.append('less than ').appendLiteral(expected);
         }
     });
 };
 
 /**
- * Asserts that the actual number is less than or equal to the given threshold.
- * Ex: <p>
- *
- * <pre>
- * assertThat(5, lessThanOrEqualTo(10));
- * </pre>
- *
- * @param {number} threshold Threshold number.
- * @return {JsHamcrest.SimpleMatcher} 'lessThanOrEqualTo' matcher.
+ * The actual number must be less than or equal to the expected number.
  */
-JsHamcrest.Matchers.lessThanOrEqualTo = function(threshold) {
+JsHamcrest.Matchers.lessThanOrEqualTo = function(expected) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            return actual <= threshold;
+            return actual <= expected;
         },
 
         describeTo: function(description) {
-            description.append('less than or equal to ').append(threshold);
+            description.append('less than or equal to ').append(expected);
         }
     });
 };
 
 /**
- * Asserts that the actual value is not a number. Ex: <p>
- *
- * <pre>
- * assertThat(Math.sqrt(-1), notANumber());
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'notANumber' matcher.
+ * The actual value must not be a number.
  */
 JsHamcrest.Matchers.notANumber = function() {
     return new JsHamcrest.SimpleMatcher({
@@ -744,13 +646,22 @@ JsHamcrest.Matchers.notANumber = function() {
 };
 
 /**
- * Asserts that the actual value is even. Ex: <p>
- *
- * <pre>
- * assertThat(4, even());
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'even' matcher.
+ * The actual value must be divisible by the given number.
+ */
+JsHamcrest.Matchers.divisibleBy = function(divisor) {
+    return new JsHamcrest.SimpleMatcher({
+        matches: function(actual) {
+            return actual % divisor === 0;
+        },
+
+        describeTo: function(description) {
+            description.append('divisible by ').appendLiteral(divisor);
+        }
+    });
+};
+
+/**
+ * The actual value must be even.
  */
 JsHamcrest.Matchers.even = function() {
     return new JsHamcrest.SimpleMatcher({
@@ -765,13 +676,7 @@ JsHamcrest.Matchers.even = function() {
 };
 
 /**
- * Asserts that the actual value is odd. Ex: <p>
- *
- * <pre>
- * assertThat(3, odd());
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'odd' matcher.
+ * The actual number must be odd.
  */
 JsHamcrest.Matchers.odd = function() {
     return new JsHamcrest.SimpleMatcher({
@@ -786,113 +691,71 @@ JsHamcrest.Matchers.odd = function() {
 };
 
 /**
- * Asserts that the actual number is between a given inclusive range. Ex: <p>
- *
- * <pre>
- * assertThat(5, between(4).and(7));
- * </pre>
- *
- * @param {number} number Range start.
- * @return {JsHamcrest.RangeMatcherBuilder} 'between' matcher.
+ * The actual number must be between the given range (inclusive).
  */
-JsHamcrest.Matchers.between = function(number) {
-    return new JsHamcrest.RangeMatcherBuilder({
-        start: number
-    });
+JsHamcrest.Matchers.between = function(start) {
+    return {
+        and: function(end) {
+            var greater = end;
+            var lesser = start;
+
+            if (start > end) {
+                greater = start;
+                lesser = end;
+            }
+
+            return new JsHamcrest.SimpleMatcher({
+                matches: function(actual) {
+                    return actual >= lesser && actual <= greater;
+                },
+
+                describeTo: function(description) {
+                    description.append('between ').appendLiteral(lesser)
+                        .append(' and ').appendLiteral(greater);
+                }
+            });
+        }
+    };
 };
 
 /**
- * Asserts that the actual number is close to the given number, that is, if
- * the actual number is equal to a number within some range of acceptable error.
- * Ex: <p>
- *
- * <pre>
- * assertThat(0.5, closeTo(1.0, 0.5));
- * assertThat(1.0, closeTo(1.0, 0.5));
- * assertThat(1.5, closeTo(1.0, 0.5));
- * assertThat(2.0, not(closeTo(1.0, 0.5)));
- * </pre>
- *
- * @param {number} number Number.
- * @param {number} [delta=0] Acceptable difference range.
- * @return {JsHamcrest.SimpleMatcher} 'closeTo' matcher.
+ * The actual number must be close enough to *expected*, that is, the actual
+ *  number is equal to a value within some range of acceptable error.
  */
-JsHamcrest.Matchers.closeTo = function(number, delta) {
+JsHamcrest.Matchers.closeTo = function(expected, delta) {
     if (!delta) {
         delta = 0;
     }
 
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            return (Math.abs(actual - number) - delta) <= 0;
+            return (Math.abs(actual - expected) - delta) <= 0;
         },
 
         describeTo: function(description) {
             description.append('number within ')
-                .appendLiteral(delta).append(' of ').appendLiteral(number);
+                .appendLiteral(delta).append(' of ').appendLiteral(expected);
         }
     });
 };
 
 /**
- * Creates a number range matcher builder.
- * @class Matcher builder that provides an easy way to create matchers for
- * number ranges.
- * @constructor
- * @param {object} param Configuration object.
- * @param {number} param.start Range start.
+ * The actual number must be zero.
  */
-JsHamcrest.RangeMatcherBuilder = function(params) {
-    params = params || {};
+JsHamcrest.Matchers.zero = function() {
+    return new JsHamcrest.SimpleMatcher({
+        matches: function(actual) {
+            return actual === 0;
+        },
 
-    /**
-     * Range start.
-     * @property
-     * @type number
-     * @private
-     */
-    var start = params.start;
-
-    /**
-     * Finishes to build the range matcher.
-     * @param {number} end Range end.
-     * @return {JsHamcrest.SimpleMatcher} Range matcher.
-     */
-    this.and = function(end) {
-        var greater = end;
-        var lesser = start;
-
-        if (start > end) {
-            greater = start;
-            lesser = end;
+        describeTo: function(description) {
+            description.append('zero');
         }
-
-        return new JsHamcrest.SimpleMatcher({
-            matches: function(actual) {
-                return actual >= lesser && actual <= greater;
-            },
-
-            describeTo: function(description) {
-                description.append('between ').appendLiteral(lesser)
-                    .append(' and ').appendLiteral(greater);
-            }
-        });
-    };
+    });
 };
 
 /**
- * @fileOverview Provides string-related matchers.
- */
-
-/**
- * Asserts that the two strings are equals, ignoring case. Ex: <p>
- *
- * <pre>
- * assertThat('str', equalIgnoringCase('Str'));
- * </pre>
- *
- * @param {string} String.
- * @return {JsHamcrest.SimpleMatcher} 'equalIgnoringCase' matcher.
+ * The actual string must be equal to the given string, ignoring case.
  */
 JsHamcrest.Matchers.equalIgnoringCase = function(str) {
     return new JsHamcrest.SimpleMatcher({
@@ -907,15 +770,7 @@ JsHamcrest.Matchers.equalIgnoringCase = function(str) {
 };
 
 /**
- * Asserts that the actual value have a substring equals to the given string.
- * Ex: <p>
- *
- * <pre>
- * assertThat('string', containsString('tri'));
- * </pre>
- *
- * @param {string} String.
- * @return {JsHamcrest.SimpleMatcher} 'containsString' matcher.
+ * The actual string must have a substring equals to the given string.
  */
 JsHamcrest.Matchers.containsString = function(str) {
     return new JsHamcrest.SimpleMatcher({
@@ -930,14 +785,7 @@ JsHamcrest.Matchers.containsString = function(str) {
 };
 
 /**
- * Asserts that the actual value starts with the given string. Ex: <p>
- *
- * <pre>
- * assertThat('string', startsWith('str'));
- * </pre>
- *
- * @param {string} String.
- * @return {JsHamcrest.SimpleMatcher} 'startsWith' matcher.
+ * The actual string must start with the given string.
  */
 JsHamcrest.Matchers.startsWith = function(str) {
     return new JsHamcrest.SimpleMatcher({
@@ -952,14 +800,7 @@ JsHamcrest.Matchers.startsWith = function(str) {
 };
 
 /**
- * Asserts that the actual value ends with the given string. Ex: <p>
- *
- * <pre>
- * assertThat('string', endsWith('ring'));
- * </pre>
- *
- * @param {string} String.
- * @return {JsHamcrest.SimpleMatcher} 'endsWith' matcher.
+ * The actual string must end with the given string.
  */
 JsHamcrest.Matchers.endsWith = function(str) {
     return new JsHamcrest.SimpleMatcher({
@@ -974,14 +815,7 @@ JsHamcrest.Matchers.endsWith = function(str) {
 };
 
 /**
- * Asserts that the actual value matches the given regular expression. Ex: <p>
- *
- * <pre>
- * assertThat('0xa4f2c', matches(/\b0[xX][0-9a-fA-F]+\b/));
- * </pre>
- *
- * @param {RegExp} regex Regular expression literal.
- * @return {JsHamcrest.SimpleMatcher} 'matches' matcher.
+ * The actual string must match the given regular expression.
  */
 JsHamcrest.Matchers.matches = function(regex) {
     return new JsHamcrest.SimpleMatcher({
@@ -996,16 +830,7 @@ JsHamcrest.Matchers.matches = function(regex) {
 };
 
 /**
- * Asserts that the actual value looks like an email address. Ex: <p>
- *
- * <pre>
- * assertThat('user@domain.com', emailAddress());
- * </pre>
- *
- * <b>Note: this matcher is not fully compliant with RFC2822 due to its
- * complexity.</b>
- *
- * @return {JsHamcrest.SimpleMatcher} 'emailAddress' matcher.
+ * The actual string must look like an e-mail address.
  */
 JsHamcrest.Matchers.emailAddress = function() {
     var regex = /^([a-z0-9_\.\-\+])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,4})+$/i;
@@ -1022,53 +847,41 @@ JsHamcrest.Matchers.emailAddress = function() {
 };
 
 /**
- * @fileOverview Provides object-related matchers.
+ * The actual value has a member with the given name.
  */
+JsHamcrest.Matchers.hasMember = function(memberName, matcherOrValue) {
+    var undefined;
+    if (matcherOrValue === undefined) {
+        matcherOrValue = JsHamcrest.Matchers.anything();
+    } else if (!JsHamcrest.isMatcher(matcherOrValue)) {
+        matcherOrValue = JsHamcrest.Matchers.equalTo(matcherOrValue);
+    }
 
-
-/**
- * Asserts that the actual object contains the given member (variable or
- * function). Ex: <p>
- *
- * <pre>
- * assertThat(myObj, hasMember('name'));
- * </pre>
- *
- * @param {string} memberName Member name.
- * @return {JsHamcrest.SimpleMatcher} 'hasMember' matcher.
- */
-JsHamcrest.Matchers.hasMember = function(memberName) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            try {
-                return memberName in actual;
-            } catch (e) { }
+            if (actual && memberName in actual) {
+                return matcherOrValue.matches(actual[memberName]);
+            }
             return false;
         },
 
         describeTo: function(description) {
-            description.append('has member ').appendLiteral(memberName);
+            description.append('has member ').appendLiteral(memberName)
+                .append(' (').appendDescriptionOf(matcherOrValue).append(')');
         }
     });
 };
 
 /**
- * Asserts that the actual object contains the given function. Ex: <p>
- *
- * <pre>
- * assertThat(myObj, hasFunction('getName'));
- * </pre>
- *
- * @param {string} property Property name.
- * @return {JsHamcrest.SimpleMatcher} 'hasFunction' matcher.
+ * The actual value has a function with the given name.
  */
 JsHamcrest.Matchers.hasFunction = function(functionName) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            try {
+            if (actual) {
                 return functionName in actual &&
                     actual[functionName] instanceof Function;
-            } catch (e) { }
+            }
             return false;
         },
 
@@ -1079,14 +892,7 @@ JsHamcrest.Matchers.hasFunction = function(functionName) {
 };
 
 /**
- * Asserts that the actual object is instance of the given class. Ex: <p>
- *
- * <pre>
- * assertThat(myObj, instanceOf(Array));
- * </pre>
- *
- * @param {function} clazz Constructor function.
- * @return {JsHamcrest.SimpleMatcher} 'instanceOf' matcher.
+ * The actual value must be an instance of the given class.
  */
 JsHamcrest.Matchers.instanceOf = function(clazz) {
     return new JsHamcrest.SimpleMatcher({
@@ -1102,14 +908,7 @@ JsHamcrest.Matchers.instanceOf = function(clazz) {
 };
 
 /**
- * Asserts that the actual object is of the specified type. Ex: <p>
- *
- * <pre>
- * assertThat("text", typeOf("string"));
- * </pre>
- *
- * @param {function} typeName Type name.
- * @return {JsHamcrest.SimpleMatcher} 'instanceOf' matcher.
+ * The actual value must be an instance of the given type.
  */
 JsHamcrest.Matchers.typeOf = function(typeName) {
     return new JsHamcrest.SimpleMatcher({
@@ -1118,106 +917,51 @@ JsHamcrest.Matchers.typeOf = function(typeName) {
         },
 
         describeTo: function(description) {
-            description.append('typeof ').append('"').append(typeName)
-                .append('"');
+            description.append('typeof ').append('"').append(typeName).append('"');
         }
     });
 };
 
 /**
- * Asserts that the actual value is an object. Ex: <p>
- *
- * <pre>
- * assertThat({}, object());
- * assertThat(10, not(object()));
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'object' matcher.
+ * The actual value must be an object.
  */
 JsHamcrest.Matchers.object = function() {
     return new JsHamcrest.Matchers.instanceOf(Object);
 };
 
 /**
- * Asserts that the actual value is a string. Ex: <p>
- *
- * <pre>
- * assertThat("text", string());
- * assertThat(10, not(string()));
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'string' matcher.
+ * The actual value must be a string.
  */
 JsHamcrest.Matchers.string = function() {
     return new JsHamcrest.Matchers.typeOf('string');
 };
 
 /**
- * Asserts that the actual value is a number. Ex: <p>
- *
- * <pre>
- * assertThat(10, number());
- * assertThat(10.0, number());
- * assertThat("text", not(number()));
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'number' matcher.
+ * The actual value must be a number.
  */
 JsHamcrest.Matchers.number = function() {
     return new JsHamcrest.Matchers.typeOf('number');
 };
 
 /**
- * Asserts that the actual value is a boolean. Ex: <p>
- *
- * <pre>
- * assertThat(true, bool());
- * assertThat(false, bool());
- * assertThat("text" not(bool()));
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'bool' matcher.
+ * The actual value must be a boolean.
  */
 JsHamcrest.Matchers.bool = function() {
     return new JsHamcrest.Matchers.typeOf('boolean');
 };
 
 /**
- * Asserts that the actual object is a function. Ex: <p>
- *
- * <pre>
- * assertThat(function() {}, func());
- * assertThat("text", not(func()));
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'func' matcher.
+ * The actual value must be a function.
  */
 JsHamcrest.Matchers.func = function() {
-    return new JsHamcrest.Matchers.typeOf('function');
+    return new JsHamcrest.Matchers.instanceOf(Function);
 };
 
 /**
- * @fileOverview Provides collection-related matchers.
- */
-
-/**
  * The actual value should be an array and it must contain at least one value
- * that matches the given value or matcher to be successful. Ex: <p>
- *
- * <pre>
- * assertThat([1,2,3], hasItem(3));
- * assertThat([1,2,3], hasItem(equalTo(3)));
- * </pre>
- *
- * @param {array} matcher Number or matcher.
- * @return {JsHamcrest.SimpleMatcher} 'hasItem' matcher.
+ * that matches the given value or matcher.
  */
-JsHamcrest.Matchers.hasItem = function(matcher) {
-    // Uses 'equalTo' matcher if the given object is not a matcher
-    if (!JsHamcrest.isMatcher(matcher)) {
-        matcher = JsHamcrest.Matchers.equalTo(matcher);
-    }
-
+JsHamcrest.Matchers.hasItem = JsHamcrest.EqualTo(function(matcher) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
             // Should be an array
@@ -1238,19 +982,11 @@ JsHamcrest.Matchers.hasItem = function(matcher) {
                 .appendDescriptionOf(matcher);
         }
     });
-};
+});
 
 /**
  * The actual value should be an array and the given values or matchers must
- * match at least one item to be sucessful. Ex: <p>
- *
- * <pre>
- * assertThat([1,2,3], hasItems(2, 3));
- * assertThat([1,2,3], hasItems(greaterThan(2)));
- * </pre>
- *
- * @param {object...} arguments Values or matchers.
- * @return {JsHamcrest.SimpleMatcher} 'hasItems' matcher.
+ * match at least one item.
  */
 JsHamcrest.Matchers.hasItems = function() {
     var items = [];
@@ -1262,21 +998,9 @@ JsHamcrest.Matchers.hasItems = function() {
 
 /**
  * The actual value should be an array and the given value or matcher must
- * match all items to be successful. Ex: <p>
- *
- * <pre>
- * assertThat([1,2,3], everyItem(greaterThan(0)));
- * </pre>
- *
- * @param {matcher} matcher Value or matcher.
- * @return {JsHamcrest.SimpleMatcher} 'everyItem' matcher.
+ * match all items.
  */
-JsHamcrest.Matchers.everyItem = function(matcher) {
-    // Uses 'equalTo' matcher if the given object is not a matcher
-    if (!JsHamcrest.isMatcher(matcher)) {
-        matcher = JsHamcrest.Matchers.equalTo(matcher);
-    }
-
+JsHamcrest.Matchers.everyItem = JsHamcrest.EqualTo(function(matcher) {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
             // Should be an array
@@ -1293,20 +1017,14 @@ JsHamcrest.Matchers.everyItem = function(matcher) {
         },
 
         describeTo: function(description) {
-            description.append('every item ').appendDescriptionOf(matcher);
+            description.append('every item ')
+                .appendDescriptionOf(matcher);
         }
     });
-};
+});
 
 /**
- * The given array must contain the actual value to be successful. Ex: <p>
- *
- * <pre>
- * assertThat(1, isIn([1,2,3]));
- * assertThat(1, isIn(1,2,3));
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'isIn' matcher.
+ * The given array must contain the actual value.
  */
 JsHamcrest.Matchers.isIn = function() {
     var equalTo = JsHamcrest.Matchers.equalTo;
@@ -1333,32 +1051,17 @@ JsHamcrest.Matchers.isIn = function() {
 };
 
 /**
- * The given array must contain the actual value to be successful. This is an
- * alias to 'isIn' matcher. Ex: <p>
- * <pre>
- * assertThat(1, oneOf([1,2,3]));
- * assertThat(1, oneOf(1,2,3));
- * </pre>
- *
- * @function
- * @return {JsHamcrest.SimpleMatcher} 'oneOf' matcher.
+ * Alias to 'isIn' matcher.
  */
 JsHamcrest.Matchers.oneOf = JsHamcrest.Matchers.isIn;
 
 /**
  * The actual value should be an array and it must be empty to be sucessful.
- * Ex: <p>
- *
- * <pre>
- * assertThat([], empty());
- * </pre>
- *
- * @return {JsHamcrest.SimpleMatcher} 'empty' matcher.
  */
 JsHamcrest.Matchers.empty = function() {
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            return actual instanceof Array && actual.length === 0;
+            return actual.length === 0;
         },
 
         describeTo: function(description) {
@@ -1368,26 +1071,22 @@ JsHamcrest.Matchers.empty = function() {
 };
 
 /**
- * The actual value should be an array and its size must match the given value
- * or matcher to be sucessful. Ex: <p>
- *
- * <pre>
- * assertThat([1,2,3], hasSize(3));
- * assertThat([1,2,3], hasSize(lessThan(5)));
- * </pre>
- *
- * @param {object} matcher Number or matcher.
- * @return {JsHamcrest.SimpleMatcher} 'hasSize' matcher.
+ * The length of the actual value value must match the given value or matcher.
  */
-JsHamcrest.Matchers.hasSize = function(matcher) {
-    // Uses 'equalTo' matcher if the given object is not a matcher
-    if (!JsHamcrest.isMatcher(matcher)) {
-        matcher = JsHamcrest.Matchers.equalTo(matcher);
-    }
+JsHamcrest.Matchers.hasSize = JsHamcrest.EqualTo(function(matcher) {
+    var getSize = function(actual) {
+        var size = actual.length;
+        if (size === undefined && typeof actual === 'object') {
+            size = 0;
+            for (var key in actual)
+                size++;
+        }
+        return size;
+    };
 
     return new JsHamcrest.SimpleMatcher({
         matches: function(actual) {
-            return actual instanceof Array && matcher.matches(actual.length);
+            return matcher.matches(getSize(actual));
         },
 
         describeTo: function(description) {
@@ -1395,500 +1094,407 @@ JsHamcrest.Matchers.hasSize = function(matcher) {
         },
 
         describeValueTo: function(actual, description) {
-            if (actual instanceof Array) {
-                description.append(actual.length);
-            } else {
-                description.appendLiteral(actual);
+            description.append(getSize(actual));
+        }
+    });
+});
+
+JsHamcrest.Matchers.equivalentMap = function(expected) {
+    return new JsHamcrest.SimpleMatcher({
+        matches: function(actual)
+        {
+            if(JsHamcrest.retreiveEntityMatcherFunction(actual) === JsHamcrest.areMapsEquivalent &&
+                JsHamcrest.retreiveEntityMatcherFunction(expected) === JsHamcrest.areMapsEquivalent)
+            {
+                return JsHamcrest.areMapsEquivalent(expected, actual);
             }
+
+            return false; //The passed in objects aren't maps.
+        },
+
+        describeTo: function(description) {
+            description.append('map equivalent to ').appendLiteral(expected);
         }
     });
 };
 
-/**
- * @fileOverview Methods to allow integration to major JavaScript frameworks.
- */
-
-/**
- * Methods to integrate JsHamcrest to major JavaScript frameworks.
- * @namespace
- * @class
- */
-JsHamcrest.Integration = function() {
-
-    /**
-     * Assert method that is capable of handling matchers. If the given matcher
-     * fails, this method registers a failed/error'd assertion with the unit
-     * test framework being used. Ex: <p>
-     *
-     * <pre>
-     * // Asserts that something is equal to x
-     * assertThat(something, equalTo(x));
-     * assertThat(something, equalTo(x), "Some description text");
-     *
-     * // Same here
-     * assertThat(something, x);
-     * assertThat(something, x, "Some description text");
-     *
-     * // Asserts that something evaluates to some value considered truth
-     * assertThat(something);
-     * </pre>
-     *
-     * @param {object} actual Actual value under test.
-     * @param {object} matcher Matcher to assert the correctness of the actual
-     * value.
-     * @param {string} message Message that describes the assertion, if
-     * necessary.
-     * @param {function} fail Function to be called when the assertion fails.
-     * @param {function} pass Function to be called when the assertion
-     * succeeds.
-     * @return {JsHamcrest.Description} Test result description.
-     * @private
-     */
-    function assertThat(actual, matcher, message, fail, pass) {
-        var description = new JsHamcrest.Description();
-        var matchers = JsHamcrest.Matchers;
-
-        // Actual value must be any value considered non-null by JavaScript
-        if (matcher == null) {
-            matcher = matchers.truth();
-        }
-
-        // Creates a 'equalTo' matcher if 'matcher' is not a valid matcher
-        if (!JsHamcrest.isMatcher(matcher)) {
-            matcher = matchers.equalTo(matcher);
-        }
-
-        if (message) {
-            description.append(message).append('. ');
-        }
-
-        description.append('Expected ');
-        matcher.describeTo(description);
-
-        if (!matcher.matches(actual)) {
-            description.append(' but was ');
-            matcher.describeValueTo(actual, description);
-            fail(description.get());
-        } else {
-            description.append(': Success');
-            if (pass) {
-                pass(description.get());
+JsHamcrest.Matchers.equivalentArray = function(expected) {
+    return new JsHamcrest.SimpleMatcher({
+        matches: function(actual)
+        {
+            if (expected instanceof Array && actual instanceof Array)
+            {
+                return JsHamcrest.areArraysEquivalent(expected, actual);
             }
+
+            return false; //The passed in objects aren't Arrays.
+        },
+
+        describeTo: function(description) {
+            description.append('array equivalent to ').appendLiteral(expected);
         }
-        return description;
+    });
+};
+JsHamcrest.Operators = {};
+
+/**
+ * Returns those items of the array for which matcher matches.
+ */
+JsHamcrest.Operators.filter = function(array, matcherOrValue) {
+    if (!(array instanceof Array) || matcherOrValue == null) {
+        return array;
+    }
+    if (!(matcherOrValue instanceof JsHamcrest.SimpleMatcher)) {
+        matcherOrValue = JsHamcrest.Matchers.equalTo(matcherOrValue);
     }
 
-    /**
-     * Copy all members of an object to another.
-     * @param {object} source Source object.
-     * @param {object} target Target object.
-     */
-    this.copyMembers = function(source, target) {
-        for (var method in source) {
-            if (!(method in target)) {
-                target[method] = source[method];
-            }
+    var result = [];
+    for (var i = 0; i < array.length; i++) {
+        if (matcherOrValue.matches(array[i])) {
+            result.push(array[i]);
         }
+    }
+    return result;
+};
+
+/**
+ * Generic assert function.
+ */
+JsHamcrest.Operators.assert = function(actualValue, matcherOrValue, options) {
+    options = options ? options : {};
+    var description = new JsHamcrest.Description();
+
+    if (matcherOrValue == null) {
+        matcherOrValue = JsHamcrest.Matchers.truth();
+    } else if (!JsHamcrest.isMatcher(matcherOrValue)) {
+        matcherOrValue = JsHamcrest.Matchers.equalTo(matcherOrValue);
+    }
+
+    if (options.message) {
+        description.append(options.message).append('. ');
+    }
+
+    description.append('Expected ');
+    matcherOrValue.describeTo(description);
+
+    if (!matcherOrValue.matches(actualValue)) {
+        description.passed = false;
+        description.append(' but was ');
+        matcherOrValue.describeValueTo(actualValue, description);
+        if (options.fail) {
+            options.fail(description.get());
+        }
+    } else {
+        description.append(': Success');
+        description.passed = true;
+        if (options.pass) {
+            options.pass(description.get());
+        }
+    }
+    return description;
+};
+
+/**
+ * Delegate function, useful when used along with raises() and raisesAnything().
+ */
+JsHamcrest.Operators.callTo = function() {
+    var func = [].shift.call(arguments);
+    var args = arguments;
+    return function() {
+        return func.apply(this, args);
     };
+}
 
-    /**
-     * JsTestDriver integration. To plug JsHamcrest to JsTestDriver, follow
-     * JsTestDriver installation and configuration instructions and then
-     * perform the following changes: <p>
-     *
-     * <ol>
-     *     <li>Let's assume your project root directory have a <em>lib</em>
-     *     directory to keep your project's dependencies. In this case, copy
-     *     the <em>jshamcrest.js</em> file to that directory;</li>
-     *
-     *     <li>Create a file <em>plugin/jshamcrest-plugin.js</em> in
-     *     your project root directory and put the following line inside
-     *     it: <p>
-     *
-     *     <pre>
-     * JsHamcrest.Integration.JsTestDriver();
-     *     </pre></li>
-     *
-     *     <li>Finally, edit the <em>jsTestDriver.conf</em> file as
-     *     follows: <p>
-     *     <pre>
-     * load:
-     *   - lib/*.js
-     *   - &lt;source directory&gt;
-     *   - &lt;test cases directory&gt;
-     *   - plugin/*.js
-     *     </pre></li>
-     * </ol>
-     *
-     * That's it! Your test cases should now have access to JsHamcrest
-     * methods: <p>
-     *
-     * <pre>
-     *     CalculatorTest = TestCase("CalculatorTest");
-     *
-     *     CalculatorTest.prototype.testAdd = function() {
-     *         var calc = new MyCalculator();
-     *         assertThat(calc.add(2,3), equalTo(5));
-     *     };
-     * </pre>
-     *
-     * @param {object} params Configuration object.
-     * @param {object} [params.scope=window] Copies all test matcher functions
-     * to the given scope.
-     */
-    this.JsTestDriver = function(params) {
-        params = params ? params : {};
-        var target = params.scope || window;
+/**
+ * Integration utilities.
+ */
 
-        this.copyMembers(JsHamcrest.Matchers, target);
+JsHamcrest.Integration = (function() {
+
+    var self = this;
+
+    return {
 
         /**
-         * Function called when an assertion fails.
-         * @ignore
+         * Copies all members of an object to another.
          */
-        var _fail = function(message) {
-            var exc = new Error(message);
-            exc.name = 'AssertError';
-
-            // Removes all jshamcrest-related entries from error stack
-            var stack = exc.stack.split('\n');
-            var newStack = '';
-            for (var i = 0; i < stack.length; i++) {
-                if (!/jshamcrest*\.js\:/i.test(stack[i])) {
-                    newStack += stack[i] + '\n';
+        copyMembers: function(source, target) {
+            if (arguments.length == 1) {
+                target = source;
+                JsHamcrest.Integration.copyMembers(JsHamcrest.Matchers, target);
+                JsHamcrest.Integration.copyMembers(JsHamcrest.Operators, target);
+            } else if (source) {
+                for (var method in source) {
+                    if (!(method in target)) {
+                        target[method] = source[method];
+                    }
                 }
             }
-            exc.stack = newStack;
-            throw exc;
-        };
+        },
 
         /**
-         * Assertion method exposed to JsTestDriver.
-         * @ignore
+         * Adds the members of the given object to JsHamcrest.Matchers
+         * namespace.
          */
-        target.assertThat = function (actual, matcher, message) {
-            return assertThat(actual, matcher, message, _fail);
-        };
-    };
-
-    /**
-     * JsUnitTest integration. To plug JsHamcrest to JsUnitTest, follow
-     * JsUnitTest installation and configuration instructions and then edit
-     * the test suite HTML file as follows: <p>
-     *
-     * <pre>
-     *     &lt;!-- JsUnitTest and dependencies --&gt;
-     *     &lt;script type="text/javascript" src="jsunittest.js"&gt;&lt;/script&gt;
-     *
-     *     &lt;!-- Don't forget to activate JsUnitTest integration --&gt;
-     *     &lt;script type="text/javascript" src="jshamcrest.js"&gt;&lt;/script&gt;
-     *     &lt;script type="text/javascript"&gt;
-     *         JsHamcrest.Integration.JsUnitTest();
-     *     &lt;/script&gt;
-     *
-     *     &lt;!-- Some code... --&gt;
-     *
-     *     &lt;script type="text/javascript"&gt;
-     *         new Test.Unit.Runner({
-     *             setup: function() {
-     *             },
-     *
-     *             tearDown: function() {
-     *             },
-     *
-     *             testAdd: function() { with(this) {
-     *                 var calc = new MyCalculator();
-     *                 assertThat(calc.add(2,3), equalTo(5));
-     *             }},
-     *
-     *             // More tests here...
-     *         }, {'testLog':'myLog'});
-     *     &lt;/script&gt;
-     * </pre>
-     *
-     * @param {object} params Configuration object.
-     * @param {object} [params.scope=Testcase.prototype] Copies all test
-     * matcher functions to the given scope.
-     */
-    this.JsUnitTest = function(params) {
-        params = params ? params : {};
-        var target = params.scope || JsUnitTest.Unit.Testcase.prototype;
-
-        this.copyMembers(JsHamcrest.Matchers, target);
+        installMatchers: function(matchersNamespace) {
+            var target = JsHamcrest.Matchers;
+            JsHamcrest.Integration.copyMembers(matchersNamespace, target);
+        },
 
         /**
-         * Assertion method exposed to JsUnitTest.
-         * @ignore
+         * Adds the members of the given object to JsHamcrest.Operators
+         * namespace.
          */
-        target.assertThat = function (actual, matcher, message) {
-            var self = this;
+        installOperators: function(operatorsNamespace) {
+            var target = JsHamcrest.Operators;
+            JsHamcrest.Integration.copyMembers(operatorsNamespace, target);
+        },
 
-            /**
-             * Function called when an assertion executes successfully.
-             * @ignore
-             */
-            var pass = function() {
-                self.pass();
+        /**
+         * Uses the web browser's alert() function to display the assertion
+         * results. Great for quick prototyping.
+         */
+        WebBrowser: function() {
+            JsHamcrest.Integration.copyMembers(self);
+
+            self.assertThat = function (actual, matcher, message) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        alert('[FAIL] ' + message);
+                    },
+                    pass: function(message) {
+                        alert('[SUCCESS] ' + message);
+                    }
+                });
             };
+        },
 
-            /**
-             * Function called when an assertion fails.
-             * @ignore
-             */
-            var fail = function(message) {
-                self.fail(message);
+        /**
+         * Uses the Rhino's print() function to display the assertion results.
+         * Great for prototyping.
+         */
+        Rhino: function() {
+            JsHamcrest.Integration.copyMembers(self);
+
+            self.assertThat = function (actual, matcher, message) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        print('[FAIL] ' + message + '\n');
+                    },
+                    pass: function(message) {
+                        print('[SUCCESS] ' + message + '\n');
+                    }
+                });
             };
-
-            return assertThat(actual, matcher, message, fail, pass);
-        };
-    };
-
-    /**
-     * YUITest (Yahoo UI) integration. To plug JsHamcrest to YUITest, follow
-     * YUITest installation and configuration instructions and then edit the
-     * test suite HTML file as follows: <p>
-     *
-     * <pre>
-     *     &lt;!-- YUITest and dependencies --&gt;
-     *     &lt;script type="text/javascript" src="yahoo-dom-event/yahoo-dom-event.js"&gt;&lt;/script&gt;
-     *     &lt;script type="text/javascript" src="yuilogger/logger.js"&gt;&lt;/script&gt;
-     *     &lt;script type="text/javascript" src="yuitest/yuitest.js"&gt;&lt;/script&gt;
-     *
-     *     &lt;!-- Don't forget to activate YUITest integration --&gt;
-     *     &lt;script type="text/javascript" src="jshamcrest.js"&gt;&lt;/script&gt;
-     *     &lt;script type="text/javascript"&gt;
-     *         JsHamcrest.Integration.YUITest();
-     *     &lt;/script&gt;
-     *
-     *     &lt;!-- Some code... --&gt;
-     *
-     *     &lt;script type="text/javascript"&gt;
-     *         CalculatorTestCase = new YAHOO.tool.TestCase({
-     *             name: "Calculator test case",
-     *
-     *             setUp: function() {
-     *             },
-     *
-     *             teardown: function() {
-     *             },
-     *
-     *             // In YUITest, the assertion method is Assert.that(), not assertThat()!
-     *             // JsHamcrest tries not to screw with the conventions adopted by the
-     *             // unit test framework in use, making the integration feel less
-     *             // intrusive and more natural.
-     *
-     *             testAdd: function() {
-     *                 var calc = new MyCalculator();
-     *                 Assert.that(calc.add(2,3), equalTo(5));
-     *             },
-     *
-     *             // More tests here...
-     *         });
-     *     &lt;/script&gt;
-     * </pre>
-     *
-     * @param {object} params Configuration object.
-     * @param {object} [params.scope=window] Copies all test matcher functions
-     * to the given scope.
-     */
-    this.YUITest = function(params) {
-        params = params ? params : {};
-        var target = params.scope || window;
-
-        this.copyMembers(JsHamcrest.Matchers, target);
-        target.Assert = YAHOO.util.Assert;
+        },
 
         /**
-         * Function called when an assertion fails.
-         * @ignore
+         * JsTestDriver integration.
          */
-        var fail = function(message) {
-            YAHOO.util.Assert.fail(message);
-        };
+        JsTestDriver: function(params) {
+            params = params ? params : {};
+            var target = params.scope || self;
+
+            JsHamcrest.Integration.copyMembers(target);
+
+            // Function called when an assertion fails.
+            function fail(message) {
+                var exc = new Error(message);
+                exc.name = 'AssertError';
+
+                try {
+                    // Removes all jshamcrest-related entries from error stack
+                    var re = new RegExp('jshamcrest.*\.js\:', 'i');
+                    var stack = exc.stack.split('\n');
+                    var newStack = '';
+                    for (var i = 0; i < stack.length; i++) {
+                        if (!re.test(stack[i])) {
+                            newStack += stack[i] + '\n';
+                        }
+                    }
+                    exc.stack = newStack;
+                } catch (e) {
+                    // It's okay, do nothing
+                }
+                throw exc;
+            }
+
+            // Assertion method exposed to JsTestDriver.
+            target.assertThat = function (actual, matcher, message) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: fail
+                });
+            };
+        },
 
         /**
-         * Assertion method exposed to YUITest.
-         * @ignore
+         * NodeUnit (Node.js Unit Testing) integration.
          */
-        YAHOO.util.Assert.that = function(actual, matcher, message) {
-            return assertThat(actual, matcher, message, fail);
-        };
-    };
 
-    /**
-     * QUnit (JQuery) integration. To plug JsHamcrest to QUnit, follow QUnit
-     * installation and configuration instructions and then edit the test
-     * suite HTML file as follows: <p>
-     *
-     * <pre>
-     *     &lt;!-- QUnit and dependencies --&gt;
-     *     &lt;script type="text/javascript" src="jquery.js"&gt;&lt;/script&gt;
-     *
-     *     &lt;!-- Don't forget to activate QUnit integration --&gt;
-     *     &lt;script type="text/javascript" src="jshamcrest.js"&gt;&lt;/script&gt;
-     *     &lt;script&gt;
-     *         JsHamcrest.Integration.QUnit();
-     *
-     *         $(document).ready(function(){
-     *             test("Calculator should add two numbers", function() {
-     *                 var calc = new MyCalculator();
-     *                 assertThat(calc.add(2,3), equalTo(5));
-     *             });
-     *
-     *             // More tests here...
-     *         });
-     *     &lt;/script&gt;
-     *
-     *     &lt;!-- Some code... --&gt;
-     *
-     *     &lt;!-- QUnit and dependencies --&gt;
-     *     &lt;script type="text/javascript" src="testrunner.js"&gt;&lt;/script&gt;
-     * </pre>
-     *
-     * @param {object} params Configuration object.
-     * @param {object} [params.scope=window] Copies all test matcher functions
-     * to the given scope.
-     */
-    this.QUnit = function(params) {
-        params = params ? params : {};
-        var target = params.scope || window;
+        Nodeunit: function(params) {
+            params = params ? params : {};
+            var target = params.scope || global;
 
-        this.copyMembers(JsHamcrest.Matchers, target);
+            JsHamcrest.Integration.copyMembers(target);
+
+            target.assertThat = function(actual, matcher, message, test) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        test.ok(false, message);
+                    },
+                    pass: function(message) {
+                        test.ok(true, message);
+                    }
+                });
+            };
+        },
 
         /**
-         * Function called when an assertion executes successfully.
-         * @ignore
+         * JsUnitTest integration.
          */
-        var pass = function(message) {
-            QUnit.ok(true, message);
-        };
+        JsUnitTest: function(params) {
+            params = params ? params : {};
+            var target = params.scope || JsUnitTest.Unit.Testcase.prototype;
+
+            JsHamcrest.Integration.copyMembers(target);
+
+            // Assertion method exposed to JsUnitTest.
+            target.assertThat = function (actual, matcher, message) {
+                var self = this;
+
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        self.fail(message);
+                    },
+                    pass: function() {
+                        self.pass();
+                    }
+                });
+            };
+        },
 
         /**
-         * Function called when an assertion fails.
-         * @ignore
+         * YUITest (Yahoo UI) integration.
          */
-        var fail = function(message) {
-            QUnit.ok(false, message);
-        };
+        YUITest: function(params) {
+            params = params ? params : {};
+            var target = params.scope || self;
+
+            JsHamcrest.Integration.copyMembers(target);
+
+            target.Assert = YAHOO.util.Assert;
+
+            // Assertion method exposed to YUITest.
+            YAHOO.util.Assert.that = function(actual, matcher, message) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        YAHOO.util.Assert.fail(message);
+                    }
+                });
+            };
+        },
 
         /**
-         * Assertion method exposed to QUnit.
-         * @ignore
+         * QUnit (JQuery) integration.
          */
-        target.assertThat = function(actual, matcher, message) {
-            return assertThat(actual, matcher, message, fail, pass);
-        };
-    };
+        QUnit: function(params) {
+            params = params ? params : {};
+            var target = params.scope || self;
 
-    /**
-     * jsUnity integration. To plug JsHamcrest to jsUnity, follow jsUnity
-     * installation and configuration instructions and then edit the test
-     * suite file as follows: <p>
-     *
-     * <pre>
-     *     // Some test suite
-     *     function CalculatorTestSuite() {
-     *         function testA() {
-     *             var calc = new MyCalculator();
-     *             assertThat(calc.add(2,3), equalTo(5));
-     *         }
-     *
-     *         // More tests here...
-     *     }
-     *
-     *     // Don't forget to activate the jsUnity integration
-     *     JsHamcrest.Integration.jsUnity();
-     *
-     *     var results = jsUnity.run(CalculatorTestSuite);
-     * </pre>
-     *
-     * @param {object} params Configuration object.
-     * @param {object} [params.scope=jsUnity.env.defaultScope] Copies all test
-     * matcher functions to the given scope.
-     * @param {object} [params.attachAssertions=false] Whether JsHamcrest
-     * should also copy jsUnity's assertion functions to the given scope.
-     */
-    this.jsUnity = function(params) {
-        params = params ? params : {};
-        var target = params.scope || jsUnity.env.defaultScope;
-        var assertions = params.attachAssertions || false;
+            JsHamcrest.Integration.copyMembers(target);
 
-        this.copyMembers(JsHamcrest.Matchers, target);
-        if (assertions) {
-            jsUnity.attachAssertions(target);
-        }
+            // Assertion method exposed to QUnit.
+            target.assertThat = function(actual, matcher, message) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        QUnit.ok(false, message);
+                    },
+                    pass: function(message) {
+                        QUnit.ok(true, message);
+                    }
+                });
+            };
+        },
 
         /**
-         * Function called when an assertion fails.
-         * @ignore
+         * jsUnity integration.
          */
-        var fail = function(message) {
-            throw message;
-        };
+        jsUnity: function(params) {
+            params = params ? params : {};
+            var target = params.scope || jsUnity.env.defaultScope;
+            var assertions = params.attachAssertions || false;
+
+            JsHamcrest.Integration.copyMembers(target);
+
+            if (assertions) {
+                jsUnity.attachAssertions(target);
+            }
+
+            // Assertion method exposed to jsUnity.
+            target.assertThat = function(actual, matcher, message) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        throw message;
+                    }
+                });
+            };
+        },
 
         /**
-         * Assertion method exposed to jsUnity.
-         * @ignore
+         * Screw.Unit integration.
          */
-        target.assertThat = function(actual, matcher, message) {
-            return assertThat(actual, matcher, message, fail);
-        };
-    },
-
-    /**
-     * Screw.Unit integration. To plug JsHamcrest to Screw.Unit, follow
-     * Screw.Unit installation and configuration instructions and then edit the
-     * spec_helper.js file to include:
-     *
-     * <pre>
-     *     JsHamcrest.Integration.screwunit();
-     * </pre>
-     *
-     * You can then use JsHamcrest in the test suite as follows: <p>
-     *
-     * <pre>
-     *     // Some test suite
-     *     Screw.Unit(function() {
-     *       describe("MyCalculator", function() {
-     *         var calc;
-     *         before(function() { calc = new MyCalculator() });
-     *
-     *         it("should add two numbers", function() {
-     *           assertThat(calc.add(2,3), equalTo(5));
-     *         }
-     *
-     *         // More tests here...
-     *       }
-     *     }
-     * </pre>
-     *
-     * @param {object} params Configuration object.
-     * @param {object} [params.scope=Screw.Matchers] Copies all test
-     * matcher functions to the given scope.
-     */
-        this.screwunit = function(params) {
+        screwunit: function(params) {
             params = params ? params : {};
             var target = params.scope || Screw.Matchers;
 
-            this.copyMembers(JsHamcrest.Matchers, target);
+            JsHamcrest.Integration.copyMembers(target);
 
-            /**
-             * Function called when an assertion fails.
-             * @ignore
-             */
-            var fail = function(message) {
-                throw message;
-            };
-
-            /**
-             * Assertion method exposed to jsUnity.
-             * @ignore
-             */
+            // Assertion method exposed to Screw.Unit.
             target.assertThat = function(actual, matcher, message) {
-                return assertThat(actual, matcher, message, fail);
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        throw message;
+                    }
+                });
             };
-        };
+        },
 
-    return this;
-};
-JsHamcrest.Integration = new JsHamcrest.Integration();
+        /**
+         * Jasmine integration.
+         */
+        jasmine: function(params) {
+            params = params ? params : {};
+            var target = params.scope || self;
+
+            JsHamcrest.Integration.copyMembers(target);
+
+            // Assertion method exposed to Jasmine.
+            target.assertThat = function(actual, matcher, message) {
+                return JsHamcrest.Operators.assert(actual, matcher, {
+                    message: message,
+                    fail: function(message) {
+                        jasmine.getEnv().currentSpec.addMatcherResult(
+                            new jasmine.ExpectationResult({passed:false, message:message})
+                        );
+                    },
+                    pass: function(message) {
+                        jasmine.getEnv().currentSpec.addMatcherResult(
+                            new jasmine.ExpectationResult({passed:true, message:message})
+                        );
+                    }
+                });
+            };
+        }
+    };
+})();
+
+if (typeof exports !== "undefined") exports.JsHamcrest = JsHamcrest;
