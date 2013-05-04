@@ -169,6 +169,26 @@ define(["isolate"], (Isolate)->
     mockStateRegistry
   )
 
+  Isolate.mapAsFactory("UI/BaseViewModelCollection", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+    mockConstructedBVMC =
+      watch:JsMockito.mockFunction()
+
+    switch requestingModulePath
+
+      when "UI/PlayAreaView"
+        mockBaseViewModelCollection = ()->
+          mockConstructedBVMC
+
+      else
+        mockBaseViewModelCollection = actual
+
+
+    window.mockLibrary[requestingModulePath]["UI/PlayAreaView"]=mockBaseViewModelCollection
+    mockBaseViewModelCollection
+  )
+
   Isolate.mapAsFactory("UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
     if (!window.mockLibrary[requestingModulePath])
       window.mockLibrary[requestingModulePath] = {}
