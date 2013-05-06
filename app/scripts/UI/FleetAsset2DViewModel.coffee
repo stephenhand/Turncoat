@@ -15,6 +15,12 @@ define(['underscore', 'backbone', 'UI/BaseViewModelItem'], (_, Backbone, BaseVie
             "bearing"
           ]
         ])
+        @set("uuid", options.model.get("uuid"))
+
+    updateFromFleetAsset:()->
+
+    onModelUpdated:()=>
+      updateFromFleetAsset(@)
 
   FleetAsset2DViewModel
 )

@@ -169,24 +169,61 @@ define(["isolate"], (Isolate)->
     mockStateRegistry
   )
 
+  Isolate.mapAsFactory("state/FleetAsset", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+    mockConstructedFA = JsMockito.mock(actual)
+    switch requestingModulePath
+
+      when "UI/PlayAreaViexw"
+        mockFleetAsset = ()->
+          mockConstructedFA
+      else
+        mockFleetAsset = actual
+    window.mockLibrary[requestingModulePath]["state/FleetAsset"]=mockFleetAsset
+    mockFleetAsset
+  )
+
   Isolate.mapAsFactory("UI/BaseViewModelCollection", (actual, modulePath, requestingModulePath)->
     if (!window.mockLibrary[requestingModulePath])
       window.mockLibrary[requestingModulePath] = {}
-    mockConstructedBVMC =
-      watch:JsMockito.mockFunction()
-
+    mockConstructedBVMC = {}
     switch requestingModulePath
 
       when "UI/PlayAreaView"
-        mockBaseViewModelCollection = ()->
+        mockBaseViewModelCollection = (data)->
+          mockConstructedBVMC = new Backbone.Collection(data)
+          mockConstructedBVMC.watch = JsMockito.mockFunction()
+          JsMockito.when(mockConstructedBVMC.watch)(JsHamcrest.Matchers.anything()).then((collections)->
+            mockConstructedBVMC.watchedCollections = collections
+          )
           mockConstructedBVMC
 
       else
         mockBaseViewModelCollection = actual
-
-
     window.mockLibrary[requestingModulePath]["UI/PlayAreaView"]=mockBaseViewModelCollection
     mockBaseViewModelCollection
+  )
+
+  Isolate.mapAsFactory("UI/FleetAsset2DModel", (actual, modulePath, requestingModulePath)->
+    if (!window.mockLibrary[requestingModulePath])
+      window.mockLibrary[requestingModulePath] = {}
+    mockConstructedFA2DM = JsMockito.mock(actual)
+    JsMockito.when(mockConstructedFA2DM.get)(JsHamcrest.Matchers.anything()).then(
+      (att)->
+        switch att
+          when "uuid" then mockConstructedFA2DM.uuid
+    )
+    switch requestingModulePath
+      when "UI/PlayAreaView"
+        mockFleetAsset2DModel = (option)->
+          mockConstructedFA2DM.uuid = option?.model?.get("uuid")
+          mockConstructedFA2DM
+
+      else
+        mockFleetAsset2DModel = actual
+    window.mockLibrary[requestingModulePath]["UI/PlayAreaView"]=mockFleetAsset2DModel
+    mockFleetAsset2DModel
   )
 
   Isolate.mapAsFactory("UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
