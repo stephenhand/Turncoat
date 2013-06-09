@@ -1,11 +1,14 @@
-define(['rivets','lib/turncoat/Game', 'lib/turncoat/Factory', 'text!data/testInitialState.txt', 'text!data/config.txt'], (rivets, Game, Factory, testInitialState, configText)->
+define(['rivets','lib/turncoat/Game', 'lib/turncoat/Factory', 'UI/ManOWarTableTopView', 'text!data/testInitialState.txt', 'text!data/config.txt'], (rivets, Game, Factory, ManOWarTableTopView, testInitialState, configText)->
     App =
         start:()->
-
             @game = new Game()
             @game.loadState(testInitialState)
+            @render()
 
         render:()->
+            @rootView = new ManOWarTableTopView(gameState:@game.state)
+            @rootView.render()
+
         configureRivets:()->
             rivets.configure(
                 prefix:"rv"

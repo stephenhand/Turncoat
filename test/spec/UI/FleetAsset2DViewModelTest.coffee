@@ -1,15 +1,14 @@
 define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
   suite("FleetAsset2DViewModel", ()->
     suite("constructor", ()->
-      mockModel = {
+      mockModel =
+        id:"MOCKMODEL_UUID"
         get:JsMockito.mockFunction()
         position:{}
-      }
+
       JsMockito.when(mockModel.get)(JsHamcrest.Matchers.anything()).then(
         (att)->
           switch att
-            when "uuid"
-              "MOCKMODEL_UUID"
             when "position"
               {}
       )
@@ -39,7 +38,7 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
       )
       test("uuidSetFromModel", ()->
         fa2dvm = new FleetAsset2DViewModel(model:mockModel)
-        chai.assert.equal(fa2dvm.get("uuid"),"MOCKMODEL_UUID")
+        chai.assert.equal(fa2dvm.get("modelId"),"MOCKMODEL_UUID")
       )
       teardown(()->
         FleetAsset2DViewModel.prototype.watch = origWatch

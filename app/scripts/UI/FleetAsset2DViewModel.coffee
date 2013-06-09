@@ -1,7 +1,7 @@
 define(['underscore', 'backbone', 'UI/BaseViewModelItem'], (_, Backbone, BaseViewModelItem)->
   class FleetAsset2DViewModel extends BaseViewModelItem
     initialize:(options)->
-      if (options.model?)
+      if (options?.model?)
         @watch([
           model:options.model
           attributes:[
@@ -15,7 +15,7 @@ define(['underscore', 'backbone', 'UI/BaseViewModelItem'], (_, Backbone, BaseVie
             "bearing"
           ]
         ])
-        @set("uuid", options.model.get("uuid"))
+        @set("modelId", options.model.id)
 
     updateFromFleetAsset:()->
 

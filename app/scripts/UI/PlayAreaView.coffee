@@ -9,7 +9,7 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/BaseViewModelCollection', '
     createModel:()->
       ships = new BaseViewModelCollection()
       ships.watch(@gameState.searchChildren((item)->
-          item instanceOf(Backbone.Collection) && _.find(item,(collItem)->
+        (item instanceof Backbone.Collection) && _.find(item,(collItem)->
             collItem instanceof FleetAsset
           )
         )
@@ -25,19 +25,19 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/BaseViewModelCollection', '
       for watchedCollection in @model.ships?.watchedCollections or []
         for fleetAsset, watchedCollectionCounter in watchedCollection.models when fleetAsset instanceof FleetAsset
           VM = @model.ships.find((ship)->
-            ship.get("uuid") is fleetAsset.get("uuid")
+            ship.get("modelId") is fleetAsset.id
           )
           if !VM? then @model.ships.push(new FleetAsset2DViewModel(model:fleetAsset))
-          processedShips.push(fleetAsset.get("uuid"))
+          processedShips.push(fleetAsset.id)
 
       #remove surplus ships
       processedCounter = 0
       shipCounter = 0
       while shipCounter < @model.ships.length
-        if (processedCounter >= processedShips.length || processedShips[processedCounter] != @model.ships.at(shipCounter).get("uuid"))
+        if (!_.find(processedShips, (ship)=>@model.ships.at(shipCounter).get("modelId")))
           @model.ships.remove(@model.ships.at(shipCounter))
         else shipCounter++
-        processedCounter++
+
 
 
 

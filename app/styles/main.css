@@ -1,1 +1,9 @@
 /* Will be compiled down to a single stylesheet with your sass files */
+#playArea .playAreaLayer {
+    float:left;
+}
+.playAreaLayer {
+    position:absolute;
+    top:0px;
+    left:0px
+}

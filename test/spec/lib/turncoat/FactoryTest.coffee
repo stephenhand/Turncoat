@@ -25,14 +25,14 @@ define(["isolate!lib/turncoat/Factory"], (Factory)->
         testObj = Factory.buildStateMarshaller("testStateMarshaller")
         chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
       )
-      test("registeringMakesBuildStateMarshallerWithIncorrectKeyStillThrow", ()->
+      test("registeringMakesBuildStateMarshallerWithIncorrectKeyReturnsNull", ()->
         #implement test
         class testStateMarshaller
           constructor:()->
             @mockProperty="MOCK_VALUE"
 
         Factory.registerStateMarshaller("testStateMarshaller",testStateMarshaller)
-        chai.assert.throws(()->
+        chai.assert.isNull(
           Factory.buildStateMarshaller("anotherStateMarshaller",testStateMarshaller)
         )
       )

@@ -9,7 +9,11 @@ define(["underscore"], (_)->
       #opts passed in for default of this type
       opts = key
       key = undefined
-    new factory[type][key ? (factory.defaults[type])](opts)
+    fc =factory[type][key ? (factory.defaults[type])]
+    if fc?
+      new fc(opts)
+    else
+      null
 
   setDefaultFactory = (factory, type, key)->
     factory.defaults[type] = key

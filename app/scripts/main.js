@@ -9,7 +9,7 @@ require.config({
     backbone: 'vendor/backbone',
     rivets: 'vendor/rivets',
     text: 'vendor/text',
-     uuid:'vendor/uuid',
+    uuid:'vendor/uuid',
     sprintf: 'vendor/sprintf',
     templates : '../templates',
     data : '../data'
@@ -23,7 +23,7 @@ require.config({
           exports:"Backbone"
       },
       'rivets':{
-          exports:"Rivets"
+          exports:"rivets"
       },
       'sprintf':{
           exports:"sprintf"
@@ -35,9 +35,9 @@ require.config({
 require(['app',
          'backbone',
          'lib/marshallers/JSONMarshaller',
-        'state/ManOWarGameState',
-        'UI/RivetsExtensions'
-], function(app, backbone, jsonMarshaller, player, fleetAsset) {
+         'state/ManOWarGameState',
+         'UI/RivetsExtensions'
+], function(app, backbone, jsonMarshaller, state, rivetsExt) {
   // use app here
   app.start();
 });

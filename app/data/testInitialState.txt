@@ -1,5 +1,5 @@
 {
-    "_type":"ManOWarState",
+    "_type":"ManOWarGameState",
     "players":[
         {
             "_type":"Player",
@@ -8,9 +8,6 @@
                 {
                     "_type":"FleetAsset",
                     "movementTypes":[
-                        {
-                            "_type":""
-                        }
                     ],
                     "position":{
                         "_type":"AssetPosition",

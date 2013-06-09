@@ -10,12 +10,12 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone"], (GameStateModel, Bac
     suite("constructor", ()->
       test("generatesValidUuidIfNotSupplied", ()->
         gsm = new GameStateModel()
-        chai.assert.isString(gsm.get("uuid"))
-        chai.assert.isTrue(/[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[ab89][a-f0-9]{3}-[a-f0-9]{12}/i.test(gsm.get("uuid")))
+        chai.assert.isString(gsm.id)
+        chai.assert.isTrue(/[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[ab89][a-f0-9]{3}-[a-f0-9]{12}/i.test(gsm.id))
       )
       test("doesntOverwriteSuppliedUUIDEvenIfNonCompliant", ()->
-        gsm = new GameStateModel(uuid:"MOCK_NON_COMPLIANT_UUID")
-        chai.assert.equal(gsm.get("uuid"), "MOCK_NON_COMPLIANT_UUID")
+        gsm = new GameStateModel(id:"MOCK_NON_COMPLIANT_UUID")
+        chai.assert.equal(gsm.id, "MOCK_NON_COMPLIANT_UUID")
       )
     )
     suite("fromString", ()->
