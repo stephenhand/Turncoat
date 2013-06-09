@@ -20,10 +20,12 @@ define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, 
   GameStateModel = Backbone.Model.extend(
     initialize:(attributes, options)->
       GameStateModel.marshaller ?= Factory.buildStateMarshaller()
-      if !@get("uuid")?
-        @set("uuid", UUID())
+      if !@id?
+        @id=UUID()
 
     toString:()->
+      if (!GameStateModel.marshaller?)
+        throw new Error("State Marshaller not state, set a default state marshaller before constructing GSMs youi plan to marshal.")
       GameStateModel.marshaller.marshalState(@)
 
     searchChildren:(checker, deep)->
@@ -53,8 +55,9 @@ define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, 
   )
 
   GameStateModel.fromString = (state)->
+    console.log("GameStateModel.fromString")
     GameStateModel.marshaller ?= Factory.buildStateMarshaller()
-    @marshaller.unmarshalState(state)
+    GameStateModel.marshaller.unmarshalState(state)
 
 
   GameStateModel
