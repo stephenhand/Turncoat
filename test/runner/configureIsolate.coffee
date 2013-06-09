@@ -8,12 +8,13 @@ define(["isolate"], (Isolate)->
     )
   )
   window.mockLibrary = {};
+  window.mockLibrary.actuals?={}
 
   mapAndRecord = (actual, path, requestingModulePath, mapFunc)->
-    if (!window.mockLibrary[requestingModulePath])
-      window.mockLibrary[requestingModulePath] = {}
+    window.mockLibrary[requestingModulePath] ?= {}
     mock = mapFunc()
     window.mockLibrary[requestingModulePath][path]=mock
+    window.mockLibrary.actuals[path]?=actual
     mock
 
   Isolate.mapAsFactory("jquery", (actual, modulePath, requestingModulePath)->
@@ -95,11 +96,10 @@ define(["isolate"], (Isolate)->
         when "lib/turncoat/Game"
           mockGameStateModel = ()->
             mockConstructedGameStateModel
+            mockGameStateModel.fromString = JsMockito.mockFunction()
         else
           mockGameStateModel = actual
 
-
-      mockGameStateModel.fromString = JsMockito.mockFunction()
       mockGameStateModel
     )
   )
@@ -207,7 +207,9 @@ define(["isolate"], (Isolate)->
 
         when "App"
           mockManOWarTableTopView = ()->
-            JsMockito.mock(actual)
+            mmttv = JsMockito.mock(actual)
+            mmttv.mockId = "MOCK_MANOWARTABLETOPVIEW"
+            mmttv
         else
           mockManOWarTableTopView = actual
 

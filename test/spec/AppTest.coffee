@@ -17,10 +17,10 @@ define(["isolate!App"],(App)->
     mocks = window.mockLibrary["App"];
 
     suite("App", ()->
-      App.start()
-      suite("start", ()->
+      App.createGame()
+      suite("createGame", ()->
         test("initialises", ()->
-          App.start()
+          App.createGame()
           chai.assert.equal(App.game, mocks["lib/turncoat/Game"]())
         )
 
@@ -36,6 +36,16 @@ define(["isolate!App"],(App)->
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.unsubscribe)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.read)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.publish)
+        )
+      )
+      suite("render", ()->
+        test("setsRootViewToManOWarTableTopView", ()->
+          App.render()
+          chai.assert.instanceOf(App.rootView, window.mockLibrary.actuals["UI/ManOWarTableTopView"])
+        )
+        test("callsRenderOnRootView", ()->
+          App.render()
+          JsMockito.verify(App.rootView.render)()
         )
       )
     )

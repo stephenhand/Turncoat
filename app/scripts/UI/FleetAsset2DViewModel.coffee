@@ -8,7 +8,7 @@ define(['underscore', 'backbone', 'UI/BaseViewModelItem'], (_, Backbone, BaseVie
             "position"
           ]
         ,
-          model:options.model.position
+          model:options.model.get("position")
           attributes:[
             "x"
             "y"

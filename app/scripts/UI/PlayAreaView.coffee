@@ -9,7 +9,7 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/BaseViewModelCollection', '
     createModel:()->
       ships = new BaseViewModelCollection()
       ships.watch(@gameState.searchChildren((item)->
-        (item instanceof Backbone.Collection) && _.find(item,(collItem)->
+        (item instanceof Backbone.Collection) && item.find((collItem)->
             collItem instanceof FleetAsset
           )
         )

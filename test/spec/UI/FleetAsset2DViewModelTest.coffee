@@ -4,7 +4,6 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
       mockModel =
         id:"MOCKMODEL_UUID"
         get:JsMockito.mockFunction()
-        position:{}
 
       JsMockito.when(mockModel.get)(JsHamcrest.Matchers.anything()).then(
         (att)->
