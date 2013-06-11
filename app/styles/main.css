@@ -7,3 +7,13 @@
     top:0px;
     left:0px
 }
+
+.view-model-item{
+    position:absolute
+}
+
+.fleet-asset-2d{
+    border:solid 1px black;
+    width:30px;
+    height:60px
+}

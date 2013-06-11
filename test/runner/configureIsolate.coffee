@@ -75,6 +75,20 @@ define(["isolate"], (Isolate)->
     )
   )
 
+  Isolate.mapAsFactory("App", (actual, modulePath, requestingModulePath)->
+    mapAndRecord(actual, modulePath, requestingModulePath, ()->
+
+      switch requestingModulePath
+        when "UI/FleetAsset2DViewModel"
+          mockApp =
+            gameState:
+              searchGameStateModels:(func)->
+                func(
+                  id:"MOCKMODEL_UUID"
+                )
+      mockApp
+    )
+  )
   Isolate.mapAsFactory("lib/turncoat/Game", (actual, modulePath, requestingModulePath)->
     mapAndRecord(actual, modulePath, requestingModulePath, ()->
       mockConstructedGame =
