@@ -15,6 +15,17 @@
                         "y":100,
                         "bearing":45
                     }
+                },
+                {
+                    "_type":"FleetAsset",
+                    "movementTypes":[
+                    ],
+                    "position":{
+                        "_type":"AssetPosition",
+                        "x":155,
+                        "y":110,
+                        "bearing":45
+                  }
                 }
             ]
         }
