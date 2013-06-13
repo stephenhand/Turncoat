@@ -36,6 +36,23 @@ define(["isolate!App"],(App)->
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.unsubscribe)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.read)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.publish)
+
+        )
+        test("rotateCssFormatterSet", ()->
+          App.configureRivets()
+          chai.assert.isFunction(mocks.rivets.formatters.rotateCss)
+        )
+        test("style_topBinderSet",()->
+          App.configureRivets()
+          chai.assert.isFunction(mocks.rivets.binders.style_top)
+        )
+        test("style_leftBinderSet",()->
+          App.configureRivets()
+          chai.assert.isFunction(mocks.rivets.binders.style_left)
+        )
+        test("style_transformBinderSet",()->
+          App.configureRivets()
+          chai.assert.isFunction(mocks.rivets.binders.style_transform)
         )
       )
       suite("render", ()->

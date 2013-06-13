@@ -58,6 +58,8 @@ define(["isolate"], (Isolate)->
               rivetConfig = opts
             getRivetConfig:()->
               rivetConfig
+            binders:{}
+            formatters:{}
 
         when "UI/BaseView"
           stubRivets =
@@ -80,12 +82,7 @@ define(["isolate"], (Isolate)->
 
       switch requestingModulePath
         when "UI/FleetAsset2DViewModel"
-          mockApp =
-            gameState:
-              searchGameStateModels:(func)->
-                func(
-                  id:"MOCKMODEL_UUID"
-                )
+          mockApp=actual
       mockApp
     )
   )

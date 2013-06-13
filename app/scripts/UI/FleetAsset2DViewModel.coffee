@@ -17,14 +17,19 @@ define(['underscore', 'backbone', 'UI/BaseViewModelItem', 'App'], (_, Backbone, 
           ]
         ])
         @set("modelId", options.model.id)
-        @set("classList", @get("classList")+" fleet-asset-2d"
-        @updateFromFleetAsset())
+        @set("classList", @get("classList")+" fleet-asset-2d")
+        @updateFromFleetAsset()
+
 
     updateFromFleetAsset:()->
-      model = App.gameState.searchGameStateModels((model)=>
+      models = window.App.game.state.searchGameStateModels((model)=>
         @get("modelId") is model.id
       )
-      pos = model.get("position")
+      if (models.length)
+        pos = models[0].get("position")
+        @set("xpx",pos.get("x")+"px")
+        @set("ypx",pos.get("y")+"px")
+        @set("transformDegrees",pos.get("bearing"))
 
     #Executed in owner object context
     onModelUpdated:(model)->
