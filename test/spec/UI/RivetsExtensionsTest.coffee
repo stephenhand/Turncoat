@@ -1,3 +1,16 @@
+require(["isolate","isolateHelper"], (Isolate, Helper)->
+
+  Isolate.mapAsFactory("rivets","UI/RivetsExtensions", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      stubRivets =
+        binders:{}
+        formatters:{}
+      stubRivets
+    )
+  )
+)
+
+
 define(['isolate!UI/RivetsExtensions'], (RivetsExtensions)->
   suite("RivetsExtensions", ()->
     suite("binders", ()->

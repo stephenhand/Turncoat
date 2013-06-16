@@ -1,3 +1,5 @@
+
+
 define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
   suite("FleetAsset2DViewModel", ()->
     FleetAsset2DViewModel.__oldApp

@@ -1,4 +1,35 @@
+require(["isolate","isolateHelper"], (Isolate, Helper)->
 
+  Isolate.mapAsFactory("lib/2D/PolygonTools","UI/BaseView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockPolygonTools =
+        pointInPoly:(poly,x,y)->
+          mockPolygonTools
+    )
+  )
+
+
+  Isolate.mapAsFactory("rivets","UI/BaseView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      stubRivets =
+        bind:JsMockito.mockFunction()
+      JsMockito.when(stubRivets.bind)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
+        (selector, model)->
+          id:"MOCK_RIVETS_VIEW"
+          selector:selector
+      )
+      stubRivets
+    )
+  )
+
+  Isolate.mapAsFactory("lib/2D/PolygonTools","UI/BaseView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockPolygonTools =
+        pointInPoly:(poly,x,y)->
+          mockPolygonTools
+    )
+  )
+)
 
 define(["isolate!UI/BaseView"], (BaseView)->
     #BaseViewTest.coffee test file    

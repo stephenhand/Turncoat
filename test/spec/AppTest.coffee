@@ -1,18 +1,35 @@
-#rivetConfig = null
-#stubRivets =
-#  configure:(opts)->
-#    rivetConfig = opts
-#rivets = stubRivets
-#isolate.map("rivets",(actual, modulePath, requestingModulePath)->
-#    stubRivets
-#)
+require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("lib/turncoat/Game","App", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockConstructedGame =
+        loadState:(state)->
+      mockGame = ()->
+        mockConstructedGame
+      mockGame
+    )
+  )
+  Isolate.mapAsFactory("rivets","App", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      rivetConfig = null
+      stubRivets =
+        configure:(opts)=>
+          rivetConfig = opts
+        getRivetConfig:()->
+          rivetConfig
+        binders:{}
+        formatters:{}
+      stubRivets
+    )
+  )
+  Isolate.mapAsFactory("lib/2D/PolygonTools","App", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockPolygonTools =
+        pointInPoly:(poly,x,y)->
+      mockPolygonTools
+    )
+  )
+)
 
-
-
-
-
-
-#AppTest.coffee
 define(["isolate!App"],(App)->
     mocks = window.mockLibrary["App"];
 

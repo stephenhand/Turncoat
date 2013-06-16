@@ -1,3 +1,36 @@
+require(["isolate","isolateHelper"], (Isolate, Helper)->
+
+  Isolate.mapAsFactory("UI/FleetAsset2DViewModel","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockFleetAsset2DModel = (option)->
+        mockConstructedFA2DM = JsMockito.mock(actual)
+        JsMockito.when(mockConstructedFA2DM.get)(JsHamcrest.Matchers.anything()).then(
+          (att)->
+            switch(att)
+              when "modelId"
+                mockConstructedFA2DM.modelId
+        )
+        mockConstructedFA2DM.modelId = option?.model.id
+        mockConstructedFA2DM.cid=option?.model.id
+        mockConstructedFA2DM
+      mockFleetAsset2DModel
+    )
+  )
+  Isolate.mapAsFactory("UI/BaseViewModelCollection","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockBaseViewModelCollection = (data)->
+        mockConstructedBVMC = new Backbone.Collection(data)
+        mockConstructedBVMC.watch = JsMockito.mockFunction()
+        JsMockito.when(mockConstructedBVMC.watch)(JsHamcrest.Matchers.anything()).then((collections)->
+          mockConstructedBVMC.watchedCollections = collections
+        )
+        mockConstructedBVMC
+      mockBaseViewModelCollection
+    )
+  )
+)
+
+
 define(['isolate!UI/PlayAreaView', 'lib/turncoat/GameStateModel'], (PlayAreaView, GameStateModel )->
   suite("PlayAreaView", ()->
     mocks = mockLibrary["UI/PlayAreaView"]

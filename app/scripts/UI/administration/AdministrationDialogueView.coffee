@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', "jquery"], (_, Backbone, $)->
+define(['underscore', 'backbone', "jquery", "UI/BaseView","text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, templateText)->
   class AdministrationDialogueView extends BaseView
     initialize:(options)->
       options ?={}

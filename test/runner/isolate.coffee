@@ -69,7 +69,7 @@
     # Convert a real module dependency into the appropriate
     # standin implementation.
     processDependency: (path, actual, parent_module_path)=>
-      handler = @findMatchingHandler path, actual
+      handler = @findMatchingHandler path, actual,parent_module_path
       if (!handler? && @defaultMock = 'ACTUAL')
         handler = (path, actual, parent_module_path)=>
           actual
@@ -79,10 +79,16 @@
 
     # Find the appropriate handler configured for a
     # particular module.
-    findMatchingHandler: (path, actual)=>
+    findMatchingHandler: (path, actual, parent_module_path)=>
+      parentlessHandler = null
       for rule in @rules
-        return rule.handler if rule.matcher.test path
-      return @typeHandlers[getType(actual).toLowerCase()]
+        if rule.matcher.test path
+          if !rule.parent_module_matcher?
+            parentlessHandler = rule.handler
+          else
+            return rule.handler if rule.parent_module_matcher.test parent_module_path
+
+      return parentlessHandler ? @typeHandlers[getType(actual).toLowerCase()]
 
     #### Node.js / CommonJs
     # Trigger isolation of a particular module.
@@ -241,10 +247,19 @@
         @map(path, handler) for own path, handler of args[0]
       else
         path = args[0]
-        handler = args[1]
-        @rules.unshift
-          matcher: getMatcherForPath path
-          handler: if handler instanceof IsolationFactory then handler.factory else -> handler
+        if args.length>2
+          parent_module_path = args[1]
+          handler = args[2]
+          @rules.unshift
+            matcher: getMatcherForPath path
+            handler: if handler instanceof IsolationFactory then handler.factory else -> handler
+            parent_module_matcher:getMatcherForPath parent_module_path
+        else
+          handler = args[1]
+          @rules.unshift
+
+            matcher: getMatcherForPath path
+            handler: if handler instanceof IsolationFactory then handler.factory else -> handler
       return this
 
     mapType: (args...)=>
@@ -275,10 +290,18 @@
             @mapAsFactory path, factory
       else
         path = args[0]
-        factory = args[1]
-        @rules.unshift
-          matcher: getMatcherForPath path
-          handler: factory
+        if args.length>2
+          parent_module_path = args[1]
+          factory = args[2]
+          @rules.unshift
+            matcher: getMatcherForPath path
+            handler: factory
+            parent_module_matcher:getMatcherForPath parent_module_path
+        else
+          factory = args[1]
+          @rules.unshift
+            matcher: getMatcherForPath path
+            handler: factory
       return this
 
     isolateComplete: (handler)->
