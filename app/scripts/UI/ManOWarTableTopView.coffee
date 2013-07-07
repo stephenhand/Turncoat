@@ -5,16 +5,20 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'jqModal', '
       options.template = templateText
       options.rootSelector = "#gameRoot"
       super(options)
-      @playAreaView = new PlayAreaView(
-        gameState:options.gameState
-
-      )
+      if (options.gameState)
+        @createPlayAreaView(options.gameState)
 
     render:()->
       super()
       @playAreaView.render()
 
     createModel:()->
+
+    createPlayAreaView:(state)->
+      @playAreaView = new PlayAreaView(
+        gameState:state
+      )
+
   ManOWarTableTopView
 )
 

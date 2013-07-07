@@ -1,4 +1,8 @@
 /* Will be compiled down to a single stylesheet with your sass files */
+.dialog-container{
+    display:none
+}
+
 #playArea .playAreaLayer {
     float:left;
 }

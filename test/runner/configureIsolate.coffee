@@ -124,20 +124,5 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
       mockManOWarTableTopView
     )
   )
-
-  Isolate.mapAsFactory("UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      switch requestingModulePath
-
-        when "UI/ManOWarTableTopView"
-          mockPlayAreaView = ()->
-            mockId:"MOCK_PLAYAREAVIEW"
-
-        else
-          mockPlayAreaView = actual
-
-      mockPlayAreaView
-    )
-  )
   null
 )

@@ -1,5 +1,13 @@
-define(['rivets','lib/turncoat/Game', 'lib/turncoat/Factory', 'UI/ManOWarTableTopView', 'text!data/testInitialState.txt', 'text!data/config.txt'], (rivets, Game, Factory, ManOWarTableTopView, testInitialState, configText)->
+define(['backbone','rivets', 'jqModal','lib/turncoat/Game', 'lib/turncoat/Factory', 'UI/ManOWarTableTopView', 'text!data/testInitialState.txt', 'text!data/config.txt'], (Backbone, rivets, modal, Game, Factory, ManOWarTableTopView, testInitialState, configText)->
     window.App =
+      router:Backbone.Router.extend(
+        routes:
+          "/":"rootStart"
+      )
+
+      rootStart:()->
+          @trigger("")
+
       createGame:()->
           @game = new Game()
           @game.loadState(testInitialState)
@@ -32,6 +40,7 @@ define(['rivets','lib/turncoat/Game', 'lib/turncoat/Factory', 'UI/ManOWarTableTo
           el.style.msTransform=value
           el.style.webkitTransform=value
 
+    _.extend(window.App, Backbone.Events)
 
     config = JSON.parse(configText)
     Factory.setDefaultMarshaller(config.defaultMarshaller)
