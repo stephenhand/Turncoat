@@ -1,4 +1,4 @@
-define(["underscore", "backbone", "rivets", "jquery", "vendor/jqModal"], (_, Backbone, rivets, $)->
+define(["underscore", "backbone", "rivets", "jquery"], (_, Backbone, rivets, $)->
     BaseView=Backbone.View.extend(
       initialize: (options)->
         if options?

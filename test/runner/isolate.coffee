@@ -48,7 +48,7 @@
   class IsolationFactory
     constructor: (@factory)->
 
-      # The main class for Isolate
+    # The main class for Isolate
   class IsolationContext
 
     constructor: (@name = 'default')->
@@ -62,18 +62,16 @@
       # Consulted if no @rules match requested module.
       @typeHandlers = {}
 
-    # boostrap isolate into the module prototype
-    # if using require inside of node
-    #Object.getPrototypeOf(module).isolate = @isolate
+      # boostrap isolate into the module prototype
+      # if using require inside of node
+      if @env is 'commonjs'
+        that = this
+        Object.getPrototypeOf(module).isolate = (mod)-> that.require mod, this
 
     # Convert a real module dependency into the appropriate
     # standin implementation.
     processDependency: (path, actual, parent_module_path)=>
-      handler = @findMatchingHandler path, actual,parent_module_path
-      if (!handler? && @defaultMock = 'ACTUAL')
-        handler = (path, actual, parent_module_path)=>
-          actual
-
+      handler = @findMatchingHandler path, actual, parent_module_path
       throw Error "Failed to generate fake for module [#{path}] of type [#{getType actual}] while isolating module [#{parent_module_path}]" unless handler?
       return handler actual, path, parent_module_path
 
@@ -84,16 +82,23 @@
       for rule in @rules
         if rule.matcher.test path
           if !rule.parent_module_matcher?
-            parentlessHandler = rule.handler
+            parentlessHandler ?= rule.handler
           else
             return rule.handler if rule.parent_module_matcher.test parent_module_path
-
-      return parentlessHandler ? @typeHandlers[getType(actual).toLowerCase()]
+      return parentlessHandler if parentlessHandler?
+      typeHandler = @typeHandlers[getType(actual).toLowerCase()]
+      return typeHandler if typeHandler?
+      if @env is 'commonjs'
+        fakeModulePath = path.replace '.js', '.isolate-fake.js'
+        try fakeModule = require fakeModulePath
+        return fakeModule
 
     #### Node.js / CommonJs
     # Trigger isolation of a particular module.
     # `module.isolate 'some/module'`
-    require: (requested_module, context)=>
+    # - or -
+    # `isolate.require 'some/module', module`
+    require: (requested_module, context)->
 
       # The runtime context here is the requesting module, if called as
       # shown above.
@@ -200,31 +205,39 @@
             continue if modName in [requested_module, 'isolate']
             isolatedRequireCtx.defined[modName] = isolationCtx.processDependency modName, modVal, requested_module
 
-          # Remove the requested module from the secondary
-          # require context's cache.
-          delete isolatedRequireCtx.defined[requested_module]
+          dependencies = build_dependencies isolatedRequireCtx.defined
 
-          # Require the requested module using the secondary
-          # require context, so that it gets the standin
-          # implementations injected via the poisioned cache.
-          isolatedRequire [requested_module], (isolatedModule)=>
-            throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
+          reload = (done)->
+            # Remove the requested module from the secondary
+            # require context's cache.
+            undef requested_module
 
-            # Attach the standin dependencies to the `.dependencies`
-            # property.
-            isolatedModule.dependencies = build_dependencies isolatedRequireCtx.defined
+            # Require the requested module using the secondary
+            # require context, so that it gets the standin
+            # implementations injected via the poisioned cache.
+            isolatedRequire [requested_module], (isolatedModule)=>
+              throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
 
-            # Clear the main module cache so that modules will
-            # be re-isolated as needed
-            delete mainCtx.defined[key] for key in mainCtx.defined
-            #delete mainCtx.registry[key] for key in mainCtx.registry
+              # Attach the standin dependencies to the `.dependencies`
+              # property.
+              isolatedModule.dependencies = dependencies
+              reload_method_name = if isolatedModule.reload? then '_reload' else 'reload'
+              isolatedModule[reload_method_name] = reload
 
-            # Run any registered handlers
-            if isolationCtx.isolateCompleteHandlers?.length
-              handler isolatedModule for handler in isolationCtx.isolateCompleteHandlers
+              # Clear the main module cache so that modules will
+              # be re-isolated as needed
+              delete mainCtx.defined[key] for key in mainCtx.defined
+              #delete mainCtx.registry[key] for key in mainCtx.registry
 
-            # Pass the isolated module back to the requestor.
-            load isolatedModule
+              # Run any registered handlers
+              if isolationCtx.isolateCompleteHandlers?.length
+                handler isolatedModule for handler in isolationCtx.isolateCompleteHandlers
+
+              # Pass the isolated module back to the requestor.
+              done? isolatedModule
+
+          reload (isolatedModule)-> load isolatedModule
+
       catch err
         urlForException = "https://github.com/tnwinc/Isolate/wiki/Error:-An-error-occurred-while-preparing-to-isolate-the-module"
         err.message = "An error occurred while preparing to isolate the module: #{requested_module}\nFor more information, see #{urlForException}\nInner Exception:\n#{err.message}"
@@ -257,7 +270,6 @@
         else
           handler = args[1]
           @rules.unshift
-
             matcher: getMatcherForPath path
             handler: if handler instanceof IsolationFactory then handler.factory else -> handler
       return this
@@ -316,6 +328,7 @@
       ctx.isolateCompleteHandlers = this.isolateCompleteHandlers?.slice 0
       return ctx
 
+  IsolationContext.env = IsolationContext.prototype.env = if typeof exports is 'object' then 'commonjs' else 'amd'
   IsolationContext.contexts = {}
 
   return new IsolationContext

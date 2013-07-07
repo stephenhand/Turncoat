@@ -8,12 +8,12 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
     )
   )
 
-  setMocks = (jqm,actual)->
+  setMocks = (jqm,actual,requestingModulePath)->
     JsMockito.when(jqm.parent)().then(
       ()->
         mockJQueryObj = JsMockito.mock(actual)
-        if context?
-          window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.parent = mockJQueryObj
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodResults?=[]
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.parent = mockJQueryObj
         mockJQueryObj
     )
 
@@ -25,14 +25,14 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything()).then(
         (selector)=>
           mockJQueryObj = JsMockito.mock(actual)
-          setMocks(mockJQueryObj,actual)
+          setMocks(mockJQueryObj,actual,requestingModulePath)
           window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
           mockJQueryObj
       )
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
         (selector, context)=>
           mockJQueryObj = JsMockito.mock(actual)
-          setMocks(mockJQueryObj,actual)
+          setMocks(mockJQueryObj,actual,requestingModulePath)
           if context?
             window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
           else

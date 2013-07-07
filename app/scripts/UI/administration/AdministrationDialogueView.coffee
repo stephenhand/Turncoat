@@ -1,4 +1,8 @@
 define(['underscore', 'backbone', "jquery", "UI/BaseView","text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, templateText)->
+  setActiveTab=(tabElement)->
+    $(".administration-tab").toggleClass("active-tab",false)
+    $(tabElement).parent().toggleClass("active-tab",true)
+
   class AdministrationDialogueView extends BaseView
     initialize:(options)->
       options ?={}
@@ -7,11 +11,10 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView","text!templates/Admini
       super(options)
 
     events:
-      "click .tab-header" : "setActiveTab"
+      "click .tab-header" : "tabClicked"
 
-    setActiveTab:()->
-      $(".administration-tab").toggleClass("active-tab",false)
-      $(this).parent().toggleClass("active-tab",true)
+    tabClicked:()=>
+      setActiveTab(this)
 
   AdministrationDialogueView
 )
