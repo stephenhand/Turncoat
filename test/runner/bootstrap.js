@@ -18,6 +18,7 @@ require.config({
         hm: 'vendor/hm',
         esprima: 'vendor/esprima',
         jquery: 'vendor/jquery.min',
+        jqModal: 'vendor/jqModal',
         underscore: 'vendor/underscore',
         backbone: 'vendor/backbone',
         rivets: 'vendor/rivets',
@@ -46,7 +47,7 @@ require.config({
 
 require(["isolate","configureIsolate"], function(Isolate){
     window.isolate = Isolate;
-    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','BaseView',/text!.+/,/spec\/.*/])
+    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jqModal','BaseView',/text!.+/,/spec\/.*/])
 });
 
 

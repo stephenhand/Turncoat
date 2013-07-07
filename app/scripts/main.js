@@ -5,6 +5,7 @@ require.config({
     hm: 'vendor/hm',
     esprima: 'vendor/esprima',
     jquery: 'vendor/jquery.min',
+    jqModal: 'vendor/jqModal',
     underscore: 'vendor/underscore',
     backbone: 'vendor/backbone',
     rivets: 'vendor/rivets',

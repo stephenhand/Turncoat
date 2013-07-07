@@ -12,7 +12,7 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
     JsMockito.when(jqm.parent)().then(
       ()->
         mockJQueryObj = JsMockito.mock(actual)
-        window.mockLibrary[requestingModulePath].jqueryObjects.methodResults?=[]
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodResults ?= []
         window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.parent = mockJQueryObj
         mockJQueryObj
     )

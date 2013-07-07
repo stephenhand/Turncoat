@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'text!templates/ManOWarTableTop.html'], (_, Backbone, BaseView, PlayAreaView, templateText)->
+define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'jqModal', 'text!templates/ManOWarTableTop.html'], (_, Backbone, BaseView, PlayAreaView, modal, templateText)->
   class ManOWarTableTopView extends BaseView
     initialize: (options)->
       options?={}
