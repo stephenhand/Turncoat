@@ -12,6 +12,7 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
     JsMockito.when(jqm.parent)().then(
       ()->
         mockJQueryObj = JsMockito.mock(actual)
+        mockJQueryObj.jqm=JsMockito.mockFunction()
         window.mockLibrary[requestingModulePath].jqueryObjects.methodResults ?= []
         window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.parent = mockJQueryObj
         mockJQueryObj
@@ -25,6 +26,7 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything()).then(
         (selector)=>
           mockJQueryObj = JsMockito.mock(actual)
+          mockJQueryObj.jqm=JsMockito.mockFunction()
           setMocks(mockJQueryObj,actual,requestingModulePath)
           window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
           mockJQueryObj
@@ -32,6 +34,7 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
         (selector, context)=>
           mockJQueryObj = JsMockito.mock(actual)
+          mockJQueryObj.jqm=JsMockito.mockFunction()
           setMocks(mockJQueryObj,actual,requestingModulePath)
           if context?
             window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
@@ -39,13 +42,7 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
             window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
           mockJQueryObj
       )
-
-
-      switch requestingModulePath
-        when "UI/BaseView","UI/administration/AdministrationDialogueView"
-          mockJQuery
-        else
-          actual
+      mockJQuery
 
     )
   )

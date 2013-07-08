@@ -3,6 +3,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ()->
         mockId:"MOCK_PLAYAREAVIEW"
+        render:JsMockito.mockFunction()
     )
   )
 )
@@ -44,6 +45,24 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
           gameState:{}
         )
         chai.assert.equal("MOCK_PLAYAREAVIEW", MOWTTV.playAreaView.mockId)
+      )
+    )
+    suite("render", ()->
+      test("rendersPlayAreaView", ()->
+        MOWTTV = new ManOWarTableTopView()
+        MOWTTV.createPlayAreaView(
+          gameState:{}
+        )
+        MOWTTV.render()
+        JsMockito.verify(MOWTTV.playAreaView.render)()
+      )
+      test("initialisesAdministrationJQModal", ()->
+        MOWTTV = new ManOWarTableTopView()
+        MOWTTV.createPlayAreaView(
+          gameState:{}
+        )
+        MOWTTV.render()
+        JsMockito.verify(mocks.jqueryObjects["#administrationDialogue"].jqm)()
       )
     )
   )
