@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'jqModal', 'text!templates/ManOWarTableTop.html'], (_, Backbone, BaseView, PlayAreaView, modal, templateText)->
+define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'jqModal', 'UI/ManOWarTableTopViewModel', 'text!templates/ManOWarTableTop.html'], (_, Backbone, BaseView, PlayAreaView, modal, ManOWarTableTopViewModel, templateText)->
   class ManOWarTableTopView extends BaseView
     initialize: (options)->
       options?={}
@@ -13,6 +13,9 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/PlayAreaView', 'jqModal', '
       @playAreaView.render()
 
     createModel:()->
+      @model = new ManOWarTableTopViewModel(
+        administrationDialogueActive:false
+      )
 
     createPlayAreaView:(state)->
       @playAreaView = new PlayAreaView(

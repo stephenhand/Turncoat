@@ -41,7 +41,5 @@ require(['app',
 ], function(app, backbone, jsonMarshaller, state, rivetsExt) {
   // use app here
 
-  app.configureRivets();
-  app.createGame();
-  app.render();
+  app.initialise();
 });

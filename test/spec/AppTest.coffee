@@ -28,6 +28,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       mockPolygonTools
     )
   )
+  Isolate.mapAsFactory("backbone","App", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      actual.history.start=JsMockito.mockFunction()
+      actual
+    )
+  )
 )
 
 define(["isolate!App"],(App)->
@@ -36,19 +42,19 @@ define(["isolate!App"],(App)->
     suite("App", ()->
       App.createGame()
       suite("createGame", ()->
-        test("initialises", ()->
+        test("setsState", ()->
           App.createGame()
           chai.assert.equal(App.game, mocks["lib/turncoat/Game"]())
         )
 
       )
-      suite("configureRivets",()->
+      suite("initialise",()->
         test("setsPrefix", ()->
-          App.configureRivets()
+          App.initialise()
           chai.assert.equal(mocks.rivets.getRivetConfig().prefix, "rv")
         )
         test("setsUpAdapter", ()->
-          App.configureRivets()
+          App.initialise()
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.subscribe)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.unsubscribe)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.read)
@@ -56,20 +62,36 @@ define(["isolate!App"],(App)->
 
         )
         test("rotateCssFormatterSet", ()->
-          App.configureRivets()
+          App.initialise()
           chai.assert.isFunction(mocks.rivets.formatters.rotateCss)
         )
         test("style_topBinderSet",()->
-          App.configureRivets()
+          App.initialise()
           chai.assert.isFunction(mocks.rivets.binders.style_top)
         )
         test("style_leftBinderSet",()->
-          App.configureRivets()
+          App.initialise()
           chai.assert.isFunction(mocks.rivets.binders.style_left)
         )
         test("style_transformBinderSet",()->
-          App.configureRivets()
+          App.initialise()
           chai.assert.isFunction(mocks.rivets.binders.style_transform)
+        )
+      )
+      suite("launch", ()->
+        test("parameterless_triggersGameDataRequired", ()->
+          App.trigger = JsMockito.mockFunction()
+          App.initialise()
+          App.launch()
+          JsMockito.verify(App.trigger)("gameDataRequired")
+
+        )
+        test("withGameId_createsGameFromState", ()->
+          App.trigger = JsMockito.mockFunction()
+          App.initialise()
+          App.launch("MOCK_GAME")
+          chai.assert.equal(App.game, mocks["lib/turncoat/Game"]())
+
         )
       )
       suite("render", ()->

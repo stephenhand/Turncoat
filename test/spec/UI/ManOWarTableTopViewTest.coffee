@@ -28,6 +28,15 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
         chai.assert.equal("MOCK_PLAYAREAVIEW", MOWTTV.playAreaView.mockId)
       )
     )
+    suite("createModel",()->
+      test("setsAdministrationDialogueActiveToFalse", ()->
+        MOWTTV = new ManOWarTableTopView(
+          gameState:{}
+        )
+        MOWTTV.createModel()
+        chai.assert.equal(MOWTTV.model.get("administrationDialogueActive"),false)
+      )
+    )
     suite("createPlayAreaView", ()->
       test("constructsPlayAreaView", ()->
         MOWTTV = new ManOWarTableTopView()
