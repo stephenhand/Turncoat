@@ -16,6 +16,8 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView","text!templates/Admini
     tabClicked:()=>
       setActiveTab(this)
 
+    createModel:()->
+
   AdministrationDialogueView
 )
 

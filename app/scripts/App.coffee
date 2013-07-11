@@ -33,9 +33,10 @@ define(['backbone','rivets', 'jqModal','lib/turncoat/Game', 'lib/turncoat/Factor
     launch:(gameIdentifier)=>
       if (gameIdentifier?)
         window.App.createGame()
-        window.App.render()
-      else
+      window.App.render()
+      if (!gameIdentifier?)
         window.App.trigger("gameDataRequired")
+
 
     createGame:()->
       @game = new Game()

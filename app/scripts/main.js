@@ -33,13 +33,13 @@ require.config({
 
 });
  
-require(['app',
+require(['App',
          'backbone',
          'lib/marshallers/JSONMarshaller',
          'state/ManOWarGameState',
          'UI/RivetsExtensions'
-], function(app, backbone, jsonMarshaller, state, rivetsExt) {
+], function(App, backbone, jsonMarshaller, state, rivetsExt) {
   // use app here
 
-  app.initialise();
+  App.initialise();
 });
