@@ -1,4 +1,4 @@
-define(['backbone','rivets', 'jqModal','lib/turncoat/Game', 'lib/turncoat/Factory', 'UI/ManOWarTableTopView', 'text!data/testInitialState.txt', 'text!data/config.txt'], (Backbone, rivets, modal, Game, Factory, ManOWarTableTopView, testInitialState, configText)->
+define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/ManOWarTableTopView', 'text!data/config.txt'], (Backbone, rivets, modal, AppState, Factory, ManOWarTableTopView, configText)->
   configureRivets=()->
     rivets.configure(
       prefix:"rv"
@@ -23,7 +23,7 @@ define(['backbone','rivets', 'jqModal','lib/turncoat/Game', 'lib/turncoat/Factor
       el.style.msTransform=value
       el.style.webkitTransform=value
 
-  window.App =
+  AppHost =
     router:new Backbone.Router(
       routes:
         "":"launch"
@@ -31,36 +31,29 @@ define(['backbone','rivets', 'jqModal','lib/turncoat/Game', 'lib/turncoat/Factor
     )
 
     launch:(gameIdentifier)=>
+
       if (gameIdentifier?)
-        window.App.createGame()
-      window.App.render()
+        AppState.createGame()
+      AppHost.render()
       if (!gameIdentifier?)
-        window.App.trigger("gameDataRequired")
-
-
-    createGame:()->
-      @game = new Game()
-      @game.loadState(testInitialState)
+        AppState.trigger("gameDataRequired")
 
     render:()->
-      @rootView = new ManOWarTableTopView(gameState:@game.state)
+      @rootView = new ManOWarTableTopView(gameState:AppState.game?.state)
       @rootView.render()
 
     initialise:()->
       configureRivets()
-      window.App.router.on("route:launch", (gameIdentifier)->
-        window.App.launch(gameIdentifier)
-      )
+      @router.on("route:launch", (gameIdentifier)->
+        @launch(gameIdentifier)
+      ,@)
       try
         Backbone.history.start()
       catch error
 
-
-  _.extend(window.App, Backbone.Events)
-
   config = JSON.parse(configText)
   Factory.setDefaultMarshaller(config.defaultMarshaller)
 
-  window.App
+  AppHost
 
 )

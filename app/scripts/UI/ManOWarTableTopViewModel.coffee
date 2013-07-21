@@ -1,7 +1,7 @@
-define(["underscore", "backbone","App"], (_, Backbone, App)->
+define(["underscore", "exports", "backbone","AppState"], (_, require, Backbone, AppState)->
   ManOWarTableTopViewModel=Backbone.Model.extend(
     initialize: (options)->
-      App.on("gameDataRequired",()=>
+      AppState.on("gameDataRequired",()=>
         @set("administrationDialogueActive", true)
       )
   )

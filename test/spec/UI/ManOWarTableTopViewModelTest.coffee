@@ -1,9 +1,9 @@
-define(['isolate!UI/ManOWarTableTopViewModel', 'app'], (ManOWarTableTopViewModel, app)->
+define(['isolate!UI/ManOWarTableTopViewModel', 'AppState'], (ManOWarTableTopViewModel, AppState)->
   suite("ManOWarTableTopViewModel", ()->
     suite("initialize", ()->
       test("bindsAdministrationDialogueActiveToGameDataRequiredAppEvent", ()->
         MOWTTVM = new ManOWarTableTopViewModel()
-        app.trigger("gameDataRequired")
+        AppState.trigger("gameDataRequired")
         chai.assert.equal(MOWTTVM.get("administrationDialogueActive"), true)
       )
     )

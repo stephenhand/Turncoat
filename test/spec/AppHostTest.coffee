@@ -1,14 +1,6 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
-  Isolate.mapAsFactory("lib/turncoat/Game","App", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      mockConstructedGame =
-        loadState:(state)->
-      mockGame = ()->
-        mockConstructedGame
-      mockGame
-    )
-  )
-  Isolate.mapAsFactory("rivets","App", (actual, modulePath, requestingModulePath)->
+
+  Isolate.mapAsFactory("rivets","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       rivetConfig = null
       stubRivets =
@@ -21,40 +13,51 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       stubRivets
     )
   )
-  Isolate.mapAsFactory("lib/2D/PolygonTools","App", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("AppState","AppHost", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mock = JsMockito.mock(actual)
+      JsMockito.when(mock.createGame)().then(()->
+        @game =
+          state:{}
+      )
+      mock
+    )
+  )
+  Isolate.mapAsFactory("lib/2D/PolygonTools","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       mockPolygonTools =
         pointInPoly:(poly,x,y)->
       mockPolygonTools
     )
   )
-  Isolate.mapAsFactory("backbone","App", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("backbone","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       actual.history.start=JsMockito.mockFunction()
       actual
     )
   )
+  Isolate.mapAsFactory("UI/ManOWarTableTopView","AppHost", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockManOWarTableTopView = ()->
+        mmttv = JsMockito.mock(actual)
+        mmttv.mockId = "MOCK_MANOWARTABLETOPVIEW"
+        mmttv
+      mockManOWarTableTopView
+    )
+  )
 )
 
-define(["isolate!App"],(App)->
-    mocks = window.mockLibrary["App"];
+define(["isolate!AppHost"],(AppHost)->
+    mocks = window.mockLibrary["AppHost"]
 
-    suite("App", ()->
-      App.createGame()
-      suite("createGame", ()->
-        test("setsState", ()->
-          App.createGame()
-          chai.assert.equal(App.game, mocks["lib/turncoat/Game"]())
-        )
-
-      )
+    suite("AppHost", ()->
       suite("initialise",()->
         test("setsPrefix", ()->
-          App.initialise()
+          AppHost.initialise()
           chai.assert.equal(mocks.rivets.getRivetConfig().prefix, "rv")
         )
         test("setsUpAdapter", ()->
-          App.initialise()
+          AppHost.initialise()
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.subscribe)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.unsubscribe)
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.read)
@@ -62,46 +65,48 @@ define(["isolate!App"],(App)->
 
         )
         test("rotateCssFormatterSet", ()->
-          App.initialise()
+          AppHost.initialise()
           chai.assert.isFunction(mocks.rivets.formatters.rotateCss)
         )
         test("style_topBinderSet",()->
-          App.initialise()
+          AppHost.initialise()
           chai.assert.isFunction(mocks.rivets.binders.style_top)
         )
         test("style_leftBinderSet",()->
-          App.initialise()
+          AppHost.initialise()
           chai.assert.isFunction(mocks.rivets.binders.style_left)
         )
         test("style_transformBinderSet",()->
-          App.initialise()
+          AppHost.initialise()
           chai.assert.isFunction(mocks.rivets.binders.style_transform)
         )
       )
       suite("launch", ()->
         test("parameterless_triggersGameDataRequired", ()->
-          App.trigger = JsMockito.mockFunction()
-          App.initialise()
-          App.launch()
-          JsMockito.verify(App.trigger)("gameDataRequired")
+          AppHost.trigger = JsMockito.mockFunction()
+          AppHost.initialise()
+          AppHost.launch()
+          JsMockito.verify(mocks.AppState.trigger)("gameDataRequired")
 
         )
         test("withGameId_createsGameFromState", ()->
-          App.trigger = JsMockito.mockFunction()
-          App.initialise()
-          App.launch("MOCK_GAME")
-          chai.assert.equal(App.game, mocks["lib/turncoat/Game"]())
+          AppHost.trigger = JsMockito.mockFunction()
+          AppHost.initialise()
+          AppHost.launch("MOCK_GAME")
+          JsMockito.verify(mocks.AppState.createGame)()
 
         )
       )
       suite("render", ()->
         test("setsRootViewToManOWarTableTopView", ()->
-          App.render()
-          chai.assert.instanceOf(App.rootView, window.mockLibrary.actuals["UI/ManOWarTableTopView"])
+          AppHost.initialise()
+          AppHost.render()
+          chai.assert.equal(AppHost.rootView.mockId, "MOCK_MANOWARTABLETOPVIEW")
         )
         test("callsRenderOnRootView", ()->
-          App.render()
-          JsMockito.verify(App.rootView.render)()
+          AppHost.initialise()
+          AppHost.render()
+          JsMockito.verify(AppHost.rootView.render)()
         )
       )
     )

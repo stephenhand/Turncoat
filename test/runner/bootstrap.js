@@ -51,7 +51,8 @@ require(["isolate","configureIsolate"], function(Isolate){
 });
 
 
-require(['spec/AppTest',
+require(['spec/AppHostTest',
+    'spec/AppStateTest',
     'spec/UI/RivetsExtensionsTest',
     'spec/UI/BaseViewTest',
     'spec/UI/BaseViewModelCollectionTest',

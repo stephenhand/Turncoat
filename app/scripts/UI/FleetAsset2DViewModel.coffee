@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'UI/BaseViewModelItem', 'App'], (_, Backbone, BaseViewModelItem, App)->
+define(['underscore', 'backbone', 'AppState', 'UI/BaseViewModelItem'], (_, Backbone, AppState, BaseViewModelItem)->
   class FleetAsset2DViewModel extends BaseViewModelItem
     initialize:(options)->
       super(options)
@@ -22,7 +22,7 @@ define(['underscore', 'backbone', 'UI/BaseViewModelItem', 'App'], (_, Backbone, 
 
 
     updateFromFleetAsset:()->
-      models = window.App.game.state.searchGameStateModels((model)=>
+      models = AppState.game.state.searchGameStateModels((model)=>
         @get("modelId") is model.id
       )
       if (models.length)

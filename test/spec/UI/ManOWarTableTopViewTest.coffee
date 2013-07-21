@@ -1,10 +1,12 @@
 require(["isolate","isolateHelper","backbone"], (Isolate, Helper, Backbone)->
-  #Isolate.mapAsFactory("UI/ManOWarTableTopViewModel", "UI/ManOWarTableTopView", (actual, modulePath, requestingModulePath)->
-  #  Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-  #    ()->
-  #      actual
-  #  )
-  #)
+  Isolate.mapAsFactory("UI/ManOWarTableTopViewModel", "UI/ManOWarTableTopView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      x = Backbone.Model.extend(
+        initialize:()->
+      )
+      x
+    )
+  )
   Isolate.mapAsFactory("UI/PlayAreaView", "UI/ManOWarTableTopView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ()->

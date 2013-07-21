@@ -103,35 +103,6 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
     )
   )
 
-  Isolate.mapAsFactory("UI/BaseViewModelCollection", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      mockConstructedBVMC = {}
-      switch requestingModulePath
 
-        when "UI/PlayAreaView"
-
-
-        else
-          mockBaseViewModelCollection = actual
-      mockBaseViewModelCollection
-    )
-  )
-
-
-  Isolate.mapAsFactory("UI/ManOWarTableTopView", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      switch requestingModulePath
-
-        when "App"
-          mockManOWarTableTopView = ()->
-            mmttv = JsMockito.mock(actual)
-            mmttv.mockId = "MOCK_MANOWARTABLETOPVIEW"
-            mmttv
-        else
-          mockManOWarTableTopView = actual
-
-      mockManOWarTableTopView
-    )
-  )
   null
 )
