@@ -1,5 +1,4 @@
-define(['jquery','underscore', 'backbone', 'jqModal', 'UI/BaseView', 'UI/PlayAreaView', 'UI/administration/AdministrationDialogueView', 'UI/ManOWarTableTopViewModel', 'text!templates/ManOWarTableTop.html'],
-($, _, Backbone, modal, BaseView, PlayAreaView, AdministrationView, ManOWarTableTopViewModel, templateText)->
+define(['jquery','underscore', 'backbone', 'jqModal', 'UI/BaseView', 'UI/PlayAreaView', 'UI/administration/AdministrationDialogueView', 'UI/ManOWarTableTopViewModel', 'text!templates/ManOWarTableTop.html'],($, _, Backbone, modal, BaseView, PlayAreaView, AdministrationView, ManOWarTableTopViewModel, templateText)->
   class ManOWarTableTopView extends BaseView
     initialize: (options)->
       options?={}
@@ -8,11 +7,11 @@ define(['jquery','underscore', 'backbone', 'jqModal', 'UI/BaseView', 'UI/PlayAre
       super(options)
       if (options.gameState)
         @createPlayAreaView(options.gameState)
-        @createAdministrationView(options.gameState)
+      @createAdministrationView()
 
     render:()->
       super()
-      @playAreaView.render()
+      @playAreaView?.render()
       @administrationView.render()
       $("#administrationDialogue").jqm()
       @model.on("change:administrationDialogueActive",(m, val)=>
@@ -30,10 +29,8 @@ define(['jquery','underscore', 'backbone', 'jqModal', 'UI/BaseView', 'UI/PlayAre
         gameState:state
       )
 
-    createAdministrationView:(state)->
-      @administrationView= new AdministrationView(
-        gameState:state
-      )
+    createAdministrationView:()->
+      @administrationView= new AdministrationView( )
   ManOWarTableTopView
 )
 

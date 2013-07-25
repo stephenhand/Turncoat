@@ -37,20 +37,14 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
         MOWTTV = new ManOWarTableTopView({})
         chai.assert.isUndefined(MOWTTV.playAreaView)
       )
-      test("doesntConstructAdministrationDialogueViewWithoutGameState", ()->
-        MOWTTV = new ManOWarTableTopView({})
-        chai.assert.isUndefined(MOWTTV.administrationView)
-      )
       test("constructsPlayAreaViewIfGameStateProvided", ()->
         MOWTTV = new ManOWarTableTopView(
           gameState:{}
         )
         chai.assert.equal("MOCK_PLAYAREAVIEW", MOWTTV.playAreaView.mockId)
       )
-      test("constructsAdministrationDialogueViewIfGameStateProvided", ()->
-        MOWTTV = new ManOWarTableTopView(
-          gameState:{}
-        )
+      test("constructsAdministrationDialogueView", ()->
+        MOWTTV = new ManOWarTableTopView()
         chai.assert.equal("MOCK_ADMINISTRATIONDIALOGUEVIEW", MOWTTV.administrationView.mockId)
       )
     )
