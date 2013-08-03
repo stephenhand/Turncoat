@@ -3,7 +3,7 @@ define(['underscore', 'backbone', 'lib/turncoat/Game', 'text!data/testInitialSta
     createGame:()->
       @game = new Game()
       @game.loadState(testInitialState)
-
+    loadPlayer:()->
   )
 
   #Singleton

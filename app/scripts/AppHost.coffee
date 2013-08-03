@@ -18,15 +18,20 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
     router:new Backbone.Router(
       routes:
         "":"launch"
-        ":gameIdentifier":"launch"
+        ":player":"launch"
+        ":player/:gameIdentifier":"launch"
     )
 
-    launch:(gameIdentifier)=>
-
+    launch:(player, gameIdentifier)=>
+      if (player?)
+        AppState.loadPlayer(player)
       if (gameIdentifier?)
         AppState.createGame()
       AppHost.render()
-      if (!gameIdentifier?)
+
+      if (!player? && !gameIdentifier?)
+        AppState.trigger("playerDataRequired")
+      else if (!gameIdentifier?)
         AppState.trigger("gameDataRequired")
 
     render:()->
@@ -35,8 +40,8 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
 
     initialise:()->
       configureRivets()
-      @router.on("route:launch", (gameIdentifier)->
-        @launch(gameIdentifier)
+      @router.on("route:launch", (gameIdentifier, player)->
+        @launch(gameIdentifier, player)
       ,@)
       try
         Backbone.history.start()
