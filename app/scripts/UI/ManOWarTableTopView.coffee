@@ -1,4 +1,4 @@
-define(['jquery','underscore', 'backbone', 'jqModal', 'UI/BaseView', 'UI/PlayAreaView', 'UI/administration/AdministrationDialogueView', 'UI/ManOWarTableTopViewModel', 'text!templates/ManOWarTableTop.html'],($, _, Backbone, modal, BaseView, PlayAreaView, AdministrationView, ManOWarTableTopViewModel, templateText)->
+define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/BaseView', 'UI/PlayAreaView', 'UI/administration/AdministrationDialogueView', 'UI/ManOWarTableTopViewModel', 'text!templates/ManOWarTableTop.html'],($, _, Backbone, modal, BaseView, PlayAreaView, AdministrationView, ManOWarTableTopViewModel, templateText)->
   class ManOWarTableTopView extends BaseView
     initialize: (options)->
       options?={}

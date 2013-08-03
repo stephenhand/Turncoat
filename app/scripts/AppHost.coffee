@@ -12,16 +12,7 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
         publish: (obj, keypath, value)->
           obj.set(keypath, value)
     )
-    rivets.formatters.rotateCss=(cssVal)->
-      "rotate("+cssVal+"deg)"
-    rivets.binders.style_top=(el,value)->
-      el.style.top=value
-    rivets.binders.style_left=(el,value)->
-      el.style.left=value
-    rivets.binders.style_transform=(el,value)->
-      el.style.transform=value
-      el.style.msTransform=value
-      el.style.webkitTransform=value
+
 
   AppHost =
     router:new Backbone.Router(

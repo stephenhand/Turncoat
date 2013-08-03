@@ -24,7 +24,9 @@ require.config({
         rivets: 'vendor/rivets',
         uuid:'vendor/uuid',
         templates:'../templates',
-        data:'../data'
+        data:'../data',
+        sprintf: 'vendor/sprintf'
+
     },
     shim:{
         'jquery':{
@@ -39,6 +41,9 @@ require.config({
         },
         'rivets':{
             exports:"rivets"
+        }    ,
+        'sprintf':{
+            exports:"sprintf"
         }
     }
 });

@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', "jquery", "UI/BaseView","text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, templateText)->
+define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/AdministrationDialogueViewModel", "text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, AdministrationDialogueViewModel, templateText)->
   setActiveTab=(tabElement)->
     $(".administration-tab").toggleClass("active-tab",false)
     $(tabElement).parent().toggleClass("active-tab",true)
@@ -17,6 +17,7 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView","text!templates/Admini
       setActiveTab(this)
 
     createModel:()->
+       @model = new AdministrationDialogueViewModel()
 
   AdministrationDialogueView
 )

@@ -64,22 +64,6 @@ define(["isolate!AppHost"],(AppHost)->
           chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.publish)
 
         )
-        test("rotateCssFormatterSet", ()->
-          AppHost.initialise()
-          chai.assert.isFunction(mocks.rivets.formatters.rotateCss)
-        )
-        test("style_topBinderSet",()->
-          AppHost.initialise()
-          chai.assert.isFunction(mocks.rivets.binders.style_top)
-        )
-        test("style_leftBinderSet",()->
-          AppHost.initialise()
-          chai.assert.isFunction(mocks.rivets.binders.style_left)
-        )
-        test("style_transformBinderSet",()->
-          AppHost.initialise()
-          chai.assert.isFunction(mocks.rivets.binders.style_transform)
-        )
       )
       suite("launch", ()->
         test("parameterless_triggersGameDataRequired", ()->
