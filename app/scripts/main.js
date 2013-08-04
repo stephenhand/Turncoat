@@ -36,9 +36,10 @@ require.config({
 require(['AppHost',
          'backbone',
          'lib/marshallers/JSONMarshaller',
+         'lib/persisters/LocalStoragePersister',
          'state/ManOWarGameState',
          'UI/RivetsExtensions'
-], function(AppHost, backbone, jsonMarshaller, state, rivetsExt) {
+], function(AppHost, backbone, jsonMarshaller, persister, state, rivetsExt) {
   // use app here
 
   AppHost.initialise();

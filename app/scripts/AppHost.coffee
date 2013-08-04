@@ -18,19 +18,19 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
     router:new Backbone.Router(
       routes:
         "":"launch"
-        ":player":"launch"
-        ":player/:gameIdentifier":"launch"
+        ":user":"launch"
+        ":user/:gameIdentifier":"launch"
     )
 
-    launch:(player, gameIdentifier)=>
-      if (player?)
-        AppState.loadPlayer(player)
+    launch:(user, gameIdentifier)=>
+      if (user?)
+        AppState.loadUser(user)
       if (gameIdentifier?)
         AppState.createGame()
       AppHost.render()
 
-      if (!player? && !gameIdentifier?)
-        AppState.trigger("playerDataRequired")
+      if (!user? && !gameIdentifier?)
+        AppState.trigger("userDataRequired")
       else if (!gameIdentifier?)
         AppState.trigger("gameDataRequired")
 
@@ -40,8 +40,8 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
 
     initialise:()->
       configureRivets()
-      @router.on("route:launch", (gameIdentifier, player)->
-        @launch(gameIdentifier, player)
+      @router.on("route:launch", (gameIdentifier, user)->
+        @launch(gameIdentifier, user)
       ,@)
       try
         Backbone.history.start()
@@ -49,7 +49,7 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
 
   config = JSON.parse(configText)
   Factory.setDefaultMarshaller(config.defaultMarshaller)
-
+  Factory.setDefaultPersister(config.defaultPersister)
   AppHost
 
 )

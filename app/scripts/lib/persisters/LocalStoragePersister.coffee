@@ -1,5 +1,8 @@
 define(['underscore', 'backbone'], (_, Backbone)->
   class LocalStoragePersister
+    loadUser:(id)->
+      if !id? then throw new Error("Must specify a player id.")
+      return id
     loadGameList:(type)->
       if !window.localStorage["current-games"]
         return null

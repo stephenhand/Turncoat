@@ -1,9 +1,12 @@
-define(['underscore', 'backbone', 'lib/turncoat/Game', 'text!data/testInitialState.txt'], (_, Backbone, Game, testInitialState)->
+define(['underscore', 'backbone', 'lib/turncoat/Game','lib/turncoat/Factory', 'text!data/testInitialState.txt'], (_, Backbone, Game, Factory, testInitialState)->
+  persister = undefined
   AppState = Backbone.Model.extend(
     createGame:()->
       @game = new Game()
       @game.loadState(testInitialState)
-    loadPlayer:()->
+    loadUser:(id)->
+      persister ?= Factory.buildPersister()
+      @currentUser= persister.loadUser(id)
   )
 
   #Singleton

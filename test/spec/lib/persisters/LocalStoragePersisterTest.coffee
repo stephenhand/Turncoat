@@ -47,6 +47,26 @@ define(['isolate!lib/persisters/LocalStoragePersister'], (LocalStoragePersister)
       window.localStorage["current-games"] = mockStoredGames
       window.localStorage["current-invites"] = mockInvites
     )
+    suite("loadUser", ()->
+      test("echosProvidedStringId", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.equal(lps.loadUser("MOCK_ID"),"MOCK_ID")
+      )
+      test("echosProvidedObjectId", ()->
+        lps = new LocalStoragePersister()
+        val={}
+        chai.assert.equal(lps.loadUser(val),val)
+      )
+      test("throwsIfUndefined", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.throws(()->lps.loadUser())
+      )
+      test("throwsIfUNull", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.throws(()->lps.loadUser(null))
+      )
+
+    )
     suite("loadGameList", ()->
       test("retrievesGamesIfThereAreAny", ()->
         lps = new LocalStoragePersister()

@@ -8,6 +8,20 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       mockGame
     )
   )
+  Isolate.mapAsFactory("lib/turncoat/Factory","AppState", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      {
+        buildPersister:()->
+          p=
+            loadUser:JsMockito.mockFunction()
+          JsMockito.when(p.loadUser)(JsHamcrest.Matchers.anything()).then((a)->
+            input:a
+          )
+          p
+      }
+    )
+  )
+
 )
 
 define(['isolate!AppState'], (AppState)->
@@ -20,6 +34,12 @@ define(['isolate!AppState'], (AppState)->
         chai.assert.equal(AppState.game, mocks["lib/turncoat/Game"]())
       )
 
+    )
+    suite("loadUser", ()->
+      test("idString_setsCurrentUserAsPersisterReturnInputVal", ()->
+        AppState.loadUser("MOCK_USER")
+        chai.assert.equal(AppState.currentUser.input, "MOCK_USER")
+      )
     )
   )
 

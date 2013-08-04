@@ -12,9 +12,6 @@ define(["isolate!lib/turncoat/Factory"], (Factory)->
           Factory.buildStateMarshaller("anything")
         )
       )
-
-    )
-    suite("registerStateMarshaller", ()->
       test("registeringMakesStateMarshallerConstructibleByKey", ()->
         #implement test
         class testStateMarshaller
@@ -92,6 +89,93 @@ define(["isolate!lib/turncoat/Factory"], (Factory)->
       )
     )
 
+    suite("registerPersister", ()->
+      test("notRegisteringMakesDefaultBuildPersisterThrow", ()->
+        chai.assert.throws(()->
+          Factory.buildPersister()
+        )
+      )
+      test("notRegisteringMakesKeyedBuildPersisterThrow", ()->
+        chai.assert.throws(()->
+          Factory.buildPersister("anything")
+        )
+      )
+      test("registeringMakesPersisterConstructibleByKey", ()->
+        #implement test
+        class testPersister
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+
+        Factory.registerPersister("testPersister",testPersister)
+        testObj = Factory.buildPersister("testPersister")
+        chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
+      )
+      test("registeringMakesBuildPersisterWithIncorrectKeyReturnsNull", ()->
+        #implement test
+        class testPersister
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+
+        Factory.registerPersister("testPersister",testPersister)
+        chai.assert.isNull(
+          Factory.buildPersister("anotherPersister",testPersister)
+        )
+      )
+      test("registeringMakesPersisterConstructibleIfSetAsDefault", ()->
+        #implement test
+        Factory.defaults =
+          persister:"testPersister"
+        class testPersister
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+
+        Factory.registerPersister("testPersister",testPersister)
+        testObj = Factory.buildPersister()
+        chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
+      )
+      test("registeringUsesConstuctorOptsWhenBuiltWithKey", ()->
+        #implement test
+        Factory.defaults =
+          persister:"paramaterisedPersister"
+        class paramaterisedPersister
+          constructor:(opts)->
+            @mockProperty=opts.property
+
+        Factory.registerPersister("paramaterisedPersister",paramaterisedPersister)
+        testObj = Factory.buildPersister(
+          "paramaterisedPersister",
+          property:"MOCK_PARAM_PROPERTY_VALUE"
+        )
+        chai.assert.equal("MOCK_PARAM_PROPERTY_VALUE", testObj.mockProperty)
+      )
+      test("registeringUsesConstuctorOptsAsDefault", ()->
+        #implement test
+        Factory.defaults =
+          persister:"paramaterisedPersister"
+        class paramaterisedPersister
+          constructor:(opts)->
+            @mockProperty=opts.property
+
+        Factory.registerPersister("paramaterisedPersister",paramaterisedPersister)
+        testObj = Factory.buildPersister(
+          property:"MOCK_PARAM_PROPERTY_VALUE"
+        )
+        chai.assert.equal("MOCK_PARAM_PROPERTY_VALUE", testObj.mockProperty)
+      )
+    )
+    suite("setDefaultPersister", ()->
+      test("settingDefaultPersisterUsesDefaultPersisterInParameterlessBuildPersister", ()->
+        #implement test
+        class testPersister
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+
+        Factory.registerPersister("testPersister",testPersister)
+        Factory.setDefaultPersister("testPersister")
+        testObj = Factory.buildPersister()
+        chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
+      )
+    )
   )
 
 
