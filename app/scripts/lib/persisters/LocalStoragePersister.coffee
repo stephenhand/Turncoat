@@ -1,8 +1,19 @@
-define(['underscore', 'backbone'], (_, Backbone)->
+define(['underscore', 'backbone', "lib/turncoat/Factory", 'text!data/manOWarGameTemplates.txt'], (_, Backbone, Factory, templatesListText)->
   class LocalStoragePersister
     loadUser:(id)->
       if !id? then throw new Error("Must specify a player id.")
       return id
+
+    loadGameTemplateList:(type, player)->
+
+      new Backbone.Collection(
+        for gameTemplate in JSON.parse(templatesListText)
+          id:gameTemplate.id
+          label:gameTemplate.label
+          players:gameTemplate.players?.length
+
+      )
+
     loadGameList:(type)->
       if !window.localStorage["current-games"]
         return null
@@ -12,6 +23,8 @@ define(['underscore', 'backbone'], (_, Backbone)->
           id:game.id
           type:game._type
         )
+
+
 
     retrieveGameState:(id)->
       if (!id?) then throw new Error("Must specify a game id to retrieve it from storage")
@@ -31,6 +44,8 @@ define(['underscore', 'backbone'], (_, Backbone)->
         new Backbone.Model(
           invite
         )
+  Factory.registerPersister("LocalStoragePersister",LocalStoragePersister)
+
   LocalStoragePersister
 )
 

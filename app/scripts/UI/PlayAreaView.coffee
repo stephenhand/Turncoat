@@ -17,27 +17,27 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/BaseViewModelCollection', '
       )
       @model =
         ships:ships
-      @updateShipsModel()
+      @model.ships.updateFromWatchedCollections(
+        (item, watchedItem)->
+          item.get("modelId") is watchedItem.id
+        ,
+        (watchedItem)->
+          new FleetAsset2DViewModel(model:watchedItem)
+        ,
+        (watchedItem)->
+          watchedItem instanceof FleetAsset
+      )
       @model.ships.onSourceUpdated = ()=>
-        @updateShipsModel()
-
-    updateShipsModel:()->
-      processedShips = []
-      for watchedCollection in @model.ships?.watchedCollections or []
-        for fleetAsset, watchedCollectionCounter in watchedCollection.models when fleetAsset instanceof FleetAsset
-          VM = @model.ships.find((ship)->
-            ship.get("modelId") is fleetAsset.id
-          )
-          if !VM? then @model.ships.push(new FleetAsset2DViewModel(model:fleetAsset))
-          processedShips.push(fleetAsset.id)
-
-      #remove surplus ships
-      processedCounter = 0
-      shipCounter = 0
-      while shipCounter < @model.ships.length
-        if (!_.find(processedShips, (ship)=>@model.ships.at(shipCounter).get("modelId")))
-          @model.ships.remove(@model.ships.at(shipCounter))
-        else shipCounter++
+        @model.ships.updateFromWatchedCollections(
+          (item, watchedItem)->
+            item.get("modelId") is watchedItem.id
+          ,
+          (watchedItem)->
+            new FleetAsset2DViewModel(model:watchedItem)
+          ,
+          (watchedItem)->
+            watchedItem instanceof FleetAsset
+        )
 
 
 

@@ -2,40 +2,41 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("AppState", 'UI/FleetAsset2DViewModel', (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       on:JsMockito.mockFunction()
-      game:
-        state:
-          searchGameStateModels:(func)->
-            if func(
-              id:"MOCKMODEL_UUID"
-            )
-              mockModel =
+      get:(key)->
+        if key is 'game'
+          state:
+            searchGameStateModels:(func)->
+              if func(
                 id:"MOCKMODEL_UUID"
-                get:JsMockito.mockFunction()
-                on:JsMockito.mockFunction()
-
-              mockPos =
-                get:JsMockito.mockFunction()
-                on:JsMockito.mockFunction()
-
-              JsMockito.when(mockModel.get)(JsHamcrest.Matchers.anything()).then(
-                (att)->
-                  switch att
-                    when "position"
-                      mockPos
               )
+                mockModel =
+                  id:"MOCKMODEL_UUID"
+                  get:JsMockito.mockFunction()
+                  on:JsMockito.mockFunction()
 
-              JsMockito.when(mockPos.get)(JsHamcrest.Matchers.anything()).then(
-                (att)->
-                  switch att
-                    when "x"
-                      123
-                    when "y"
-                      321
-                    when "bearing"
-                      45
+                mockPos =
+                  get:JsMockito.mockFunction()
+                  on:JsMockito.mockFunction()
 
-              )
-              [mockModel]
+                JsMockito.when(mockModel.get)(JsHamcrest.Matchers.anything()).then(
+                  (att)->
+                    switch att
+                      when "position"
+                        mockPos
+                )
+
+                JsMockito.when(mockPos.get)(JsHamcrest.Matchers.anything()).then(
+                  (att)->
+                    switch att
+                      when "x"
+                        123
+                      when "y"
+                        321
+                      when "bearing"
+                        45
+
+                )
+                [mockModel]
     )
   )
 )

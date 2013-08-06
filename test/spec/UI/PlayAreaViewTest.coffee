@@ -1,3 +1,5 @@
+updateFromWatchedCollectionsRes=null
+
 require(["isolate","isolateHelper"], (Isolate, Helper)->
 
   Isolate.mapAsFactory("UI/FleetAsset2DViewModel","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
@@ -23,6 +25,13 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
         mockConstructedBVMC.watch = JsMockito.mockFunction()
         JsMockito.when(mockConstructedBVMC.watch)(JsHamcrest.Matchers.anything()).then((collections)->
           mockConstructedBVMC.watchedCollections = collections
+        )
+        mockConstructedBVMC.updateFromWatchedCollections = JsMockito.mockFunction()
+        JsMockito.when(mockConstructedBVMC.updateFromWatchedCollections)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((c,a, s)->
+          updateFromWatchedCollectionsRes=
+            comparer:c
+            adder:a
+            selector:s
         )
         mockConstructedBVMC
       mockBaseViewModelCollection
@@ -65,97 +74,67 @@ define(['isolate!UI/PlayAreaView', 'lib/turncoat/GameStateModel'], (PlayAreaView
         if gsmWithOneCollection.watchCollection then [gsmWithOneCollection.watchCollection] else []
       )
 
-      gsmWithOneCollectionThreeItems = JsMockito.mock(GameStateModel)
-      gsmWithOneCollectionThreeItems.watchCollection = new Backbone.Collection([
-        new mocks["state/FleetAsset"]        
-        new mocks["state/FleetAsset"]
-        new mocks["state/FleetAsset"]
-        
-      ])
-      gsmWithOneCollectionThreeItems.watchCollection.at(0).id="MOCK_FLEETASSET0_UUID"
-      gsmWithOneCollectionThreeItems.watchCollection.at(1).id="MOCK_FLEETASSET1_UUID"
-      gsmWithOneCollectionThreeItems.watchCollection.at(2).id="MOCK_FLEETASSET2_UUID"
-      gsmWithOneCollectionThreeItems.watchCollection.at(0).cid="MOCK_FLEETASSET0_UUID"
-      gsmWithOneCollectionThreeItems.watchCollection.at(1).cid="MOCK_FLEETASSET1_UUID"
-      gsmWithOneCollectionThreeItems.watchCollection.at(2).cid="MOCK_FLEETASSET2_UUID"
-      JsMockito.when(gsmWithOneCollectionThreeItems.searchChildren)(JsHamcrest.Matchers.anything()).then((func)->
-        if gsmWithOneCollectionThreeItems.watchCollection then [gsmWithOneCollectionThreeItems.watchCollection] else []
+      teardown(()->
+        updateFromWatchedCollectionsRes=null
       )
 
-
-      gsmWithOneLevelTwoCollectionsThreeItems = JsMockito.mock(GameStateModel)
-      gsmWithOneLevelTwoCollectionsThreeItems.watchCollection = new Backbone.Collection([
-        new mocks["state/FleetAsset"]
-        new mocks["state/FleetAsset"]
-
-      ])
-      gsmWithOneLevelTwoCollectionsThreeItems.otherWatchCollection = new Backbone.Collection([
-        new mocks["state/FleetAsset"]
-      ])
-      gsmWithOneLevelTwoCollectionsThreeItems.watchCollection.at(0).id="MOCK_FLEETASSET0_UUID"
-      gsmWithOneLevelTwoCollectionsThreeItems.watchCollection.at(1).id="MOCK_FLEETASSET1_UUID"
-      gsmWithOneLevelTwoCollectionsThreeItems.otherWatchCollection.at(0).id="MOCK_FLEETASSET2_UUID"
-      gsmWithOneLevelTwoCollectionsThreeItems.watchCollection.at(0).cid="MOCK_FLEETASSET0_UUID"
-      gsmWithOneLevelTwoCollectionsThreeItems.watchCollection.at(1).cid="MOCK_FLEETASSET1_UUID"
-      gsmWithOneLevelTwoCollectionsThreeItems.otherWatchCollection.at(0).cid="MOCK_FLEETASSET2_UUID"
-      JsMockito.when(gsmWithOneLevelTwoCollectionsThreeItems.searchChildren)(JsHamcrest.Matchers.anything()).then((func)->
-        if gsmWithOneLevelTwoCollectionsThreeItems.watchCollection then [gsmWithOneLevelTwoCollectionsThreeItems.watchCollection, gsmWithOneLevelTwoCollectionsThreeItems.otherWatchCollection] else []
-      )
-
-      gsmWithThreeCollectionsFiveItemsThreeValid = JsMockito.mock(GameStateModel)
-      gsmWithThreeCollectionsFiveItemsThreeValid.watchCollection = new Backbone.Collection([
-        new mocks["state/FleetAsset"]
-        new Backbone.Model()
-        new mocks["state/FleetAsset"]
-      ])
-      gsmWithThreeCollectionsFiveItemsThreeValid.otherCollection = new Backbone.Collection([
-        new Backbone.Model()
-        new mocks["state/FleetAsset"]
-        new mocks["state/FleetAsset"]
-        new Backbone.Model()
-      ])
-      gsmWithThreeCollectionsFiveItemsThreeValid.thirdCollection = new Backbone.Collection([
-        new mocks["state/FleetAsset"]
-      ])
-
-      gsmWithThreeCollectionsFiveItemsThreeValid.watchCollection.at(0).id="MOCK_FLEETASSET0_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.watchCollection.at(2).id="MOCK_FLEETASSET1_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.otherCollection.at(1).id="MOCK_FLEETASSET2_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.otherCollection.at(2).id="MOCK_FLEETASSET3_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.thirdCollection.at(0).id="MOCK_FLEETASSET4_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.watchCollection.at(0).cid="MOCK_FLEETASSET0_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.watchCollection.at(2).cid="MOCK_FLEETASSET1_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.otherCollection.at(1).cid="MOCK_FLEETASSET2_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.otherCollection.at(2).cid="MOCK_FLEETASSET3_UUID"
-      gsmWithThreeCollectionsFiveItemsThreeValid.thirdCollection.at(0).cid="MOCK_FLEETASSET4_UUID"
-      JsMockito.when(gsmWithThreeCollectionsFiveItemsThreeValid.searchChildren)(JsHamcrest.Matchers.anything()).then((func)->
-        if gsmWithThreeCollectionsFiveItemsThreeValid.watchCollection then [gsmWithThreeCollectionsFiveItemsThreeValid.watchCollection, gsmWithThreeCollectionsFiveItemsThreeValid.otherCollection, gsmWithThreeCollectionsFiveItemsThreeValid.thirdCollection] else []
-      )
-
-      test("createsFleetAsset2DViewModelsWatchingSingleCollectionSingleItems", ()->
+      test("callsUpdateFromWatchedCollectionsWithFunctions", ()->
         pav = new PlayAreaView(gameState:gsmWithOneCollection)
         pav.createModel()
-        chai.assert.equal(pav.model.ships.length, 1)
-        chai.assert.equal(pav.model.ships.at(0).get("modelId"),"MOCK_FLEETASSET0_UUID")
+        JsMockito.verify(pav.model.ships.updateFromWatchedCollections)(JsHamcrest.Matchers.func(),JsHamcrest.Matchers.func())
       )
-      test("createsFleetAsset2DViewModelsWatchingSingleCollectionThreeitems", ()->
-        pav = new PlayAreaView(gameState:gsmWithOneCollectionThreeItems)
+      test("callsUpdateFromWatchedCollectionsWithComparerThatIdentifiesMatchesOnModelIdToId", ()->
+        pav = new PlayAreaView(gameState:gsmWithOneCollection)
         pav.createModel()
-        chai.assert.equal(pav.model.ships.length, 3)
-        chai.assert.equal(pav.model.ships.at(0).get("modelId"),"MOCK_FLEETASSET0_UUID")
-        chai.assert.equal(pav.model.ships.at(1).get("modelId"),"MOCK_FLEETASSET1_UUID")
-        chai.assert.equal(pav.model.ships.at(2).get("modelId"),"MOCK_FLEETASSET2_UUID")
+
+        chai.assert(
+          updateFromWatchedCollectionsRes.comparer(
+            get:(key)->
+              if key=="modelId" then 1 else 0
+          ,
+            id:1
+          )
+        )
       )
-      test("createsFleetAsset2DViewModelsWatchingThreeCollectionsIrrelevantItems", ()->
-        pav = new PlayAreaView(gameState:gsmWithThreeCollectionsFiveItemsThreeValid)
+      test("callsUpdateFromWatchedCollectionsWithComparerThatFailsOnModelIdNotId", ()->
+        pav = new PlayAreaView(gameState:gsmWithOneCollection)
         pav.createModel()
-        chai.assert.equal(pav.model.ships.length, 5)
-        chai.assert.equal(pav.model.ships.at(0).get("modelId"),"MOCK_FLEETASSET0_UUID")
-        chai.assert.equal(pav.model.ships.at(1).get("modelId"),"MOCK_FLEETASSET1_UUID")
-        chai.assert.equal(pav.model.ships.at(2).get("modelId"),"MOCK_FLEETASSET2_UUID")
-        chai.assert.equal(pav.model.ships.at(3).get("modelId"),"MOCK_FLEETASSET3_UUID")
-        chai.assert.equal(pav.model.ships.at(4).get("modelId"),"MOCK_FLEETASSET4_UUID")
+
+        chai.assert.isFalse(
+          updateFromWatchedCollectionsRes.comparer(
+            get:(key)->
+              if key=="modelId" then 1 else 0
+          ,
+            id:3
+          )
+        )
       )
+      test("callsUpdateFromWatchedCollectionsWithComparerThatFailsOnModelIdNotExactlyId", ()->
+        pav = new PlayAreaView(gameState:gsmWithOneCollection)
+        pav.createModel()
+
+        chai.assert.isFalse(
+          updateFromWatchedCollectionsRes.comparer(
+            get:(key)->
+              if key=="modelId" then 1 else 0
+          ,
+            id:'1'
+          )
+        )
+      )
+      test("callsUpdateFromWatchedCollectionsWithComparerThatFailsOnBothUndefined", ()->
+        pav = new PlayAreaView(gameState:gsmWithOneCollection)
+
+        pav.createModel()
+
+        chai.assert(
+          updateFromWatchedCollectionsRes.comparer(
+            get:(key)->undefined
+          ,{}
+          )
+        )
+      )
+
     )
   )
 

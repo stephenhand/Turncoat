@@ -32,14 +32,20 @@ require.config({
   }
 
 });
- 
-require(['AppHost',
-         'backbone',
+require(['lib/turncoat/Factory',
          'lib/marshallers/JSONMarshaller',
          'lib/persisters/LocalStoragePersister',
+         'text!data/config.txt'
+], function(Factory, jsonMarshaller, persister, configText){
+  config = JSON.parse(configText)
+  Factory.setDefaultMarshaller(config.defaultMarshaller);
+  Factory.setDefaultPersister(config.defaultPersister);
+});
+require(['AppHost',
+         'backbone',
          'state/ManOWarGameState',
          'UI/RivetsExtensions'
-], function(AppHost, backbone, jsonMarshaller, persister, state, rivetsExt) {
+], function(AppHost, backbone,  state, rivetsExt) {
   // use app here
 
   AppHost.initialise();

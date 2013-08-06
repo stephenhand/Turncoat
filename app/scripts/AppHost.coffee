@@ -1,4 +1,4 @@
-define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/ManOWarTableTopView', 'text!data/config.txt'], (Backbone, rivets, modal, AppState, Factory, ManOWarTableTopView, configText)->
+define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (Backbone, rivets, modal, AppState , ManOWarTableTopView)->
   configureRivets=()->
     rivets.configure(
       prefix:"rv"
@@ -35,7 +35,7 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
         AppState.trigger("gameDataRequired")
 
     render:()->
-      @rootView = new ManOWarTableTopView(gameState:AppState.game?.state)
+      @rootView = new ManOWarTableTopView(gameState:AppState.get("game")?.state)
       @rootView.render()
 
     initialise:()->
@@ -47,9 +47,6 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'lib/turncoat/Factory', 'UI/
         Backbone.history.start()
       catch error
 
-  config = JSON.parse(configText)
-  Factory.setDefaultMarshaller(config.defaultMarshaller)
-  Factory.setDefaultPersister(config.defaultPersister)
   AppHost
 
 )

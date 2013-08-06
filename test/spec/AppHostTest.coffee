@@ -15,7 +15,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("AppState","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      {}
+      get:(key)->
     )
   )
   Isolate.mapAsFactory("lib/2D/PolygonTools","AppHost", (actual, modulePath, requestingModulePath)->
@@ -85,7 +85,9 @@ define(["isolate!AppHost"],(AppHost)->
 
           JsMockito.when(mocks["AppState"].createGame)().then(()->
             @game =
-              state:{}
+              get:(key)->
+                if key is "state" then {}
+                undefined
           )
         )
         test("parameterless_triggersUserDataRequired", ()->

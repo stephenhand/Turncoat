@@ -1,8 +1,35 @@
+require(["isolate","isolateHelper"], (Isolate, Helper)->
+
+  Isolate.mapAsFactory("text!data/manOWarGameTemplates.txt", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      JSON.stringify([
+        label:"MOCK GAME TEMPLATE 1"
+        name:"MOCK_GAME1"
+        _type:"MOCK_GAMETYPE"
+        id:"MOCK_TEMPLATE_ID1"
+        players:[
+          {}
+          {}
+          {}
+        ]
+      ,
+        label:"MOCK GAME TEMPLATE 2"
+        id:"MOCK_TEMPLATE_ID2"
+        players:[]
+      ,
+        label:"MOCK GAME TEMPLATE 3"
+        id:"MOCK_TEMPLATE_ID3"
+      ])
+    )
+  )
+)
+
 define(['isolate!lib/persisters/LocalStoragePersister'], (LocalStoragePersister)->
   suite("LocalStorage", ()->
     class MOCK_GAMETYPE
 
     mockStoredGames = JSON.stringify([
+
       name:"MOCK_GAME1"
       _type:"MOCK_GAMETYPE"
       id:"MOCK_ID1"
@@ -20,6 +47,7 @@ define(['isolate!lib/persisters/LocalStoragePersister'], (LocalStoragePersister)
         prop:"MOCK_VALUE"
     ])
 
+    #mockStoredGameTemplates =
     mockInvites = JSON.stringify([
       name:"MOCK_GAME1"
       type:"MOCK_GAMETYPE"
@@ -61,11 +89,37 @@ define(['isolate!lib/persisters/LocalStoragePersister'], (LocalStoragePersister)
         lps = new LocalStoragePersister()
         chai.assert.throws(()->lps.loadUser())
       )
-      test("throwsIfUNull", ()->
+      test("throwsIfNull", ()->
         lps = new LocalStoragePersister()
         chai.assert.throws(()->lps.loadUser(null))
       )
 
+    )
+    suite("loadGameTemplatesList", ()->
+      test("generatesItemPerTemplate", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.equal(lps.loadGameTemplateList().length,3)
+      )
+      test("setsCorrectLabelPerTemplate", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.deepEqual(["MOCK GAME TEMPLATE 1", "MOCK GAME TEMPLATE 2", "MOCK GAME TEMPLATE 3"],(t.get("label") for t in lps.loadGameTemplateList().models))
+      )
+      test("setsCorrectIdPerTemplate", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.deepEqual(["MOCK_TEMPLATE_ID1", "MOCK_TEMPLATE_ID2", "MOCK_TEMPLATE_ID3"],(t.get("id") for t in lps.loadGameTemplateList().models))
+      )
+      test("setsPlayersTo3For3PlayerTemplate", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.equal(lps.loadGameTemplateList().at(0).get("players"),3)
+      )
+      test("setsPlayersTo0ForEmptyPlayerTemplate", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.equal(lps.loadGameTemplateList().at(1).get("players"),0)
+      )
+      test("leavesPlayersUndefinedForUndefinedPlayerTemplate", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.equal(lps.loadGameTemplateList().at(2).get("players"),undefined)
+      )
     )
     suite("loadGameList", ()->
       test("retrievesGamesIfThereAreAny", ()->

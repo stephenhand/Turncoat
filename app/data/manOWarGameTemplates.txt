@@ -1,0 +1,34 @@
+{
+    "_type":"ManOWarGameState",
+    "players":[
+        {
+            "_type":"Player",
+            "name":"Dead Ted",
+            "fleet":[
+                {
+                    "_type":"FleetAsset",
+                    "movementTypes":[
+                    ],
+                    "position":{
+                        "_type":"AssetPosition",
+                        "x":100,
+                        "y":100,
+                        "bearing":45
+                    }
+                },
+                {
+                    "_type":"FleetAsset",
+                    "movementTypes":[
+                    ],
+                    "position":{
+                        "_type":"AssetPosition",
+                        "x":155,
+                        "y":110,
+                        "bearing":45
+                    }
+                }
+            ]
+        }
+
+    ]
+}

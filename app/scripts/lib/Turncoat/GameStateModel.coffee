@@ -55,7 +55,6 @@ define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, 
   )
 
   GameStateModel.fromString = (state)->
-    console.log("GameStateModel.fromString")
     GameStateModel.marshaller ?= Factory.buildStateMarshaller()
     GameStateModel.marshaller.unmarshalState(state)
 

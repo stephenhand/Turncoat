@@ -22,7 +22,7 @@ define(['underscore', 'backbone', 'AppState', 'UI/BaseViewModelItem'], (_, Backb
 
 
     updateFromFleetAsset:()->
-      models = AppState.game.state.searchGameStateModels((model)=>
+      models = AppState.get("game").state.searchGameStateModels((model)=>
         @get("modelId") is model.id
       )
       if (models.length)

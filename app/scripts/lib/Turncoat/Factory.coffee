@@ -29,7 +29,14 @@ define(["underscore"], (_)->
     setDefaultMarshaller:(marshallerClassKey)->
       setDefaultFactory(@, "stateMarshaller", marshallerClassKey)
 
+    buildPersister:(key, opts)->
+      buildFactoryType(@, "persister", key, opts)
 
+    registerPersister:(key, persisterClass)->
+      registerFactoryType(@, "persister", key, persisterClass)
+
+    setDefaultPersister:(persisterClassKey)->
+      setDefaultFactory(@, "persister", persisterClassKey)
 
 
 
