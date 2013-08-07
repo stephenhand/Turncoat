@@ -8,10 +8,18 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'UI/BaseViewMode
       @gameTypes.watch(AppState.get("gameTemplates"))
 
       @gameTypes.onSourceUpdated=()=>
-        @updateGameTemplatesList()
+        @gameTypes.updateFromWatchedCollections(
+          (item , watched)->
+            item.get("id")? and (item.get("id") is watched.get("id"))
+          (watched)->
+            new Backbone.Model(
+              id:watched.get("id")
+              label:watched.get("label")
+              players:watched.get("players")
+            )
+        )
 
-    updateGameTemplatesList:()->
-
+      @gameTypes.onSourceUpdated()
   )
 
 
