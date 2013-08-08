@@ -49,7 +49,7 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
       )
       test("watchesAppStateGameTemplates", ()->
         cgvm = new CreateGameViewModel()
-        JsMockito.verify(cgvm.gameTypes.watch)(JsHamcrest.Matchers.hasItems(JsHamcrest.Matchers.hasMember('id','MOCK_TEMPLATE1'),JsHamcrest.Matchers.hasMember('id','MOCK_TEMPLATE2')))
+        JsMockito.verify(cgvm.gameTypes.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasItems(JsHamcrest.Matchers.hasMember('id','MOCK_TEMPLATE1'),JsHamcrest.Matchers.hasMember('id','MOCK_TEMPLATE2'))))
       )
       test("setsGameTypesOnSourceUpdated", ()->
         cgvm = new CreateGameViewModel()
@@ -62,7 +62,7 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
         chai.assert.isFalse(updateFromWatchedCollectionsRes.comparer(new Backbone.Model(id:5), new Backbone.Model({id:1,otherVal:2})))
         chai.assert.isFalse(updateFromWatchedCollectionsRes.comparer(new Backbone.Model(), new Backbone.Model({otherVal:2})))
         newM=updateFromWatchedCollectionsRes.adder(new Backbone.Model({label:"A",players:3,id:"B"}))
-        chai.assert.deepEqual({label:"A",players:3,id:"B"}, newM.attributes)
+        chai.assert.deepEqual({label:"A (3 players)",players:3,id:"B"}, newM.attributes)
       )
     )
   )

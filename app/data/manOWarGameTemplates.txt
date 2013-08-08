@@ -1,4 +1,7 @@
+[
 {
+    "id":"1",
+    "label":"War Galley Squadron Exercises",
     "_type":"ManOWarGameState",
     "players":[
         {
@@ -31,4 +34,46 @@
         }
 
     ]
-}
+},{
+      "id":"2",
+      "label":"War Galley Duel",
+      "_type":"ManOWarGameState",
+      "players":[
+          {
+              "_type":"Player",
+              "name":"Dead Ted",
+              "fleet":[
+                  {
+                      "_type":"FleetAsset",
+                      "movementTypes":[
+                      ],
+                      "position":{
+                          "_type":"AssetPosition",
+                          "x":100,
+                          "y":100,
+                          "bearing":45
+                      }
+                  }
+              ]
+          },
+          {
+              "_type":"Player",
+              "name":"Red Fred",
+              "fleet":[
+                  {
+                      "_type":"FleetAsset",
+                      "movementTypes":[
+                      ],
+                      "position":{
+                          "_type":"AssetPosition",
+                          "x":155,
+                          "y":110,
+                          "bearing":45
+                      }
+                  }
+              ]
+          }
+
+      ]
+  }
+]

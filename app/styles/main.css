@@ -1,15 +1,23 @@
 /* Will be compiled down to a single stylesheet with your sass files */
-.dialog-container{
-    display:none
-}
+.dialogue-container{
+    display:none;
+    position:absolute;
+    background-color: #FFFFFF;
 
+}
+.large-dialogue{
+    left:30%
+
+}
 #playArea .playAreaLayer {
     float:left;
 }
 .playAreaLayer {
     position:absolute;
-    top:0px;
-    left:0px
+    top:20%;
+    left:20%;
+    right:20%;
+    bottom:20%
 }
 
 .view-model-item{

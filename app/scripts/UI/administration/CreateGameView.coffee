@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', "UI/administration/CreateGameViewModel","text!templates/createGame.html"], (_, Backbone, CreateGameViewModel, templateText)->
+define(['underscore', 'backbone', 'UI/BaseView', "UI/administration/CreateGameViewModel","text!templates/createGame.html"], (_, Backbone, BaseView, CreateGameViewModel, templateText)->
   class CreateGameView extends BaseView
     initialize:(options)->
       options?={}
@@ -7,9 +7,7 @@ define(['underscore', 'backbone', "UI/administration/CreateGameViewModel","text!
       super(options)
 
     createModel:()->
-      @model = new CreateGameViewModel(
-        invitees:new Backbone.Collection()
-      )
+      @model = new CreateGameViewModel()
 
   CreateGameView
 )

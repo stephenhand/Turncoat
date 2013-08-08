@@ -1,11 +1,11 @@
-define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'UI/BaseViewModelItem', 'AppState'], (_, Backbone, BackboneViewModelCollection, BackboneViewModelItem, AppState)->
+define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/BaseViewModelItem', 'AppState'], (_, Backbone, sprintf, BackboneViewModelCollection, BackboneViewModelItem, AppState)->
 
 
 
   CreateGameViewModel = Backbone.Model.extend(
     initialize:()->
       @gameTypes=new BackboneViewModelCollection( )
-      @gameTypes.watch(AppState.get("gameTemplates"))
+      @gameTypes.watch([AppState.get("gameTemplates")])
 
       @gameTypes.onSourceUpdated=()=>
         @gameTypes.updateFromWatchedCollections(
@@ -14,7 +14,7 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'UI/BaseViewMode
           (watched)->
             new Backbone.Model(
               id:watched.get("id")
-              label:watched.get("label")
+              label:sprintf("%s (%s players)", watched.get("label"), watched.get("players"))
               players:watched.get("players")
             )
         )
