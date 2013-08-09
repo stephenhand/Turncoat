@@ -1,5 +1,9 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
-
+  Isolate.mapAsFactory("lib/turncoat/GameStateModel", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      fromString:JsMockito.mockFunction()
+    )
+  )
   Isolate.mapAsFactory("text!data/manOWarGameTemplates.txt", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       JSON.stringify([
@@ -22,9 +26,29 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ])
     )
   )
+
+  Isolate.mapAsFactory("text!data/config.txt", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      JSON.stringify(gameTypes:[
+        label:"MOCK GAME TYPE 1"
+        name:"MOCK_GAMETYPE1"
+        id:"MOCK_TEMPLATE_ID1"
+        marshaller:"MOCK_MARSHALLER1"
+        persister:"MOCK_PERSISTER1"
+      ,
+        label:"MOCK GAME TEMPLATE 2"
+        id:"MOCK_TEMPLATE_ID2"
+      ,
+        label:"MOCK GAME TEMPLATE 3"
+        id:"MOCK_TEMPLATE_ID3"
+      ])
+    )
+  )
 )
 
-define(['isolate!lib/persisters/LocalStoragePersister'], (LocalStoragePersister)->
+define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStoragePersister, Backbone)->
+  mocks = window.mockLibrary["lib/persisters/LocalStoragePersister"]
+
   suite("LocalStorage", ()->
     class MOCK_GAMETYPE
 
@@ -47,7 +71,6 @@ define(['isolate!lib/persisters/LocalStoragePersister'], (LocalStoragePersister)
         prop:"MOCK_VALUE"
     ])
 
-    #mockStoredGameTemplates =
     mockInvites = JSON.stringify([
       name:"MOCK_GAME1"
       type:"MOCK_GAMETYPE"
@@ -119,6 +142,52 @@ define(['isolate!lib/persisters/LocalStoragePersister'], (LocalStoragePersister)
       test("leavesPlayersUndefinedForUndefinedPlayerTemplate", ()->
         lps = new LocalStoragePersister()
         chai.assert.equal(lps.loadGameTemplateList().at(2).get("players"),undefined)
+      )
+    )
+    suite("loadGameTemplate", ()->
+      gsmInput=null
+      setup(()->
+        mocks["lib/turncoat/GameStateModel"].fromString=JsMockito.mockFunction()
+        JsMockito.when(mocks["lib/turncoat/GameStateModel"].fromString)(JsHamcrest.Matchers.anything()).then((a)->
+          gsmInput=a
+        )
+      )
+      test("validTemplateId_callsGameStateModelFromStringOnTemplateWithId",()->
+        lps = new LocalStoragePersister()
+        lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
+        JsMockito.verify(mocks["lib/turncoat/GameStateModel"].fromString)(JsHamcrest.Matchers.containsString("MOCK_TEMPLATE_ID2"))
+      )
+      test("validTemplateId_callsGameStateModelFromStringWithValidJSON",()->
+        lps = new LocalStoragePersister()
+        game=lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
+        chai.assert.doesNotThrow(()->
+          JSON.parse(gsmInput)
+        )
+      )
+      test("validTemplateId_callsGameStateModelFromStringWithValidJSONWithCorrectData",()->
+        lps = new LocalStoragePersister()
+        lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
+        chai.assert.equal(JSON.parse(gsmInput).label, "MOCK GAME TEMPLATE 2")
+      )
+      test("missingId_throws",()->
+        lps = new LocalStoragePersister()
+        chai.assert.throws(()->
+          lps.loadGameTemplate("MOCK_TEMPLATE_MISSINGID")
+        )
+      )
+      test("undefinedId_throws",()->
+        lps = new LocalStoragePersister()
+        chai.assert.throws(()->
+          lps.loadGameTemplate()
+        )
+      )
+    )
+    suite("loadGameTypes", ()->
+      test("retrievesAllItemsInGameTypesArrayAsBackboneCollection",()->
+        lps = new LocalStoragePersister()
+        types=lps.loadGameTypes()
+        chai.assert.instanceOf(types,Backbone.Collection)
+        chai.assert.equal(types.length,3)
       )
     )
     suite("loadGameList", ()->

@@ -1,4 +1,26 @@
 /* Will be compiled down to a single stylesheet with your sass files */
+@font-face {
+    font-family: 'Caslon Antique';
+    src: url('styles/CASLANTR.ttf');
+    src: local('☺'),
+    url('CASLANTR.woff') format('woff'), url('CASLANTR.ttf') format('truetype');
+}@font-face{
+    font-family: "caslon antique";
+    src: url(CASLANTR.TTF)
+}
+select{
+    font-family: caslon antique;
+    background-color: white;
+    border:#000000 solid 1px;
+}
+
+select.large,
+label.large{
+    font-size: 20px;
+}
+div{
+    font-family: caslon antique;
+}
 .dialogue-container{
     display:none;
     position:absolute;
@@ -6,7 +28,76 @@
 
 }
 .large-dialogue{
-    left:30%
+    top:20%;
+    left:20%;
+    right:20%;
+    bottom:20%;
+
+}
+.administration-tab {
+    position:absolute;
+    background-color:#DEDEDE;
+    z-index:0;
+    top:46px;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    padding:2px;
+    border:solid 2px black;
+}
+.administration-tab.active-tab {
+     background-color:#FFFFFF;
+     z-index:1
+}
+.administration-tab .tab-content {
+    margin:4px;
+    padding:4px;
+    border-top:solid 1px black;
+
+    border-bottom:solid 1px black;
+}
+.tab-header{
+    position:absolute;
+    top:-48px;
+    left:-2px;
+    margin-left:-2px;
+    margin-right:-2px;
+    height:40px;
+    width:32.7%;
+    background-color:#DEDEDE;
+    text-align: center;
+    border:solid 2px black;
+    border-left:solid 1px black;
+
+    border-right:solid 1px black;
+    padding:2px
+}
+.tab-header div {
+    cursor:pointer;
+    font-size: 35px;
+    top:3px
+}
+div:first-child>.tab-header{
+     left:0%;
+    border-left-width: 2px;
+}
+div:nth-child(2)>.tab-header{
+     left:33.5%;
+     width:33%;
+}
+div:nth-child(3)>.tab-header{
+     left:67%;
+     border-right-width: 2px;
+}
+.active-tab .tab-header{
+    background-color:#FFFFFF;
+    border-bottom-color:white;
+}
+.tab-header:hover{
+    color:#ffffff;
+    background-color:#434343;
+    border-color:white;
+    z-index: 2;
 
 }
 #playArea .playAreaLayer {
@@ -14,10 +105,6 @@
 }
 .playAreaLayer {
     position:absolute;
-    top:20%;
-    left:20%;
-    right:20%;
-    bottom:20%
 }
 
 .view-model-item{

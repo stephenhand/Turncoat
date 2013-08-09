@@ -13,6 +13,7 @@ define(["underscore", "backbone", "rivets", "jquery"], (_, Backbone, rivets, $)-
         rootJQ = $(@rootSelector, @rootContext)
         rootJQ.html(@template)
         @view = rivets.bind(rootJQ, @model)
+        @delegateEvents(@events)
     )
 
     BaseView

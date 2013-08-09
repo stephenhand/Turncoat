@@ -1,17 +1,30 @@
-define(['underscore', 'backbone', "lib/turncoat/Factory", 'text!data/manOWarGameTemplates.txt'], (_, Backbone, Factory, templatesListText)->
+define(['underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/GameStateModel", 'text!data/manOWarGameTemplates.txt', 'text!data/config.txt'], (_, Backbone, Factory, GameStateModel, templatesListText, configText)->
   class LocalStoragePersister
     loadUser:(id)->
       if !id? then throw new Error("Must specify a player id.")
       return id
 
     loadGameTemplateList:(type, player)->
-
       new Backbone.Collection(
         for gameTemplate in JSON.parse(templatesListText)
           id:gameTemplate.id
           label:gameTemplate.label
           players:gameTemplate.players?.length
 
+      )
+
+    loadGameTemplate:(id)->
+      template = _.find(JSON.parse(templatesListText),(t)->t.id is id)
+      if (!template?) then throw new Error("Failed to load listed template")
+      GameStateModel.fromString(
+        JSON.stringify(
+          template
+        )
+      )
+
+    loadGameTypes:()->
+      new Backbone.Collection(
+        JSON.parse(configText).gameTypes
       )
 
     loadGameList:(type)->

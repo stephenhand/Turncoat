@@ -30,7 +30,9 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/BaseView', 'UI/PlayAr
       )
 
     createAdministrationView:()->
-      @administrationView= new AdministrationView( )
+      @administrationView= new AdministrationView(
+        $el:$("#administrationDialogue")
+      )
   ManOWarTableTopView
 )
 
