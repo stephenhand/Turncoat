@@ -193,9 +193,12 @@ class Rivets.View
 
             return
 
+        recursiveParse = (node)=>
+          recursiveParse(child) for child in node.children
+          if (node.attributes?) then parse(node)
+
         for el in @els
-            parse el
-            parse node for node in el.getElementsByTagName '*' when node.attributes?
+          recursiveParse el
 
         return
 

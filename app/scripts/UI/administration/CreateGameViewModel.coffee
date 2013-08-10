@@ -20,6 +20,37 @@ define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/B
         )
 
       @gameTypes.onSourceUpdated()
+
+      @selectedGameType = new Backbone.Model(
+      )
+      @selectedGameType.on("change:id", ()->
+        @set("template",AppState.loadGameTemplate(@get("id")))
+        console.log("selected set")
+      )
+      @selectedGameType.set("id",@gameTypes.at(0)?.get("id"))
+
+      @gameSetupTypes=new BackboneViewModelCollection( )
+      @gameSetupTypes.watch([AppState.get("gameTypes")])
+
+      @gameSetupTypes.onSourceUpdated=()=>
+        @gameSetupTypes.updateFromWatchedCollections(
+          (item , watched)->
+            item.get("id")? and (item.get("id") is watched.get("id"))
+          (watched)->
+            new Backbone.Model(watched.attributes)
+        )
+
+      @gameSetupTypes.onSourceUpdated()
+
+      @selectedGameSetupType = new Backbone.Model( )
+      @selectedGameSetupType.on("change:id", ()=>
+        @set("template",@gameSetupTypes.find(
+          (item)=>
+            item.get("id") is @selectedGameSetupType.get("id")
+        ))
+      )
+      @selectedGameSetupType.set("id", @gameSetupTypes.at(0)?.get("id"))
+
   )
 
 

@@ -3,7 +3,7 @@
     "defaultPersister":"LocalStoragePersister",
     "gameTypes":[
         {
-            "name":"local",
+            "id":"local",
             "label":"Local",
             "description":"This type of game is player entirely within the browser the game is created in. It can be played by any player at any time, and players can still receive invites to local games offline. This type of game is very quick and easy to set up, but cannot be played from anywhere but the in the browser and on the device where it is created.",
             "marshaller":"JSONMarshaller",

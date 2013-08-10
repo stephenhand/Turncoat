@@ -8,6 +8,10 @@ define(['underscore', 'backbone', 'lib/turncoat/Game','lib/turncoat/Factory', 't
     loadUser:(id)->
       @set("currentUser", persister.loadUser(id))
       @set("gameTemplates", persister.loadGameTemplateList(null, id))
+      @set("gameTypes", persister.loadGameTypes())
+    loadGameTemplate:(id)->
+      if (!id?) then throw new Error("loadGameTemplate requires an ID parameter")
+      persister.loadGameTemplate(id)
   )
 
   #Singleton

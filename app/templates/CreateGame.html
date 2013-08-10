@@ -1,12 +1,14 @@
 <div>
-    <label for="gameTemplates" class="large">Choose Scenario: </label><select id="gameTemplates" class="large">
-        <option data-rv-each-gametype="gameTypes" data-rv-text="gametype.label" data-rv-id="gametype.id" />
+    <label for="gameTemplates" class="large">Choose Scenario: </label>
+    <select id="gameTemplates" class="large" data-rv-value="selectedGameType.id">
+        <option data-rv-each-gametype="gameTypes" data-rv-text="gametype.label" data-rv-value="gametype.id" />
     </select>
     <div class="inset">
         <span>Players</span>
 
     </div>
-    <label for="gameTypes" class="large">Play Game As: </label> <select id="gameTypes" class="large">
-        <option data-rv-each-gametype="gameTypes" data-rv-text="gametype.label" data-rv-id="gametype.id" />
+    <label for="gameTypes" class="large">Play Game As: </label>
+    <select id="gameTypes" class="large" data-rv-value="selectedGameSetup.id">
+        <option data-rv-each-gamesetuptype="gameSetupTypes" data-rv-text="gamesetuptype.label" data-rv-value="gamesetuptype.id" />
     </select>
 </div>
