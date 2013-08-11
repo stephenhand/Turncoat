@@ -1,5 +1,5 @@
 define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (Backbone, rivets, modal, AppState , ManOWarTableTopView)->
-  configureRivets=()->
+  configureRivets = ()->
     rivets.configure(
       prefix:"rv"
       adapter:
@@ -8,11 +8,26 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
         unsubscribe:(obj,keypath,callback)->
           obj.off('change:' + keypath, callback)
         read:(obj,keypath)->
-          if (obj instanceof Backbone.Collection) then obj["models"] else obj.get(keypath)
-        publish: (obj, keypath, value)->
-          obj.set(keypath, value)
-    )
+          keypath?=[]
+          if !_.isArray(keypath) then keypath=keypath.split('.')
+          if (keypath[0])
+            val = obj.get(keypath.shift())
+            @read(val ,keypath)
+          else
+            if (obj instanceof Backbone.Collection)
+              obj["models"]
+            else
+              obj
 
+        publish: (obj, keypath, value)->
+          keypath ?= []
+          if !_.isArray(keypath) then keypath=keypath.split('.')
+          if (keypath[1])
+            val = obj.get(keypath.shift())
+            @publish(val ,keypath)
+          else
+            obj.set(keypath[0],value)
+    )
 
   AppHost =
     router:new Backbone.Router(

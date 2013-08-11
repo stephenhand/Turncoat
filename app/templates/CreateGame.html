@@ -4,8 +4,8 @@
         <option data-rv-each-gametype="gameTypes" data-rv-text="gametype.label" data-rv-value="gametype.id" />
     </select>
     <div class="inset">
-        <span>Players</span>
-
+        <span class="large" data-rv-text="selectedGameType.template.label < selectedGameType.template"></span><span class="large">Players</span>
+        <span data-rv-each-player="selectedGameType.template.players < selectedGameType.template selectedGameType.template.players" data-rv-text="player.name" />
     </div>
     <label for="gameTypes" class="large">Play Game As: </label>
     <select id="gameTypes" class="large" data-rv-value="selectedGameSetup.id">
