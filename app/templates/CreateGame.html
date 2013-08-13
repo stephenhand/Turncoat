@@ -4,8 +4,18 @@
         <option data-rv-each-gametype="gameTypes" data-rv-text="gametype.label" data-rv-value="gametype.id" />
     </select>
     <div class="inset">
-        <span class="large" data-rv-text="selectedGameType.template.label < selectedGameType.template"></span><span class="large">Players</span>
-        <span data-rv-each-player="selectedGameType.template.players < selectedGameType.template selectedGameType.template.players" data-rv-text="player.name" />
+        <div class="player-selection">
+            <span class="large">Players</span>
+
+            <div data-rv-each-player="selectedGameType.template.players < selectedGameType.template selectedGameType.template.players" class="player-item" data-rv-class-selected-player="player.selectedForUser">
+
+                <span data-rv-text="player.name" />
+                <div><div class="select-box"/><span class="selected-player-only">You will play this player.</span><span class="other-player-only">Select to play or send invite to <span data-rv-text="selectedGameSetupType.userIdentifierTitle"></span></div> :
+                <input type="text" data-rv-name="player.id"></input>
+            </div>
+
+
+        </div>
     </div>
     <label for="gameTypes" class="large">Play Game As: </label>
     <select id="gameTypes" class="large" data-rv-value="selectedGameSetup.id">

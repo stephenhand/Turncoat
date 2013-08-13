@@ -100,6 +100,27 @@ div:nth-child(3)>.tab-header{
     z-index: 2;
 
 }
+.selected-player:hover{
+    background-color:#F0F0F0
+}
+
+.selected-player-only{
+    display:none
+}
+.selected-player .selected-player-only{
+    display:inline
+}
+.selected-player .other-player-only {
+    display:none
+}
+.select-box{
+     width:45px;
+     height:45px;
+     border:solid 1px black
+ }
+.selected-player .select-box{
+   background-image: url('/images/MOWSkullXBoneMarker50x50.png');
+ }
 #playArea .playAreaLayer {
     float:left;
 }

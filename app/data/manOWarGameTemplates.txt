@@ -7,6 +7,7 @@
         {
             "_type":"Player",
             "name":"Dead Ted",
+            "id":"1-PLAYER1-deadted",
             "fleet":[
                 {
                     "_type":"FleetAsset",
@@ -42,6 +43,7 @@
           {
               "_type":"Player",
               "name":"Dead Ted",
+              "id":"1-PLAYER1-deadted",
               "fleet":[
                   {
                       "_type":"FleetAsset",
@@ -59,6 +61,7 @@
           {
               "_type":"Player",
               "name":"Red Fred",
+              "id":"1-PLAYER2-redfred",
               "fleet":[
                   {
                       "_type":"FleetAsset",

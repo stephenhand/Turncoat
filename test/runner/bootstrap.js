@@ -49,7 +49,10 @@ require.config({
 });
 
 //Isolate = require("");
-
+require(['jquery','backbone'], function($,Backbone){
+        Backbone.$=$;
+    }
+);
 require(["isolate","configureIsolate"], function(Isolate){
     window.isolate = Isolate;
     isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jqModal','BaseView',/text!.+/,/spec\/.*/])

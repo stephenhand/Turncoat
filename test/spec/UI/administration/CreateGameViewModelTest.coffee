@@ -3,23 +3,40 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 
   Isolate.mapAsFactory("AppState","UI/administration/CreateGameViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-        get:(key)->
-          switch key
-            when "gameTemplates"
-              [
-                id:"MOCK_TEMPLATE1"
-              ,
-                id:"MOCK_TEMPLATE2"
-              ]
-            when "gameTypes"
+      loadGameTemplate:(id)->
+        if (id is 'MOCK_TEMPLATE2')
+          new Backbone.Model(
+            id:"MOCK_TEMPLATE2"
+            label:"Another Mock Template"
+            players:new Backbone.Collection([
+              new Backbone.Model(
+                id:"TEST"
+              )
+            ])
+
+          )
+      get:(key)->
+        switch key
+          when "gameTemplates"
+            [
+              id:"MOCK_TEMPLATE1"
+              label:"A Mock Template"
+            ,
+              id:"MOCK_TEMPLATE2"
+              label:"Another Mock Template"
+            ]
+          when "gameTypes"
+            new Backbone.Collection(
               [
                 id:"MOCK_GAME_TYPE"
+
               ,
                 id:"OTHER_MOCK_GAME_TYPE"
-
+                label:"Another Game Configuration"
               ]
-            else
-              null
+            )
+          else
+            null
     )
   )
   Isolate.mapAsFactory("UI/BaseViewModelCollection","UI/administration/CreateGameViewModel", (actual, modulePath, requestingModulePath)->
@@ -76,9 +93,22 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
       )
       test("watchesAppStateGameTypes", ()->
         cgvm = new CreateGameViewModel()
-        JsMockito.verify(cgvm.gameSetupTypes.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasItems(JsHamcrest.Matchers.hasMember('id','MOCK_GAME_TYPE'),JsHamcrest.Matchers.hasMember('id','OTHER_MOCK_GAME_TYPE'))))
+        JsMockito.verify(cgvm.gameSetupTypes.watch)(
+          JsHamcrest.Matchers.hasItem(
+            JsHamcrest.Matchers.hasMember(
+              "models",
+              JsHamcrest.Matchers.hasItems(
+                JsHamcrest.Matchers.hasMember(
+                  "attributes",
+                  JsHamcrest.Matchers.hasMember('id','MOCK_GAME_TYPE'),
+                  JsHamcrest.Matchers.hasMember('id','OTHER_MOCK_GAME_TYPE')
+                )
+              )
+            )
+          )
+        )
       )
-      test("setsGameTypesOnSourceUpdated", ()->
+      test("setsGameSetupTypesOnSourceUpdated", ()->
         cgvm = new CreateGameViewModel()
         chai.assert.isFunction(cgvm.gameSetupTypes.onSourceUpdated)
       )
@@ -102,7 +132,57 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
         model=new Backbone.Model({label:"Mock Game Type",persister:"MOCK_PERSISTER",id:"B"})
         newM=cgvm.gameTypes.updateFromWatchedCollectionsRes.adder(model)
         chai.assert.notEqual(newM.attributes,model.attributes)
+      )
+      test("setsUpSelectedGameTypeToSetTemplateWhenIdChanges",()->
+        cgvm = new CreateGameViewModel()
+
+        cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
+        chai.assert.equal(cgvm.selectedGameType.get("template").get("label"), "Another Mock Template")
+
+      )
+      test("setsUpSelectedGameTypeToSetPlayerForUserWhenIdChanges",()->
+        cgvm = new CreateGameViewModel()
+
+        cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
+        chai.assert(cgvm.selectedGameType.get("template").get("players").at(0).get("selectedForUser"))
+
+      )
+      test("setsUpSelectedGameSetupTypeToSetTypeWhenIdChanges",()->
+        cgvm = new CreateGameViewModel()
+        cgvm.gameSetupTypes = new Backbone.Collection(
+          [
+            id:"MOCK_GAME_TYPE"
+
+          ,
+            id:"OTHER_MOCK_GAME_TYPE"
+            label:"Another Game Configuration"
+          ]
         )
+        cgvm.selectedGameSetupType.set("id","OTHER_MOCK_GAME_TYPE")
+        chai.assert.equal(cgvm.selectedGameSetupType.get("setup").get("label"), "Another Game Configuration")
+
+      )
+    )
+    suite("selectUsersPlayer", ()->
+      cgvm = null
+      setup(()->
+        cgvm=new CreateGameViewModel()
+        cgvm.selectedGameType= new Backbone.Model(
+          template:new Backbone.Model(
+            players:new Backbone.Collection([
+              id:"PLAYER_1"
+            ,
+              id:"PLAYER_2"
+            ])
+          )
+        )
+      )
+      test("validId_setsUsersPlayerToTrueOnOnlyPlayerWithCorrectId",()->
+        cgvm.selectUsersPlayer("PLAYER_1")
+        chai.assert(cgvm.selectedGameType.get("template").get("players").at(0).get("selectedForUser"))
+        chai.assert.isUndefined(cgvm.selectedGameType.get("template").get("players").at(1).get("selectedForUser"))
+
+      )
     )
   )
 

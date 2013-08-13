@@ -23,6 +23,7 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
     )
 
   Isolate.mapAsFactory("jquery", (actual, modulePath, requestingModulePath)->
+    window.mockLibrary[requestingModulePath]?=[]
     window.mockLibrary[requestingModulePath]["jqueryObjects"]={}
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
 

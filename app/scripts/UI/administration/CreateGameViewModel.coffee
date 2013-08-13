@@ -23,9 +23,9 @@ define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/B
 
       @selectedGameType = new Backbone.Model(
       )
-      @selectedGameType.on("change:id", ()->
-        @set("template",AppState.loadGameTemplate(@get("id")))
-        console.log("selected set")
+      @selectedGameType.on("change:id", ()=>
+        @selectedGameType.set("template",AppState.loadGameTemplate(@selectedGameType.get("id")))
+        @selectUsersPlayer( @selectedGameType.get("template").get("players").at(0).get("id"))
       )
       @selectedGameType.set("id",@gameTypes.at(0)?.get("id"))
 
@@ -44,12 +44,15 @@ define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/B
 
       @selectedGameSetupType = new Backbone.Model( )
       @selectedGameSetupType.on("change:id", ()=>
-        @set("template",@gameSetupTypes.find(
+        @selectedGameSetupType.set("setup",@gameSetupTypes.find(
           (item)=>
             item.get("id") is @selectedGameSetupType.get("id")
         ))
       )
       @selectedGameSetupType.set("id", @gameSetupTypes.at(0)?.get("id"))
+
+    selectUsersPlayer:(id)->
+      (if player.get("id") is id then player.set("selectedForUser",true) else player.unset("selectedForUser")) for player in @selectedGameType.get("template").get("players").models
 
   )
 
