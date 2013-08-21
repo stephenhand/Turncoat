@@ -3,17 +3,19 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
     mocks = window.mockLibrary["UI/administration/AdministrationDialogueView"]
     suite("tabClicked", ()->
       contextCaller =
-        call:(func)->
-          func()
+        call:(func, param)->
+          func(param)
 
 
       test("removesActiveClassFromAnyElementWithATabClass", ()->
-        contextCaller.call(new AdministrationDialogueView().tabClicked)
+        contextCaller.call(new AdministrationDialogueView().tabClicked, {currentTarget:{}})
         JsMockito.verify(mocks.jqueryObjects[".administration-tab"].toggleClass)("active-tab", false)
       )
       test("appliesActiveClassToCurrentContext", ()->
-        contextCaller.call(new AdministrationDialogueView().tabClicked)
-        JsMockito.verify(mocks.jqueryObjects[contextCaller].parent)()
+        event=
+          currentTarget:{}
+        new AdministrationDialogueView().tabClicked(event)
+        JsMockito.verify(mocks.jqueryObjects[event.currentTarget].parent)()
         JsMockito.verify(mocks.jqueryObjects.methodResults.parent.toggleClass)("active-tab", true)
 
       )

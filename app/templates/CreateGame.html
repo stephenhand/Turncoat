@@ -1,19 +1,18 @@
 <div>
-    <label for="gameTemplates" class="large">Choose Scenario: </label>
+    <label for="gameTemplates" class="large">Choose Scenario : </label>
     <select id="gameTemplates" class="large" data-rv-value="selectedGameType.id">
         <option data-rv-each-gametype="gameTypes" data-rv-text="gametype.label" data-rv-value="gametype.id" />
     </select>
     <div class="inset">
         <div class="player-selection">
-            <span class="large">Players</span>
+            <span class="large">Assign Players : </span>
 
             <div data-rv-each-player="selectedGameType.template.players < selectedGameType.template selectedGameType.template.players" class="player-item" data-rv-class-selected-player="player.selectedForUser">
 
                 <span data-rv-text="player.name" />
-                <div><div class="select-box"/><span class="selected-player-only">You will play this player.</span><span class="other-player-only">Select to play or send invite to <span data-rv-text="selectedGameSetupType.userIdentifierTitle"></span></div> :
-                <input type="text" data-rv-name="player.id"></input>
+                <span><div class="select-box"><div class="selected-player-marker" data-rv-id="player.id"/></div><span class="selected-player-only">You will play this player.</span><span class="other-player-only">Select to play or send invite to <span data-rv-text="selectedGameSetupType.userIdentifierTitle"></span> :
+                <input type="text" data-rv-name="player.id"></input></span>
             </div>
-
 
         </div>
     </div>

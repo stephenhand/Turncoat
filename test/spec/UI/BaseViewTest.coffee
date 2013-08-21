@@ -88,6 +88,56 @@ define(["isolate!UI/BaseView"], (BaseView)->
             chai.assert.equal(bv.view.id, "MOCK_RIVETS_VIEW")
             chai.assert.equal(bv.view.selector, mocks.jqueryObjects["TEST_SELECTOR"])
           )
+          test("sets$elToRootSelectorResult", ()->
+            bv = new BaseView(
+              rootSelector:"TEST_SELECTOR"
+            )
+            bv.createModel=JsMockito.mockFunction()
+            bv.render()
+            chai.assert.equal(bv.$el, mocks.jqueryObjects["TEST_SELECTOR"])
+          )
+
+          test("undelegatesExistingEvents", ()->
+            bv = new BaseView(
+              rootSelector:"TEST_SELECTOR"
+            )
+            if (bv.undelegateEvents)
+              bv.undelegateEvents= JsMockito.mockFunction()
+            else
+              chai.assert(false,"Base Views should support undelegateEvents method")
+            bv.createModel=JsMockito.mockFunction()
+            bv.render()
+            JsMockito.verify(bv.undelegateEvents)()
+          )
+
+          test("delegatesEventsObject", ()->
+            ev={}
+            bv = new BaseView(
+              rootSelector:"TEST_SELECTOR"
+              events:ev
+            )
+            if (bv.delegateEvents)
+              bv.delegateEvents= JsMockito.mockFunction()
+            else
+              chai.assert(false, "Base Views should support delegateEvents method")
+            bv.createModel=JsMockito.mockFunction()
+            bv.render()
+            JsMockito.verify(bv.delegateEvents)(ev)
+          )
+
+          test("delegatesUndefinedIfEventNotDefined", ()->
+            ev={}
+            bv = new BaseView(
+              rootSelector:"TEST_SELECTOR"
+            )
+            if (bv.delegateEvents)
+              bv.delegateEvents= JsMockito.mockFunction()
+            else
+              chai.assert(false, "Base Views should support delegateEvents method")
+            bv.createModel=JsMockito.mockFunction()
+            bv.render()
+            JsMockito.verify(bv.delegateEvents)(JsHamcrest.Matchers.nil())
+          )
         )
         suite("createModel", ()->
           test("throwsIfNotOverriden", ()->

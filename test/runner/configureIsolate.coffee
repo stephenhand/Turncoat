@@ -1,4 +1,17 @@
-define(["isolate","isolateHelper"], (Isolate, Helper)->
+define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
+  class UniquelyIdentifiable
+    constructor:()->
+      hashVal = UUID()
+      hashProp = UUID()
+      @[hashProp]=hashVal
+
+      @__origToString = @toString()
+      @toString=()->
+        @[hashProp]
+
+
+
+
   Isolate.mapType('object',Isolate.mapAsFactory((actual, modulePath, requestingModulePath)->
       actual
     )
@@ -30,6 +43,7 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
       mockJQuery = JsMockito.mockFunction()
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything()).then(
         (selector)=>
+          if typeof selector is "object" then _.extend(selector, new UniquelyIdentifiable())
           mockJQueryObj = JsMockito.mock(actual)
           mockJQueryObj.jqm=JsMockito.mockFunction()
           mockJQueryObj.jqmShow=JsMockito.mockFunction()
@@ -42,6 +56,8 @@ define(["isolate","isolateHelper"], (Isolate, Helper)->
       )
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
         (selector, context)=>
+          if typeof selector is "object" then _.extend(selector, new UniquelyIdentifiable())
+          if typeof context is "object" then _.extend(selector, new UniquelyIdentifiable())
           mockJQueryObj = JsMockito.mock(actual)
           mockJQueryObj.jqm=JsMockito.mockFunction()
           mockJQueryObj.jqmShow=JsMockito.mockFunction()

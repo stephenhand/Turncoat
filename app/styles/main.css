@@ -14,8 +14,7 @@ select{
     border:#000000 solid 1px;
 }
 
-select.large,
-label.large{
+.large{
     font-size: 20px;
 }
 div{
@@ -114,13 +113,27 @@ div:nth-child(3)>.tab-header{
     display:none
 }
 .select-box{
-     width:45px;
-     height:45px;
-     border:solid 1px black
+     width:40px;
+     height:40px;
+     border:solid 1px black;
+    display:inline-block
  }
-.selected-player .select-box{
-   background-image: url('/images/MOWSkullXBoneMarker50x50.png');
+.selected-player-marker {
+    transition: opacity .5s ease-out;
+    -moz-transition: opacity .5s ease-out;
+    -webkit-transition: opacity .5s ease-out;
+    -o-transition: opacity .5s ease-out;
+    opacity: 0;
+    position:relative;
+    top:-5px;
+    left:-5px;
+    width:50px;
+    height:50px;
+   background-image: url('/images/MOWSkullXBoneMarkerTransp50x47.png');
  }
+.selected-player .selected-player-marker {
+    opacity: 1
+}
 #playArea .playAreaLayer {
     float:left;
 }
@@ -135,5 +148,4 @@ div:nth-child(3)>.tab-header{
 .fleet-asset-2d{
     border:solid 1px black;
     width:30px;
-    height:60px
-}
+  

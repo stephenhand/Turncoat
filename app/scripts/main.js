@@ -4,7 +4,7 @@ require.config({
   paths: {
     hm: 'vendor/hm',
     esprima: 'vendor/esprima',
-    jquery: 'vendor/jquery.min',
+    jquery: 'vendor/jquery-1.10.2',
     jqModal: 'vendor/jqModal',
     underscore: 'vendor/underscore',
     backbone: 'vendor/backbone',
@@ -16,6 +16,9 @@ require.config({
     data : '../data'
   },
   shim:{
+      'jquery':{
+          exports:"$"
+      },
       'underscore':{
           exports:"_"
       },

@@ -9,6 +9,15 @@ define(['underscore', 'backbone', 'UI/BaseView', "UI/administration/CreateGameVi
     createModel:()->
       @model = new CreateGameViewModel()
 
+    events:
+      'click .selected-player-marker':'selectedPlayerMarker_clicked'
+
+    selectedPlayerMarker_clicked:(event)->
+      console.log("clicked")
+      @model.selectUsersPlayer(event.target.id)
+
+    render:()->
+      super()
   CreateGameView
 )
 

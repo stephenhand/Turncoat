@@ -9,10 +9,11 @@ define(["underscore", "backbone", "rivets", "jquery"], (_, Backbone, rivets, $)-
       createModel:()->
         throw(new Error("createModel method required for BaseViews"))
       render:()->
+        @undelegateEvents()
         @createModel()
-        rootJQ = $(@rootSelector, @rootContext)
-        rootJQ.html(@template)
-        @view = rivets.bind(rootJQ, @model)
+        @$el = $(@rootSelector, @rootContext)
+        @$el.html(@template)
+        @view = rivets.bind(@$el, @model)
         @delegateEvents(@events)
     )
 

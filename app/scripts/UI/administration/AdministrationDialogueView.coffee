@@ -14,8 +14,8 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/Ad
     events:
       "click .tab-header" : "tabClicked"
 
-    tabClicked:()=>
-      setActiveTab(this)
+    tabClicked:(event)->
+      setActiveTab(event.currentTarget)
 
     createModel:()->
        @model = new AdministrationDialogueViewModel()
@@ -25,7 +25,7 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/Ad
       @createGameView.render()
 
     createCreateGameTabView:()->
-      @createGameView = new CreateGameView()
+      @createGameView = new CreateGameView($("#createGame"))
   AdministrationDialogueView
 )
 
