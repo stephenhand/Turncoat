@@ -3,7 +3,7 @@ define(['underscore', 'backbone', 'UI/BaseView', "UI/administration/CreateGameVi
     initialize:(options)->
       options?={}
       options.template = templateText
-      options.rootSelector = "#createGame"
+      options.rootSelector ?= "#createGame"
       super(options)
 
     createModel:()->
@@ -11,13 +11,16 @@ define(['underscore', 'backbone', 'UI/BaseView', "UI/administration/CreateGameVi
 
     events:
       'click .selected-player-marker':'selectedPlayerMarker_clicked'
+      'click #confirm-create-game':'confirmCreateGame_clicked'
+
 
     selectedPlayerMarker_clicked:(event)->
-      console.log("clicked")
       @model.selectUsersPlayer(event.target.id)
 
-    render:()->
-      super()
+    confirmCreateGame_clicked:()->
+      if (@model.validate())
+        @model.createGame()
+
   CreateGameView
 )
 

@@ -16,7 +16,7 @@ define(["underscore", "backbone"], (_, Backbone)->
       ,
         name:"invites"
         class:"invites-tab"
-        label:"Invites"
+        label:"Challenges"
         active:false
         visible:true
       ])

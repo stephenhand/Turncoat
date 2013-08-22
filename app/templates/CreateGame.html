@@ -3,21 +3,32 @@
     <select id="gameTemplates" class="large" data-rv-value="selectedGameType.id">
         <option data-rv-each-gametype="gameTypes" data-rv-text="gametype.label" data-rv-value="gametype.id" />
     </select>
-    <div class="inset">
-        <div class="player-selection">
-            <span class="large">Assign Players : </span>
-
-            <div data-rv-each-player="selectedGameType.template.players < selectedGameType.template selectedGameType.template.players" class="player-item" data-rv-class-selected-player="player.selectedForUser">
-
-                <span data-rv-text="player.name" />
-                <span><div class="select-box"><div class="selected-player-marker" data-rv-id="player.id"/></div><span class="selected-player-only">You will play this player.</span><span class="other-player-only">Select to play or send invite to <span data-rv-text="selectedGameSetupType.userIdentifierTitle"></span> :
-                <input type="text" data-rv-name="player.id"></input></span>
-            </div>
-
-        </div>
-    </div>
+    <div style="float:right">
     <label for="gameTypes" class="large">Play Game As: </label>
     <select id="gameTypes" class="large" data-rv-value="selectedGameSetup.id">
         <option data-rv-each-gamesetuptype="gameSetupTypes" data-rv-text="gamesetuptype.label" data-rv-value="gamesetuptype.id" />
     </select>
+    </div>
+    <div  class="inset">
+        <div class="scenario-info">
+            <span class="heading" data-rv-text="selectedGameType.template.label < selectedGameType.template"></span><br/>
+            <span data-rv-text="selectedGameType.template.description < selectedGameType.template"></span>
+        </div>
+        <div class="player-selection">
+            <span class="large">Assign Players : </span>
+
+            <div data-rv-each-player="selectedGameType.template.players < selectedGameType.template selectedGameType.template.players" class="player-item" data-rv-class-selected-player="player.selectedForUser">
+                <div class="info-panel">
+                    <span data-rv-text="player.name" class="large" /><br/>
+                    <span data-rv-text="player.description" />
+                </div>
+                <div class="select-box"><div class="selected-player-marker" data-rv-id="player.id"/></div>
+                <div class="user-info"><span class="selected-player-only">You will play this player.</span><span class="other-player-only">Select to play or send invite to <span data-rv-text="selectedGameSetupType.userIdentifierTitle"></span> :
+                    <input type="text" data-rv-name="player.id" data-rv-value="player.userId"></input></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="button-row"><input type="button" id="confirm-create-game" value="Create Game & Issue Challenges"/></div>
 </div>

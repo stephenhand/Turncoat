@@ -52,7 +52,13 @@ define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/B
       @selectedGameSetupType.set("id", @gameSetupTypes.at(0)?.get("id"))
 
     selectUsersPlayer:(id)->
-      (if player.get("id") is id then player.set("selectedForUser",true) else player.unset("selectedForUser")) for player in @selectedGameType.get("template").get("players").models
+      for player in @selectedGameType.get("template").get("players").models
+        if player.get("id") is id
+          player.set("selectedForUser",true)
+          player.set("userId",AppState.get("currentUser"))
+        else
+          if player.get("selectedForUser") is true then player.unset("userId")
+          player.unset("selectedForUser")
 
   )
 

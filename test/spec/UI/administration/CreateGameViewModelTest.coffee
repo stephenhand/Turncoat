@@ -35,6 +35,8 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
                 label:"Another Game Configuration"
               ]
             )
+          when "currentUser"
+            "MOCK_CURRENT_USER"
           else
             null
     )
@@ -181,6 +183,17 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
         cgvm.selectUsersPlayer("PLAYER_1")
         chai.assert(cgvm.selectedGameType.get("template").get("players").at(0).get("selectedForUser"))
         chai.assert.isUndefined(cgvm.selectedGameType.get("template").get("players").at(1).get("selectedForUser"))
+
+      )
+      test("validId_setsUserIdToCurrentUserOnSelectedPlayer",()->
+        cgvm.selectUsersPlayer("PLAYER_1")
+        chai.assert.equal(cgvm.selectedGameType.get("template").get("players").at(0).get("userId"), "MOCK_CURRENT_USER")
+
+      )
+      test("validId_unsetsUserIdOnPlayerThatIsUnselected",()->
+        cgvm.selectUsersPlayer("PLAYER_1")
+        cgvm.selectUsersPlayer("PLAYER_2")
+        chai.assert.isUndefined(cgvm.selectedGameType.get("template").get("players").at(0).get("userId"))
 
       )
     )

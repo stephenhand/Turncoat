@@ -39,11 +39,13 @@
       "id":"2",
       "label":"War Galley Duel",
       "_type":"ManOWarGameState",
+      "description":"Whilst en route to rendezvous with the rest of her patrol squardron, lookouts on the Imperial war galley 'Todbringer' spot a sail on the horizon. Closer inspection reveals it to be the 'Squealing Pig', galley of pirate captain Dead Ted and a vessel that had been playing merry hell with shipping in these waters the past few months. The 'Todbringer' now blocks the Pig's escape from the rest of her squadron. Sensing an opportunity to make her mark at court, commander Winnifred Redmark orders her helmsman to bring them about onto an intercept course...",
       "players":[
           {
               "_type":"Player",
               "name":"Dead Ted",
               "id":"1-PLAYER1-deadted",
+              "description":"A notorious pirate captain and fugitive from the emperor's justice!",
               "fleet":[
                   {
                       "_type":"FleetAsset",
@@ -62,6 +64,7 @@
               "_type":"Player",
               "name":"Red Fred",
               "id":"1-PLAYER2-redfred",
+              "description":"An imperial war galley captain tasked with keeping the trade routes of the Great Ocean clear of pirates.",
               "fleet":[
                   {
                       "_type":"FleetAsset",
