@@ -3,6 +3,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 
   Isolate.mapAsFactory("AppState","UI/administration/CreateGameViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      createNewGame:JsMockito.mockFunction()
       loadGameTemplate:(id)->
         if (id is 'MOCK_TEMPLATE2')
           new Backbone.Model(
@@ -64,6 +65,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 
 
 define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGameViewModel, Backbone)->
+  mocks=window.mockLibrary['UI/administration/CreateGameViewModel']
   suite("CreateGameViewModel", ()->
     suite("initialize", ()->
       test("createsGameTypes", ()->
@@ -195,6 +197,53 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
         cgvm.selectUsersPlayer("PLAYER_2")
         chai.assert.isUndefined(cgvm.selectedGameType.get("template").get("players").at(0).get("userId"))
 
+      )
+    )
+    suite("validate", ()->
+      cgvm = null
+      setup(()->
+        cgvm=new CreateGameViewModel()
+        cgvm.selectedGameType= new Backbone.Model(
+          template:new Backbone.Model(
+            players:new Backbone.Collection([
+              id:"PLAYER_1"
+            ,
+              id:"PLAYER_2"
+            ,
+              id:"PLAYER_3"
+            ])
+          )
+        )
+      )
+      test("playerHasEmptyUserId_Fails",()->
+        cgvm.selectedGameType.get("template").get("players").at(0).set("userId", "AN_ID")
+        cgvm.selectedGameType.get("template").get("players").at(1).set("userId", "ANOTHER_ID")
+        cgvm.selectedGameType.get("template").get("players").at(2).unset("userId")
+        chai.assert.isFalse(cgvm.validate())
+      )
+      test("anyPlayersHaveSameUserIds_Fails",()->
+        cgvm.selectedGameType.get("template").get("players").at(0).set("userId", "AN_ID")
+        cgvm.selectedGameType.get("template").get("players").at(1).set("userId", "ANOTHER_ID")
+        cgvm.selectedGameType.get("template").get("players").at(2).set("userId", "AN_ID")
+        chai.assert.isFalse(cgvm.validate())
+      )
+      test("allPlayersHaveDifferentUserIds_Passes",()->
+        cgvm.selectedGameType.get("template").get("players").at(0).set("userId", "AN_ID")
+        cgvm.selectedGameType.get("template").get("players").at(1).set("userId", "ANOTHER_ID")
+        cgvm.selectedGameType.get("template").get("players").at(2).set("userId", "YET_ANOTHER_ID")
+        chai.assert.isTrue(cgvm.validate())
+      )
+
+    )
+
+    suite("createGame", ()->
+      test("CallsAppStateCreateNewGame", ()->
+        cgvm=new CreateGameViewModel()
+        cgvm.selectedGameType = new Backbone.Model(
+          template:{}
+        )
+        cgvm.createGame()
+        JsMockito.verify(mocks["AppState"].createNewGame)(cgvm.selectedGameType.get("template"))
       )
     )
   )
