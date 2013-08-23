@@ -2,9 +2,9 @@ define(['underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/GameStat
   class LocalStoragePersister
     loadUser:(id)->
       if !id? then throw new Error("Must specify a player id.")
-      return id
+      return new Backbone.Model(id:id)
 
-    loadGameTemplateList:(type, player)->
+    loadGameTemplateList:(type, user)->
       new Backbone.Collection(
         for gameTemplate in JSON.parse(templatesListText)
           id:gameTemplate.id
@@ -27,36 +27,39 @@ define(['underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/GameStat
         JSON.parse(configText).gameTypes
       )
 
-    loadGameList:(type)->
-      if !window.localStorage["current-games"]
+    loadGameList:(user, type)->
+      if (!user?)
+        throw new ReferenceError("User must be specified")
+      if !window.localStorage[user+"::current-games"]
         return null
-      for game in JSON.parse(window.localStorage["current-games"]) when !type? or game._type is type
+      for game in JSON.parse(window.localStorage[user+"::current-games"]) when !type? or game._type is type
         new Backbone.Model(
           name:game.name
           id:game.id
           type:game._type
         )
 
-
-
-    retrieveGameState:(id)->
+    retrieveGameState:(user, id)->
       if (!id?) then throw new Error("Must specify a game id to retrieve it from storage")
-      if !window.localStorage["current-games"]
+      if !window.localStorage[user+"::current-games"]
         return null
       found = null
-      for game in JSON.parse(window.localStorage["current-games"]) when game.id is id
+      for game in JSON.parse(window.localStorage[user+"::current-games"]) when game.id is id
         found = game
         break
       found
 
-    loadInviteList:(filter)->
-      if !window.localStorage["current-invites"]
+    loadPendingGamesList:(user, filter)->
+      if (!user?) then throw new Error("User must be specified")
+      if !window.localStorage[user+"::pending-games"]
         return null
-      for invite in JSON.parse(window.localStorage["current-invites"]) when !filter? or ((!filter.type? or invite.type is filter.type) and (!filter.status? or invite.status is filter.status))
+      for invite in JSON.parse(window.localStorage[user+"::pending-games"]) when !filter? or ((!filter.type? or invite.type is filter.type) and (!filter.status? or invite.status is filter.status))
         invite.time = new Date(invite.time)
         new Backbone.Model(
           invite
         )
+
+
   Factory.registerPersister("LocalStoragePersister",LocalStoragePersister)
 
   LocalStoragePersister

@@ -95,6 +95,13 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
           )
           chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_ATTRIBUTE"),"MOCK_NESTED_VALUE")
         )
+        test("adapterReadReturnsUndefinedIfMissingChainLink", ()->
+          AppHost.initialise()
+          mod= new Backbone.Model(
+
+          )
+          chai.assert.isUndefined(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_ATTRIBUTE"))
+        )
         test("adapterReadReadsChainedBackboneCollectionAsModels", ()->
           AppHost.initialise()
           mod= new Backbone.Model(

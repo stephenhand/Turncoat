@@ -11,8 +11,12 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
           keypath?=[]
           if !_.isArray(keypath) then keypath=keypath.split('.')
           if (keypath[0])
-            val = obj.get(keypath.shift())
-            @read(val ,keypath)
+            key = keypath.shift()
+            val = obj.get(key)
+            if !val? && keypath.length>0
+              val
+            else
+              @read(val ,keypath)
           else
             if (obj instanceof Backbone.Collection)
               obj["models"]
@@ -23,8 +27,12 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
           keypath ?= []
           if !_.isArray(keypath) then keypath=keypath.split('.')
           if (keypath[1])
-            val = obj.get(keypath.shift())
-            @publish(val ,keypath)
+            key = keypath.shift()
+            val = obj.get(key)
+            if !val? && keypath.length>0
+              val=new Backbone.Model()
+              obj.set(key, val)
+            @publish(val ,keypath, value)
           else
             obj.set(keypath[0],value)
     )

@@ -13,7 +13,7 @@ define(['underscore', 'backbone', 'lib/turncoat/Game','lib/turncoat/Factory', 't
       if (!id?) then throw new Error("loadGameTemplate requires an ID parameter")
       persister.loadGameTemplate(id)
     createNewGame:(initialState)->
-      console.log("Creating new game.")
+      console.log("Creating new game: " + JSON.stringify(initialState))
   )
 
   #Singleton

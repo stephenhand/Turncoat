@@ -55,15 +55,15 @@ define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/B
       for player in @selectedGameType.get("template").get("players").models
         if player.get("id") is id
           player.set("selectedForUser",true)
-          player.set("userId",AppState.get("currentUser"))
+          player.set("user",AppState.get("currentUser"))
         else
-          if player.get("selectedForUser") is true then player.unset("userId")
+          if player.get("selectedForUser") is true then player.unset("user")
           player.unset("selectedForUser")
     validate:()->
       userIds=[]
       for player in @selectedGameType.get("template").get("players").models
-        if !player.get("userId")? or userIds[player.get("userId")] then return false
-        userIds[player.get("userId")] = true
+        if !(player.get("user")?.get("id"))? or userIds[player.get("user").get("id")] then return false
+        userIds[player.get("user").get("id")] = true
       true
 
     createGame:()->

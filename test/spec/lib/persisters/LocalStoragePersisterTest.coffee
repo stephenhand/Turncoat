@@ -95,18 +95,18 @@ define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStorag
     ])
 
     setup(()->
-      window.localStorage["current-games"] = mockStoredGames
-      window.localStorage["current-invites"] = mockInvites
+      window.localStorage["mock_user::current-games"] = mockStoredGames
+      window.localStorage["mock_user::pending-games"] = mockInvites
     )
     suite("loadUser", ()->
-      test("echosProvidedStringId", ()->
+      test("echosProvidedStringIdInModel", ()->
         lps = new LocalStoragePersister()
-        chai.assert.equal(lps.loadUser("MOCK_ID"),"MOCK_ID")
+        chai.assert.equal(lps.loadUser("MOCK_ID").get("id"),"MOCK_ID")
       )
-      test("echosProvidedObjectId", ()->
+      test("echosProvidedObjectIdInModel", ()->
         lps = new LocalStoragePersister()
         val={}
-        chai.assert.equal(lps.loadUser(val),val)
+        chai.assert.equal(lps.loadUser(val).get("id"),val)
       )
       test("throwsIfUndefined", ()->
         lps = new LocalStoragePersister()
@@ -193,7 +193,7 @@ define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStorag
     suite("loadGameList", ()->
       test("retrievesGamesIfThereAreAny", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadGameList()
+        list = lps.loadGameList("mock_user")
         chai.assert.equal(list.length, 3)
         chai.assert.equal(list[0].get("name"), "MOCK_GAME1")
         chai.assert.equal(list[0].get("type"), "MOCK_GAMETYPE")
@@ -205,15 +205,24 @@ define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStorag
         chai.assert.equal(list[2].get("type"), "MOCK_GAMETYPE")
         chai.assert.equal(list[2].get("id"), "MOCK_ID3")
       )
-      test("returnsNullIfNoGamesSaved", ()->
-        window.localStorage.removeItem("current-games")
+      test("returnsNullIfWrongPlayer", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadGameList()
+        list = lps.loadGameList("other_user")
+        chai.assert.isNull(list)
+      )
+      test("throwsIfNoPlayer", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.throws(()->lps.loadGameList())
+      )
+      test("returnsNullIfNoGamesSaved", ()->
+        window.localStorage.removeItem("mock_user::current-games")
+        lps = new LocalStoragePersister()
+        list = lps.loadGameList("mock_user")
         chai.assert.isNull(list)
       )
       test("returnsOnlyCorrectTypeOfGameIfGameTypeSpecified", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadGameList("MOCK_GAMETYPE")
+        list = lps.loadGameList("mock_user", "MOCK_GAMETYPE")
         chai.assert.equal(list.length, 2)
         chai.assert.equal(list[0].get("name"), "MOCK_GAME1")
         chai.assert.equal(list[0].get("type"), "MOCK_GAMETYPE")
@@ -224,52 +233,66 @@ define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStorag
       )
       test("returnsOnlyTypeIdAndName", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadGameList("MOCK_GAMETYPE")
+        list = lps.loadGameList("mock_user", "MOCK_GAMETYPE")
         chai.assert.equal(list.length, 2)
         chai.assert.isUndefined(list[0].data)
         chai.assert.isUndefined(list[1].data)
       )
 
-      test("returnsNullIfNoGamesSaved", ()->
-        window.localStorage.removeItem("current-games")
-        lps = new LocalStoragePersister()
-        list = lps.loadGameList()
-        chai.assert.isNull(list)
-      )
     )
     suite("retrieveGameState", ()->
-      test("returnsFullUnvivifiedObjectIfCorrectIdProvided", ()->
+      test("returnsFullUnvivifiedObjectIfCorrectUserAndIdProvided", ()->
         lps = new LocalStoragePersister()
-        game = lps.retrieveGameState("MOCK_ID3")
+        game = lps.retrieveGameState("mock_user","MOCK_ID3")
         chai.assert.equal(game.id, "MOCK_ID3")
         chai.assert.equal(game.name, "MOCK_GAME3")
         chai.assert.equal(game._type, "MOCK_GAMETYPE")
         chai.assert.equal(game.data.prop, "MOCK_VALUE")
       )
-
-      test("returnsNullIfNoGamesSaved", ()->
-        window.localStorage.removeItem("current-games")
+      test("returnsNullIfIdNotPresent", ()->
         lps = new LocalStoragePersister()
-        game = lps.retrieveGameState("MOCK_ID3")
+        game = lps.retrieveGameState("mock_user","MOCK_MISSING_ID")
+        chai.assert.isNull(game)
+      )
+      test("returnsNullIfWrongPlayer", ()->
+        lps = new LocalStoragePersister()
+        game = lps.retrieveGameState("other_user","MOCK_ID3")
+        chai.assert.isNull(game)
+      )
+      test("returnsNullIfNoGamesSaved", ()->
+        window.localStorage.removeItem("mock_user::current-games")
+        lps = new LocalStoragePersister()
+        game = lps.retrieveGameState("mock_user","MOCK_ID3")
         chai.assert.isNull(game)
       )
       test("throwsWithNoIdSpecified", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.throw(()->
+          lps.retrieveGameState("mock_user")
+        )
+      )
+      test("throwsWithNothingSpecified", ()->
         lps = new LocalStoragePersister()
         chai.assert.throw(()->
           lps.retrieveGameState()
         )
       )
     )
-    suite("loadInviteList", ()->
+    suite("loadPendingGamesList", ()->
 
       test("returnsNullIfNoGamesSaved", ()->
-        window.localStorage.removeItem("current-invites")
+        window.localStorage.removeItem("mock_user::pending-games")
         lps = new LocalStoragePersister()
-        invites = lps.loadInviteList()
+        list = lps.loadPendingGamesList("mock_user")
+        chai.assert.isNull(list)
       )
-      test("returnsFullListIfNoParameterSpecified", ()->
+      test("throwsIfNoUserSpecified", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadInviteList()
+        chai.assert.throws(()->lps.loadPendingGamesList())
+      )
+      test("returnsFullListIfOnlyUserSpecified", ()->
+        lps = new LocalStoragePersister()
+        list = lps.loadPendingGamesList("mock_user")
         chai.assert.equal(list[0].get("name"), "MOCK_GAME1")
         chai.assert.equal(list[0].get("type"), "MOCK_GAMETYPE")
         chai.assert.equal(list[0].get("id"), "MOCK_ID1")
@@ -291,10 +314,15 @@ define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStorag
         chai.assert.equal(list[2].get("time").toUTCString(), new Date(2010,6,1).toUTCString())
         chai.assert.equal(list[2].get("status"), "REJECTED")
       )
+      test("returnsNullIfWrongUserSpecified", ()->
+        lps = new LocalStoragePersister()
+        list = lps.loadPendingGamesList("other_user")
+        chai.assert.isNull(list)
 
+      )
       test("returnsFilteredListIfInviteStatusSpecified", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadInviteList(
+        list = lps.loadPendingGamesList("mock_user",
           status:"PENDING"
         )
         chai.assert.equal(list[0].get("name"), "MOCK_GAME1")
@@ -315,7 +343,7 @@ define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStorag
 
       test("returnsFilteredListIfGameTypeSpecified", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadInviteList(
+        list = lps.loadPendingGamesList("mock_user",
           type:"MOCK_GAMETYPE"
         )
         chai.assert.equal(list[0].get("name"), "MOCK_GAME1")
@@ -335,7 +363,7 @@ define(['isolate!lib/persisters/LocalStoragePersister',"backbone"], (LocalStorag
 
       test("returnsFilteredListIfBothSpecified", ()->
         lps = new LocalStoragePersister()
-        list = lps.loadInviteList(
+        list = lps.loadPendingGamesList("mock_user",
           status:"PENDING"
           type:"MOCK_GAMETYPE"
         )
