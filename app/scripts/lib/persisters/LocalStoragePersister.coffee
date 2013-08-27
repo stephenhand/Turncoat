@@ -1,4 +1,6 @@
-define(['underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/GameStateModel", 'text!data/manOWarGameTemplates.txt', 'text!data/config.txt'], (_, Backbone, Factory, GameStateModel, templatesListText, configText)->
+define(['uuid','underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/GameStateModel", 'text!data/manOWarGameTemplates.txt', 'text!data/config.txt'], (UUID, _, Backbone, Factory, GameStateModel, templatesListText, configText)->
+
+
   class LocalStoragePersister
     loadUser:(id)->
       if !id? then throw new Error("Must specify a player id.")
@@ -30,30 +32,39 @@ define(['underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/GameStat
     loadGameList:(user, type)->
       if (!user?)
         throw new ReferenceError("User must be specified")
-      if !window.localStorage[user+"::current-games"]
+      if !window.localStorage.getItem(user+"::current-games")
         return null
-      for game in JSON.parse(window.localStorage[user+"::current-games"]) when !type? or game._type is type
+      for game in JSON.parse(window.localStorage.getItem(user+"::current-games")) when !type? or game._type is type
         new Backbone.Model(
-          name:game.name
+          label:game.label
           id:game.id
           type:game._type
         )
 
-    retrieveGameState:(user, id)->
+    loadGameState:(user, id)->
       if (!id?) then throw new Error("Must specify a game id to retrieve it from storage")
-      if !window.localStorage[user+"::current-games"]
-        return null
-      found = null
-      for game in JSON.parse(window.localStorage[user+"::current-games"]) when game.id is id
-        found = game
-        break
-      found
+      json = window.localStorage.getItem(user+"::current-games::"+id)
+      if json? then GameStateModel.fromString(json) else null
+
+    saveGameState:(user, state)->
+      if (!user? or !state?) then throw new Error("Must specify user id and state to save a game")
+      listJSON = window.localStorage.getItem(user+"::current-games")
+      list=[]
+      if (listJSON?) then list = JSON.parse(listJSON)
+
+      list.push(
+        label:state.get("label")
+        id:state.get("id")
+        type:state.get("_type")
+      )
+      window.localStorage.setItem(user+"::current-games",JSON.stringify(list))
+      window.localStorage.setItem(user+"::current-games::"+state.get("id"), state.toString())
 
     loadPendingGamesList:(user, filter)->
       if (!user?) then throw new Error("User must be specified")
-      if !window.localStorage[user+"::pending-games"]
+      if !window.localStorage.getItem(user+"::pending-games")
         return null
-      for invite in JSON.parse(window.localStorage[user+"::pending-games"]) when !filter? or ((!filter.type? or invite.type is filter.type) and (!filter.status? or invite.status is filter.status))
+      for invite in JSON.parse(window.localStorage.getItem(user+"::pending-games")) when !filter? or ((!filter.type? or invite.type is filter.type) and (!filter.status? or invite.status is filter.status))
         invite.time = new Date(invite.time)
         new Backbone.Model(
           invite

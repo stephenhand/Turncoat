@@ -1,3 +1,5 @@
+
+
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("lib/turncoat/Game","AppState", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
@@ -6,6 +8,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       mockGame = ()->
         mockConstructedGame
       mockGame
+    )
+  )
+  Isolate.mapAsFactory("uuid", "AppState", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ()->
+        "MOCK_GENERATED_ID"
     )
   )
   Isolate.mapAsFactory("lib/turncoat/Factory","AppState", (actual, modulePath, requestingModulePath)->
@@ -17,6 +25,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
             loadGameTemplateList:JsMockito.mockFunction()
             loadGameTypes:JsMockito.mockFunction()
             loadGameTemplate:JsMockito.mockFunction()
+            saveGameState:JsMockito.mockFunction()
           JsMockito.when(p.loadUser)(JsHamcrest.Matchers.anything()).then((a)->
             input:a
           )
@@ -80,6 +89,48 @@ define(['isolate!AppState'], (AppState)->
             AppState.loadGameTemplate()
         )
       )
+    )
+    suite("createGameFromTemplate", ()->
+      setup(()->
+        AppState.set("currentUser",
+          new Backbone.Model(
+            id:"MOCK_USER"
+          )
+        )
+      )
+      test("noState_throws", ()->
+        chai.assert.throws(()->
+          AppState.createGameFromTemplate()
+        )
+      )
+
+      test("invalidState_throws", ()->
+        chai.assert.throws(()->
+          AppState.createGameFromTemplate({})
+        )
+      )
+
+      test("noCurrentUserAndValidState_throws", ()->
+        AppState.unset("currentUser")
+        chai.assert.throws(()->
+          AppState.createGameFromTemplate(new Backbone.Model(
+            id:"TEMPLATE_ID"
+            players:new Backbone.Collection()
+          ))
+        )
+      )
+
+      test("validState_callsPersisterSaveWithIdAsTemplateId", ()->
+        AppState.createGameFromTemplate(new Backbone.Model(
+          id:"TEMPLATE_ID"
+          players:new Backbone.Collection()
+        ))
+        JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER", new JsHamcrest.SimpleMatcher(
+          matches:(s)->
+            s.get("templateId") is "TEMPLATE_ID"
+        ))
+      )
+
     )
   )
 
