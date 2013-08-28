@@ -34,11 +34,11 @@ define(['uuid','underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/G
         throw new ReferenceError("User must be specified")
       if !window.localStorage.getItem(user+"::current-games")
         return null
-      for game in JSON.parse(window.localStorage.getItem(user+"::current-games")) when !type? or game._type is type
+      for game in JSON.parse(window.localStorage.getItem(user+"::current-games")) when !type? or game.type is type
         new Backbone.Model(
           label:game.label
           id:game.id
-          type:game._type
+          type:game.type
         )
 
     loadGameState:(user, id)->
@@ -51,11 +51,15 @@ define(['uuid','underscore', 'backbone', "lib/turncoat/Factory", "lib/turncoat/G
       listJSON = window.localStorage.getItem(user+"::current-games")
       list=[]
       if (listJSON?) then list = JSON.parse(listJSON)
-
-      list.push(
+      newListItem =
         label:state.get("label")
         id:state.get("id")
         type:state.get("_type")
+
+      (newListItem.userStatus=player.get("user")?.get("status")) for player in state.get("players")?.models ? [] when player.get("user")?.get("id") is user
+
+      list.push(
+        newListItem
       )
       window.localStorage.setItem(user+"::current-games",JSON.stringify(list))
       window.localStorage.setItem(user+"::current-games::"+state.get("id"), state.toString())

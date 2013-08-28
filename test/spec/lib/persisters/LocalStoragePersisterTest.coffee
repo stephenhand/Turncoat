@@ -75,17 +75,17 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
     mockStoredGames = JSON.stringify([
 
       label:"MOCK_GAME1"
-      _type:"MOCK_GAMETYPE"
+      type:"MOCK_GAMETYPE"
       id:"MOCK_ID1"
       data:{}
     ,
       label:"MOCK_GAME2"
-      _type:"MOCK_OTHERGAMETYPE"
+      type:"MOCK_OTHERGAMETYPE"
       id:"MOCK_ID2"
       data:{}
     ,
       label:"MOCK_GAME3"
-      _type:"MOCK_GAMETYPE"
+      type:"MOCK_GAMETYPE"
       id:"MOCK_ID3"
       data:
         prop:"MOCK_VALUE"
@@ -375,6 +375,144 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
             (game.label is "MOCK GAME TO SAVE") &&
             (game.type is "MOCK_TYPE")
           )
+        )
+      )
+
+      test("validUserAndValidState_leavesOtherGamesInList", ()->
+        lps=new LocalStoragePersister()
+        state =new Backbone.Model(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection()
+        )
+        state.toString=()->
+          JSON.stringify(@)
+
+        lps.saveGameState("mock_user",state)
+        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        chai.assert(_.find(games,
+          (game)->
+            (game.id is "MOCK_ID1") &&
+            (game.label is "MOCK_GAME1")
+          )
+        )
+        chai.assert(_.find(games,
+        (game)->
+          (game.id is "MOCK_ID2") &&
+          (game.label is "MOCK_GAME2")
+        )
+        )
+        chai.assert(_.find(games,
+        (game)->
+          (game.id is "MOCK_ID3") &&
+          (game.label is "MOCK_GAME3")
+        )
+        )
+      )
+      test("stateWithPlayerAsCurrentUserWithStatus_setsUserStatusAsMatchedUserStatus", ()->
+        lps=new LocalStoragePersister()
+        state =new Backbone.Model(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_user"
+                status:"MOCK_STATUS1"
+              )
+            )
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_other_user"
+                status:"MOCK_STATUS2"
+              )
+            )
+          ])
+        )
+        state.toString=()->
+          JSON.stringify(@)
+        lps.saveGameState("mock_user",state)
+        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        chai.assert(_.find(games,
+          (game)->
+            (game.id is "MOCK_SAVED_ID") &&
+            (game.userStatus is "MOCK_STATUS1")
+          )
+        )
+      )
+      test("stateWithPlayerAsCurrentUserWithoutStatus_doesntSetUserStatus", ()->
+        lps=new LocalStoragePersister()
+        state =new Backbone.Model(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_user"
+              )
+            )
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_other_user"
+                status:"MOCK_STATUS2"
+              )
+            )
+          ])
+        )
+        state.toString=()->
+          JSON.stringify(@)
+        lps.saveGameState("mock_user",state)
+        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        chai.assert(_.find(games,
+          (game)->
+            (game.id is "MOCK_SAVED_ID") && !game.userStatus?
+          )
+        )
+      )
+      test("stateWithNoPlayerAsCurrentUser_doesntSetUserStatus", ()->
+        lps=new LocalStoragePersister()
+        state =new Backbone.Model(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_other_user"
+                status:"MOCK_STATUS2"
+              )
+            )
+          ])
+        )
+        state.toString=()->
+          JSON.stringify(@)
+        lps.saveGameState("mock_user",state)
+        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        chai.assert(_.find(games,
+          (game)->
+            (game.id is "MOCK_SAVED_ID") && !game.userStatus?
+          )
+        )
+      )
+      test("stateWithNoPlayers_doesntSetUserStatus", ()->
+        lps=new LocalStoragePersister()
+        state =new Backbone.Model(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection()
+        )
+        state.toString=()->
+          JSON.stringify(@)
+        lps.saveGameState("mock_user",state)
+        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        chai.assert(_.find(games,
+        (game)->
+          (game.id is "MOCK_SAVED_ID") && !game.userStatus?
+        )
         )
       )
     )
