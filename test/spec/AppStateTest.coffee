@@ -25,9 +25,14 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
             loadGameTemplateList:JsMockito.mockFunction()
             loadGameTypes:JsMockito.mockFunction()
             loadGameTemplate:JsMockito.mockFunction()
+            loadGameList:JsMockito.mockFunction()
             saveGameState:JsMockito.mockFunction()
+            on:JsMockito.mockFunction()
+            off:JsMockito.mockFunction()
           JsMockito.when(p.loadUser)(JsHamcrest.Matchers.anything()).then((a)->
             input:a
+            get:(key)->
+              if key is "id" then a else null
           )
           JsMockito.when(p.loadGameTemplateList)(JsHamcrest.Matchers.anything()).then((t,a)->
             type:t
@@ -35,6 +40,9 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
           )
           JsMockito.when(p.loadGameTypes)().then(()->
             "MOCK_GAME_TYPES"
+          )
+          JsMockito.when(p.loadGameList)("MOCK_USER").then(()->
+            "MOCK_GAME_LIST"
           )
           JsMockito.when(p.loadGameTemplate)(JsHamcrest.Matchers.anything()).then((a)->
             a
@@ -59,6 +67,10 @@ define(['isolate!AppState'], (AppState)->
 
     )
     suite("loadUser", ()->
+      setup(()->
+        window.mockLibrary["AppState"]["persister"].off=JsMockito.mockFunction()
+        window.mockLibrary["AppState"]["persister"].on=JsMockito.mockFunction()
+      )
       test("idString_setsCurrentUserAsPersisterReturnInputVal", ()->
         AppState.loadUser("MOCK_USER")
         chai.assert.equal(AppState.get("currentUser").input, "MOCK_USER")
@@ -71,6 +83,62 @@ define(['isolate!AppState'], (AppState)->
       test("idString_setsGameTypes", ()->
         AppState.loadUser("MOCK_USER")
         chai.assert.equal(AppState.get("gameTypes"), "MOCK_GAME_TYPES")
+      )
+      test("idString_setsGames", ()->
+        AppState.loadUser("MOCK_USER")
+        chai.assert.equal(AppState.get("games"), "MOCK_GAME_LIST")
+      )
+      test("removesExistingPersisterGameListUpdatedHandler", ()->
+        AppState.loadUser("MOCK_USER")
+        JsMockito.verify(mocks["persister"].off)("gameListUpdated",null,AppState)
+      )
+      test("appliesNewPersisterGameListUpdatedHandler", ()->
+        AppState.loadUser("MOCK_USER")
+        AppState.get("games").set=JsMockito.mockFunction()
+        JsMockito.verify(mocks["persister"].on)("gameListUpdated",JsHamcrest.Matchers.anything(),AppState)
+      )
+      suite("gameListUpdatedHandler", ()->
+        setup(()->
+          JsMockito.when(mocks["persister"].loadGameList)("MOCK_USER").then(()->
+            new Backbone.Collection()
+          )
+        )
+        test("currentUser_updatesGames", ()->
+          AppState.loadUser("MOCK_USER")
+          JsMockito.verify(mocks["persister"].on)("gameListUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(input)->
+                AppState.get("games").set=JsMockito.mockFunction()
+                newVal=
+                  userId:"MOCK_USER"
+                  list:new Backbone.Collection([])
+                input.call(AppState, newVal)
+                try
+                  JsMockito.verify(AppState.get("games").set)(newVal.list)
+                  true
+                catch e
+                  false
+            )
+          ,AppState)
+        )
+        test("otherUser_doesNothing", ()->
+          AppState.loadUser("MOCK_USER")
+          JsMockito.verify(mocks["persister"].on)("gameListUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(input)->
+                AppState.get("games").set=JsMockito.mockFunction()
+                newVal=
+                  userId:"OTHER_USER"
+                  list:new Backbone.Collection([])
+                input.call(AppState, newVal)
+                try
+                  JsMockito.verify(AppState.get("games").set, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+                  true
+                catch e
+                  false
+            )
+          ,AppState)
+        )
       )
     )
     suite("loadGameTemplate", ()->

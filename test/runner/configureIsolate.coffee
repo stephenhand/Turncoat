@@ -30,46 +30,64 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
         mockJQueryObj.jqmHide=JsMockito.mockFunction()
         mockJQueryObj.jqmAddTrigger=JsMockito.mockFunction()
         mockJQueryObj.jqmAddClose=JsMockito.mockFunction()
+        mockJQueryObj.on=JsMockito.mockFunction()
         window.mockLibrary[requestingModulePath].jqueryObjects.methodResults ?= []
         window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.parent = mockJQueryObj
         mockJQueryObj
     )
+    JsMockito.when(jqm.on)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything()).then(
+      (eventName, cb)->
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks ?= []
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks.on ?= []
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks.on[eventName]= cb
+        @
+    )
+
 
   Isolate.mapAsFactory("jquery", (actual, modulePath, requestingModulePath)->
     window.mockLibrary[requestingModulePath]?=[]
-    window.mockLibrary[requestingModulePath]["jqueryObjects"]={}
+    window.mockLibrary[requestingModulePath]["jqueryObjects"]={
+      getSelectorResult:(selector, context)->
+        if selector is window then selector = "__WINDOW_SELECTOR_PLACEHOLDER"
+        if context is window then context = "__WINDOW_CONTEXT_PLACEHOLDER"
+        if (context?)
+          @[selector][context]
+        else
+          @[selector]
+    }
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
 
       mockJQuery = JsMockito.mockFunction()
+      imp = (selector, context)=>
+
+        #Without these 2 lines $(window) or $(foo, window) cause circular references when put into window.mocklibrary, which will then leak memory
+        #use 'getSelectorResult passing in window where appropriate will yield the correct object
+        if selector is window then selector="__WINDOW_SELECTOR_PLACEHOLDER"
+        if context is window then context="__WINDOW_CONTEXT_PLACEHOLDER"
+
+        if typeof selector is "object" then _.extend(selector, new UniquelyIdentifiable())
+        if typeof context is "object" then _.extend(selector, new UniquelyIdentifiable())
+        mockJQueryObj = JsMockito.mock(actual)
+        mockJQueryObj.jqm=JsMockito.mockFunction()
+        mockJQueryObj.jqmShow=JsMockito.mockFunction()
+        mockJQueryObj.jqmHide=JsMockito.mockFunction()
+        mockJQueryObj.jqmAddTrigger=JsMockito.mockFunction()
+        mockJQueryObj.jqmAddClose=JsMockito.mockFunction()
+        mockJQueryObj.on=JsMockito.mockFunction()
+        setMocks(mockJQueryObj,actual,requestingModulePath)
+        if context?
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
+        else
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
+        mockJQueryObj
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything()).then(
         (selector)=>
-          if typeof selector is "object" then _.extend(selector, new UniquelyIdentifiable())
-          mockJQueryObj = JsMockito.mock(actual)
-          mockJQueryObj.jqm=JsMockito.mockFunction()
-          mockJQueryObj.jqmShow=JsMockito.mockFunction()
-          mockJQueryObj.jqmHide=JsMockito.mockFunction()
-          mockJQueryObj.jqmAddTrigger=JsMockito.mockFunction()
-          mockJQueryObj.jqmAddClose=JsMockito.mockFunction()
-          setMocks(mockJQueryObj,actual,requestingModulePath)
-          window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
-          mockJQueryObj
+          imp(selector)
       )
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
         (selector, context)=>
-          if typeof selector is "object" then _.extend(selector, new UniquelyIdentifiable())
-          if typeof context is "object" then _.extend(selector, new UniquelyIdentifiable())
-          mockJQueryObj = JsMockito.mock(actual)
-          mockJQueryObj.jqm=JsMockito.mockFunction()
-          mockJQueryObj.jqmShow=JsMockito.mockFunction()
-          mockJQueryObj.jqmHide=JsMockito.mockFunction()
-          mockJQueryObj.jqmAddTrigger=JsMockito.mockFunction()
-          mockJQueryObj.jqmAddClose=JsMockito.mockFunction()
-          setMocks(mockJQueryObj,actual,requestingModulePath)
-          if context?
-            window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
-          else
-            window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
-          mockJQueryObj
+          imp(selector, context)
+
       )
       mockJQuery
 

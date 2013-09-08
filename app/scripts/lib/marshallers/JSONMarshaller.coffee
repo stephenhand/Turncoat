@@ -1,12 +1,12 @@
 define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (StateRegistry, Backbone, Factory)->
-  vivify = (dataObject)->
+  vivify = (dataObject, ignoreTypeInfo)->
     if (Array.isArray(dataObject))
       dataObject[index] = vivify(subObject) for subObject, index in dataObject when (typeof(subObject)=="object")
       new Backbone.Collection(dataObject)
     else
       dataObject[subObject] = vivify(dataObject[subObject]) for subObject of dataObject when (typeof(dataObject[subObject])=="object")
       dataObject[subObject]
-      if (dataObject._type? && StateRegistry[dataObject._type]?)
+      if (!ignoreTypeInfo && dataObject._type? && StateRegistry[dataObject._type]?)
         vivified = new StateRegistry[dataObject._type]()
         vivified.set(dataObject)
         vivified.unset("_type")
@@ -25,10 +25,10 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
         "_type" : StateRegistry.reverse[stateObject.constructor]
       )
 
-
   forgetType = (stateObject)->
     forgetType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when typeof(stateObject.attributes[subObject])=="object" and stateObject.attributes[subObject].set? and stateObject.attributes[subObject].attributes?
     stateObject.unset("_type")
+
 
   class JSONMarshaller
     marshalState:(stateObject)->
@@ -46,6 +46,15 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
 
     unmarshalAction:(actionString)->
       throw new Error("Not implemented")
+
+    unmarshalModel:(modelJSON)->
+      pojso = JSON.parse(modelJSON)
+      vivify(pojso, true)
+
+    marshalModel:(model)->
+      if (model instanceof Backbone.Collection or model instanceof Backbone.Model)
+        return JSON.stringify(model)
+      else throw new Error("Only backbone models and collections are marshalled")
 
   Factory.registerStateMarshaller("JSONMarshaller",JSONMarshaller)
   JSONMarshaller

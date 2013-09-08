@@ -1,4 +1,22 @@
+fakeBuiltMarshaller = {}
+
 require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("lib/turncoat/Factory", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      m=
+        buildStateMarshaller:JsMockito.mockFunction()
+        registerPersister:JsMockito.mockFunction()
+      JsMockito.when(m.buildStateMarshaller)().then(()->
+        fakeBuiltMarshaller
+      )
+      m
+    )
+  )
+  Isolate.mapAsFactory("lib/turncoat/GameStateModel", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      fromString:JsMockito.mockFunction()
+    )
+  )
   Isolate.mapAsFactory("lib/turncoat/GameStateModel", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       fromString:JsMockito.mockFunction()
@@ -77,18 +95,17 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       label:"MOCK_GAME1"
       type:"MOCK_GAMETYPE"
       id:"MOCK_ID1"
-      data:{}
+      userStatus:"PENDING"
     ,
       label:"MOCK_GAME2"
       type:"MOCK_OTHERGAMETYPE"
       id:"MOCK_ID2"
-      data:{}
+      userStatus:"PENDING"
     ,
       label:"MOCK_GAME3"
       type:"MOCK_GAMETYPE"
       id:"MOCK_ID3"
-      data:
-        prop:"MOCK_VALUE"
+      userStatus:"REJECTED"
     ])
 
     mockInvites = JSON.stringify([
@@ -117,7 +134,12 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
     origSet = Storage.prototype.setItem
     origRemove = Storage.prototype.removeItem
     origClear = Storage.prototype.clear
+
     setup(()->
+      mocks.jqueryObjects
+      fakeBuiltMarshaller =
+        unmarshalModel:JsMockito.mockFunction()
+        marshalModel:JsMockito.mockFunction()
       data=[]
       Storage.prototype.getItem=(key)->
         data[key]
@@ -128,10 +150,82 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       Storage.prototype.clear = ()->
         data=[]
 
-      data["mock_user::current-games::MOCK_ID1"] = mockGame1
-      data["mock_user::current-games::MOCK_ID3"] = mockGame3
-      data["mock_user::current-games"] = mockStoredGames
+      data["current-games::mock_user::MOCK_ID1"] = mockGame1
+      data["current-games::mock_user::MOCK_ID3"] = mockGame3
+      data["current-games::mock_user"] = mockStoredGames
       data["mock_user::pending-games"] = mockInvites
+    )
+    suite("constructor", ()->
+      test("noMarshallerSupplied_usesDefaultFromMarshallerFactory",()->
+        lps = new LocalStoragePersister()
+        chai.assert.equal(fakeBuiltMarshaller,lps.marshaller)
+      )
+      test("marshallerSupplied_usesIt",()->
+        m = {}
+        lps = new LocalStoragePersister(m)
+        chai.assert.equal(m,lps.marshaller)
+      )
+      test("setsStorageEventHandler",()->
+        new LocalStoragePersister()
+        JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on("storage", JsHamcrest.Matchers.func()))
+      )
+      suite("storageEventHandler", ()->
+        test("irrelevantDataUpdate_doesNothing", ()->
+          lps = new LocalStoragePersister()
+          lps.trigger = new JsMockito.mockFunction()
+          JsMockito.verify(
+            mocks.jqueryObjects.getSelectorResult(window).on("storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(actual)->
+                  actual(
+                    key:"IRRELEVANT_KEY"
+                    newValue:"IRRELEVANT_DATA"
+                  )
+                  JsMockito.verify(lps.trigger, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
+              )
+            )
+          )
+        )
+        test("currentGamesNOQualifiersUpdate_doesNothing", ()->
+          lps = new LocalStoragePersister()
+          lps.trigger = new JsMockito.mockFunction()
+          JsMockito.verify(
+            mocks.jqueryObjects.getSelectorResult(window).on("storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(actual)->
+                  actual(
+                    key:"current-games"
+                    newValue:"IRRELEVANT_DATA"
+                  )
+                  JsMockito.verify(lps.trigger, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
+              )
+            )
+          )
+        )
+
+        test("currentGamesUserSpecified_triggersGamelistUpdatedEvent", ()->
+          lps = new LocalStoragePersister()
+          lps.trigger = new JsMockito.mockFunction()
+          JsMockito.verify(
+            mocks.jqueryObjects.getSelectorResult(window).on("storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(actual)->
+                  actual(
+                    key:"current-games::mock_user"
+                    newValue:"NEW_LIST_DATA"
+                  )
+                  JsMockito.verify(lps.trigger)("gameListUpdated",
+                    JsHamcrest.Matchers.allOf(
+                      JsHamcrest.Matchers.hasMember("userId","mock_user"),
+                      JsHamcrest.Matchers.hasMember("list","NEW_LIST_DATA")
+                    )
+                  )
+
+              )
+            )
+          )
+        )
+      )
     )
     suite("loadUser", ()->
       test("echosProvidedStringIdInModel", ()->
@@ -154,6 +248,28 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
 
     )
     suite("loadGameTemplatesList", ()->
+      setup(()->
+        JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then((a)->
+          new Backbone.Collection([
+            label:"MOCK GAME TEMPLATE 1"
+            name:"MOCK_GAME1"
+            _type:"MOCK_GAMETYPE"
+            id:"MOCK_TEMPLATE_ID1"
+            players:[
+              {}
+              {}
+              {}
+            ]
+          ,
+            label:"MOCK GAME TEMPLATE 2"
+            id:"MOCK_TEMPLATE_ID2"
+            players:[]
+          ,
+            label:"MOCK GAME TEMPLATE 3"
+            id:"MOCK_TEMPLATE_ID3"
+          ])
+        )
+      )
       test("generatesItemPerTemplate", ()->
         lps = new LocalStoragePersister()
         chai.assert.equal(lps.loadGameTemplateList().length,3)
@@ -182,6 +298,25 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
     suite("loadGameTemplate", ()->
       gsmInput=null
       setup(()->
+        JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then((a)->
+          new Backbone.Collection([
+            label:"MOCK GAME TYPE 1"
+            name:"MOCK_GAMETYPE1"
+            id:"MOCK_TEMPLATE_ID1"
+            marshaller:"MOCK_MARSHALLER1"
+            persister:"MOCK_PERSISTER1"
+          ,
+            label:"MOCK GAME TEMPLATE 2"
+            id:"MOCK_TEMPLATE_ID2"
+          ,
+            label:"MOCK GAME TEMPLATE 3"
+            id:"MOCK_TEMPLATE_ID3"
+          ])
+        )
+        JsMockito.when(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.anything()).then(
+          (a)->
+            JSON.stringify(a.attributes)
+        )
         mocks["lib/turncoat/GameStateModel"].fromString=JsMockito.mockFunction()
         JsMockito.when(mocks["lib/turncoat/GameStateModel"].fromString)(JsHamcrest.Matchers.anything()).then((a)->
           gsmInput=a
@@ -218,6 +353,25 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       )
     )
     suite("loadGameTypes", ()->
+      setup(()->
+        JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then((a)->
+          new Backbone.Model(
+            gameTypes:new Backbone.Collection([
+              label:"MOCK GAME TYPE 1"
+              name:"MOCK_GAMETYPE1"
+              id:"MOCK_TEMPLATE_ID1"
+              marshaller:"MOCK_MARSHALLER1"
+              persister:"MOCK_PERSISTER1"
+            ,
+              label:"MOCK GAME TEMPLATE 2"
+              id:"MOCK_TEMPLATE_ID2"
+            ,
+              label:"MOCK GAME TEMPLATE 3"
+              id:"MOCK_TEMPLATE_ID3"
+            ])
+          )
+        )
+      )
       test("retrievesAllItemsInGameTypesArrayAsBackboneCollection",()->
         lps = new LocalStoragePersister()
         types=lps.loadGameTypes()
@@ -226,19 +380,31 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       )
     )
     suite("loadGameList", ()->
+      setup(()->
+        JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then((a)->
+          p =JSON.parse(a)
+          if p instanceof Array
+            return new Backbone.Collection(p)
+          else
+            return new Backbone.Model(p)
+        )
+      )
       test("retrievesGamesIfThereAreAny", ()->
         lps = new LocalStoragePersister()
         list = lps.loadGameList("mock_user")
         chai.assert.equal(list.length, 3)
-        chai.assert.equal(list[0].get("label"), "MOCK_GAME1")
-        chai.assert.equal(list[0].get("type"), "MOCK_GAMETYPE")
-        chai.assert.equal(list[0].get("id"), "MOCK_ID1")
-        chai.assert.equal(list[1].get("label"), "MOCK_GAME2")
-        chai.assert.equal(list[1].get("type"), "MOCK_OTHERGAMETYPE")
-        chai.assert.equal(list[1].get("id"), "MOCK_ID2")
-        chai.assert.equal(list[2].get("label"), "MOCK_GAME3")
-        chai.assert.equal(list[2].get("type"), "MOCK_GAMETYPE")
-        chai.assert.equal(list[2].get("id"), "MOCK_ID3")
+        chai.assert.equal(list.at(0).get("label"), "MOCK_GAME1")
+        chai.assert.equal(list.at(0).get("type"), "MOCK_GAMETYPE")
+        chai.assert.equal(list.at(0).get("id"), "MOCK_ID1")
+        chai.assert.equal(list.at(0).get("userStatus"),"PENDING")
+        chai.assert.equal(list.at(1).get("label"), "MOCK_GAME2")
+        chai.assert.equal(list.at(1).get("type"), "MOCK_OTHERGAMETYPE")
+        chai.assert.equal(list.at(1).get("id"), "MOCK_ID2")
+        chai.assert.equal(list.at(1).get("userStatus"),"PENDING")
+        chai.assert.equal(list.at(2).get("label"), "MOCK_GAME3")
+        chai.assert.equal(list.at(2).get("type"), "MOCK_GAMETYPE")
+        chai.assert.equal(list.at(2).get("id"), "MOCK_ID3")
+        chai.assert.equal(list.at(2).get("userStatus"),"REJECTED")
       )
       test("returnsNullIfWrongPlayer", ()->
         lps = new LocalStoragePersister()
@@ -250,7 +416,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         chai.assert.throws(()->lps.loadGameList())
       )
       test("returnsNullIfNoGamesSaved", ()->
-        window.localStorage.removeItem("mock_user::current-games")
+        window.localStorage.removeItem("current-games::mock_user")
         lps = new LocalStoragePersister()
         list = lps.loadGameList("mock_user")
         chai.assert.isNull(list)
@@ -259,19 +425,12 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         lps = new LocalStoragePersister()
         list = lps.loadGameList("mock_user", "MOCK_GAMETYPE")
         chai.assert.equal(list.length, 2)
-        chai.assert.equal(list[0].get("label"), "MOCK_GAME1")
-        chai.assert.equal(list[0].get("type"), "MOCK_GAMETYPE")
-        chai.assert.equal(list[0].get("id"), "MOCK_ID1")
-        chai.assert.equal(list[1].get("label"), "MOCK_GAME3")
-        chai.assert.equal(list[1].get("type"), "MOCK_GAMETYPE")
-        chai.assert.equal(list[1].get("id"), "MOCK_ID3")
-      )
-      test("returnsOnlyTypeIdAndName", ()->
-        lps = new LocalStoragePersister()
-        list = lps.loadGameList("mock_user", "MOCK_GAMETYPE")
-        chai.assert.equal(list.length, 2)
-        chai.assert.isUndefined(list[0].data)
-        chai.assert.isUndefined(list[1].data)
+        chai.assert.equal(list.at(0).get("label"), "MOCK_GAME1")
+        chai.assert.equal(list.at(0).get("type"), "MOCK_GAMETYPE")
+        chai.assert.equal(list.at(0).get("id"), "MOCK_ID1")
+        chai.assert.equal(list.at(1).get("label"), "MOCK_GAME3")
+        chai.assert.equal(list.at(1).get("type"), "MOCK_GAMETYPE")
+        chai.assert.equal(list.at(1).get("id"), "MOCK_ID3")
       )
 
     )
@@ -302,7 +461,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         chai.assert.isNull(game)
       )
       test("returnsNullIfNoGamesSaved", ()->
-        window.localStorage.removeItem("mock_user::current-games::MOCK_ID3")
+        window.localStorage.removeItem("current-games::mock_user::MOCK_ID3")
         lps = new LocalStoragePersister()
         game = lps.loadGameState("mock_user","MOCK_ID3")
         chai.assert.isNull(game)
@@ -321,6 +480,20 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       )
     )
     suite("saveGameState",()->
+      setup(()->
+        JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then(
+          (a)->
+            p =JSON.parse(a)
+            if p instanceof Array
+              new Backbone.Collection(p)
+            else
+              new Backbone.Model(p)
+        )
+        JsMockito.when(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.anything()).then(
+          (a)->
+            JSON.stringify(a)
+        )
+      )
       test("noParameters_throws", ()->
         lps=new LocalStoragePersister()
         chai.assert.throws(()->
@@ -352,7 +525,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
           JSON.stringify(@)
 
         lps.saveGameState("mock_user",state)
-        game=JSON.parse(window.localStorage.getItem("mock_user::current-games::MOCK_SAVED_ID"))
+        game=JSON.parse(window.localStorage.getItem("current-games::mock_user::MOCK_SAVED_ID"))
         chai.assert.equal(game.id, "MOCK_SAVED_ID")
       )
 
@@ -368,7 +541,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
           JSON.stringify(@)
 
         lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
         chai.assert(_.find(games,
           (game)->
             (game.id is "MOCK_SAVED_ID") &&
@@ -390,7 +563,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
           JSON.stringify(@)
 
         lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
         chai.assert(_.find(games,
           (game)->
             (game.id is "MOCK_ID1") &&
@@ -434,7 +607,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         state.toString=()->
           JSON.stringify(@)
         lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
         chai.assert(_.find(games,
           (game)->
             (game.id is "MOCK_SAVED_ID") &&
@@ -465,7 +638,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         state.toString=()->
           JSON.stringify(@)
         lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
         chai.assert(_.find(games,
           (game)->
             (game.id is "MOCK_SAVED_ID") && !game.userStatus?
@@ -490,7 +663,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         state.toString=()->
           JSON.stringify(@)
         lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
         chai.assert(_.find(games,
           (game)->
             (game.id is "MOCK_SAVED_ID") && !game.userStatus?
@@ -508,7 +681,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         state.toString=()->
           JSON.stringify(@)
         lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("mock_user::current-games"))
+        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
         chai.assert(_.find(games,
         (game)->
           (game.id is "MOCK_SAVED_ID") && !game.userStatus?

@@ -10,6 +10,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
       mockMethod:()->
         "CHEESE"
     )
+    MOCK_TYPE = Backbone.Model.extend()
     mockMarshalledType ="{ "+
       "\"_type\":\"MOCK_TYPE\","+
       "\"propA\":\"valA\" ,"+
@@ -297,7 +298,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         chai.assert.equal(ut.get("knownObject").get("propE"),4)
         chai.assert.equal(ut.get("knownObject").get("propF"),"valF")
       )
-      test("correctlyUnmarshalsKnownTypeToCorrectType", ()->
+      test("knownType_correctlyUnmarshalsToCorrectType", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
         chai.assert.isFunction(ut.mockMethod)
         chai.assert.equal(ut.mockMethod(),"CHEESE")
@@ -320,6 +321,90 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         chai.assert.equal(ut.get("knownObject").get("collection").at(2).mockMethod(),"CHEESE")
       )
 
+    )
+    suite("Model", ()->
+      origParse=JSON.parse
+      origStringify=JSON.stringify
+      setup(()->
+        JSON.parse=JsMockito.mockFunction()
+        JsMockito.when(JSON.parse)(JsHamcrest.Matchers.anything()).then((input)->
+          if input is "MOCK_JSON_ARRAY"
+            return [
+              FAKE_PARSED_PROPERTY:"FAKE_PARSED_PROPERTY_VALUE1"
+            ,
+              FAKE_PARSED_PROPERTY:"FAKE_PARSED_PROPERTY_VALUE2"
+            ]
+          else
+            return {
+              FAKE_PARSED_PROPERTY:"FAKE_PARSED_PROPERTY_VALUE"
+              _type:"MOCK_TYPE"
+            }
+        )
+        JSON.stringify=JsMockito.mockFunction()
+
+      )
+      teardown(()->
+        JSON.parse=origParse
+        JSON.stringify=origStringify
+      )
+      suite("unmarshalModel", ()->
+        test("wrapsJSONParse", ()->
+          marshaller.unmarshalModel("MOCK_JSON")
+          JsMockito.verify(JSON.parse)("MOCK_JSON")
+        )
+        test("IsNotArray_returnsBackboneModel", ()->
+          val = marshaller.unmarshalModel("MOCK_JSON")
+          chai.assert.instanceOf(val, Backbone.Model)
+          chai.assert.equal("FAKE_PARSED_PROPERTY_VALUE", val.get("FAKE_PARSED_PROPERTY"))
+        )
+        test("IsArray_returnsBackboneCollection", ()->
+          val = marshaller.unmarshalModel("MOCK_JSON_ARRAY")
+          chai.assert.instanceOf(val, Backbone.Collection)
+          chai.assert.equal("FAKE_PARSED_PROPERTY_VALUE2", val.at(1).get("FAKE_PARSED_PROPERTY"))
+        )
+        test("hasTypeProperty_ignoresTypePropertyAndUnmarhalsAsModel",()->
+          ret=marshaller.unmarshalModel(mockMarshalledType)
+          chai.assert.notInstanceOf(ret, mockType)
+          chai.assert.equal("MOCK_TYPE", ret.get("_type"))
+        )
+      )
+      suite("marshalModel", ()->
+        test("backboneModel_callsJSONStringifyOnObject", ()->
+          val = marshaller.marshalModel(new Backbone.Model(
+              prop:"MOCK_VALUE"
+            )
+          )
+          JsMockito.verify(JSON.stringify)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("prop","MOCK_VALUE")))
+        )
+        test("backboneCollection_callsJSONStringifyOnObject", ()->
+          val = marshaller.marshalModel(new Backbone.Collection(
+            [
+              prop:"MOCK_VALUE1"
+            ,
+              prop:"MOCK_VALUE2"
+            ,
+              prop:"MOCK_VALUE3"
+
+            ])
+          )
+          JsMockito.verify(JSON.stringify)(JsHamcrest.Matchers.hasMember("models",JsHamcrest.Matchers.hasItems(
+            JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("prop","MOCK_VALUE1")),
+            JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("prop","MOCK_VALUE2")),
+            JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("prop","MOCK_VALUE3"))
+          )))
+        )
+        test("otherValue_throws", ()->
+          chai.assert.throws(()->marshaller.marshalModel({}))
+          chai.assert.throws(()->marshaller.marshalModel([]))
+          chai.assert.throws(()->marshaller.marshalModel(22))
+          chai.assert.throws(()->marshaller.marshalModel("A STRING"))
+          chai.assert.throws(()->marshaller.marshalModel(null))
+        )
+        test("undefined_throws", ()->
+          chai.assert.throws(()->marshaller.marshalModel())
+        )
+
+      )
     )
 
   )

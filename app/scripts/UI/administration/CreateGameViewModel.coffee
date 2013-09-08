@@ -1,7 +1,5 @@
 define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/BaseViewModelItem', 'AppState'], (_, Backbone, sprintf, BackboneViewModelCollection, BackboneViewModelItem, AppState)->
 
-
-
   CreateGameViewModel = Backbone.Model.extend(
     initialize:()->
       @gameTypes=new BackboneViewModelCollection( )
