@@ -1,9 +1,9 @@
 define(['underscore', 'backbone'], (_, Backbone)->
   StateRegistry =
     reverse:[]
-    registerType:(typeName, constructor)->
-      @[typeName] = constructor
-      @reverse[constructor] = typeName
+    registerType:(typeName, factory)->
+      @[typeName] = factory
+      @reverse[factory] = typeName
 
 
 

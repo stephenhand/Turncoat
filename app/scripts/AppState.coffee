@@ -1,4 +1,4 @@
-define(['uuid','underscore', 'backbone', 'lib/turncoat/Game','lib/turncoat/Factory', 'text!data/testInitialState.txt'], (UUID, _, Backbone, Game, Factory, testInitialState)->
+define(['uuid', 'moment', 'underscore', 'backbone', 'lib/turncoat/Game','lib/turncoat/Factory', 'text!data/testInitialState.txt'], (UUID, moment, _, Backbone, Game, Factory, testInitialState)->
   persister = undefined
 
   AppState = Backbone.Model.extend(
@@ -23,12 +23,13 @@ define(['uuid','underscore', 'backbone', 'lib/turncoat/Game','lib/turncoat/Facto
     createGameFromTemplate:(state)->
       state.set("templateId",state.get("id"))
       state.set("id",UUID())
+      state.logEvent(moment.utc(),"CREATED","Game created locally")
       for player in state.get("players").models when player.get("user")?
         playerUser = player.get("user")
         if (playerUser.get("id") is user)
           player.get("user").set("status","READY")
         else
-          player.get("user").set("status","PENDING")
+          player.get("user").set("status","CREATED")
       persister.saveGameState(@get("currentUser").get("id"), state)
   )
 

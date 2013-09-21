@@ -4,6 +4,9 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
     y : null
     bearing : null
 
-  StateRegistry.registerType("AssetPosition", AssetPosition)
+  StateRegistry.registerType("AssetPosition", (unvivified)->
+    GameStateModel.vivify(unvivified, AssetPosition)
+  )
+
   AssetPosition
 )

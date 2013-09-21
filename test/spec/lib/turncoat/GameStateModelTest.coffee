@@ -1,8 +1,17 @@
-define(["isolate!lib/turncoat/GameStateModel", "backbone"], (GameStateModel, Backbone)->
+define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntry"], (GameStateModel, Backbone, LogEntry)->
   #GameStateModelTest.coffee test file    
   suite("GameStateModelTest", ()->
     mockMarshaller ={}
+    mockType = Backbone.Model.extend(
+      attributes:
+        A:"A"
+        B:"B"
+        C:"C"
+      mockMethod:()->
+        "CHEESE"
+    )
     setup(()->
+
       mockMarshaller =
         unmarshalState:JsMockito.mockFunction()
         marshalState:JsMockito.mockFunction()
@@ -42,7 +51,6 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone"], (GameStateModel, Bac
       test("setsDefaultMarshallerWithNoMarshallerSet", ()->
         GameStateModel.marshaller = null
         gsm = new GameStateModel()
-        #verify(window.mockLibrary["lib/GameStateModel"]["lib/Factory"].buildStateMarshaller)()
         res = gsm.toString()
         JsMockito.verify(GameStateModel.marshaller.marshalState)(gsm)
         chai.assert.equal(res, "MOCK_MARSHALLER_OUTPUT")
@@ -390,6 +398,91 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone"], (GameStateModel, Bac
         chai.assert.equal(res[2], gsmChildThreeLevelsDeep.get("child"))
         chai.assert.equal(res[3], gsmChildThreeLevelsDeep)
       )
+    )
+    suite("logEvent", ()->
+      test("gameStateModelWithEventLog_AddsNewEventToEnd", ()->
+        gsm = new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME"
+          ])
+        )
+        GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+        chai.assert.equal(gsm.get("_eventLog").length, 2)
+        chai.assert.equal(gsm.get("_eventLog").at(1).get("timestamp"), "CURRENT_TIME")
+        chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_NEW_EVENT")
+        chai.assert.equal(gsm.get("_eventLog").at(1).get("details"), "MOCK_NEW_DETAILS")
+      )
+      test("gameStateModelWithEventLog_AddsNewEventAsLogEntry", ()->
+        gsm = new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME"
+          ])
+        )
+        GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+        chai.assert.equal(gsm.get("_eventLog").length, 2)
+        chai.assert.equal(gsm.get("_eventLog").at(1).get("timestamp"), "CURRENT_TIME")
+        chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_NEW_EVENT")
+        chai.assert.equal(gsm.get("_eventLog").at(1).get("details"), "MOCK_NEW_DETAILS")
+      )
+      test("gameStateModelWithEventLog_PreservesExistingEvents", ()->
+        gsm = new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME"
+          ])
+        )
+        GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+        chai.assert.instanceOf(gsm.get("_eventLog").at(1), LogEntry)
+      )
+      test("gameStateModelWithoutEventLog_CreatesNewLog", ()->
+        gsm = new GameStateModel()
+        GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+        chai.assert.equal(gsm.get("_eventLog").length, 1)
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp"), "CURRENT_TIME")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
+      )
+      test("gameStateModelEventLogNotBBCollection_Throws", ()->
+        gsm = new GameStateModel(
+          _eventLog:{}
+        )
+        chai.assert.throw(()->
+          GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+        )
+      )
+    )
+    suite("vivifier", ()->
+
+      test("createsBackboneModel", ()->
+        ut = GameStateModel.vivifier({}, mockType)
+        chai.assert.isFunction(ut.set)
+        chai.assert.isFunction(ut.unset)
+        chai.assert.isFunction(ut.get)
+        chai.assert.isObject(ut.attributes)
+      )
+      test("preservesMarshalledData", ()->
+        ut = GameStateModel.vivifier(
+          propA:"valA"
+          propB:"valB"
+        , mockType)
+        chai.assert.equal(ut.get("propA"),"valA")
+        chai.assert.equal(ut.get("propB"),"valB")
+      )
+      test("correctlyVivifiesToCorrectType", ()->
+        ut = GameStateModel.vivifier(
+          propA:"valA"
+          propB:"valB"
+        , mockType)
+        chai.assert.isFunction(ut.mockMethod)
+        chai.assert.equal(ut.mockMethod(),"CHEESE")
+        chai.assert.instanceOf(ut, mockType)
+      )
+
     )
   )
 

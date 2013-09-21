@@ -23,6 +23,7 @@ require.config({
         backbone: 'vendor/backbone',
         rivets: 'vendor/rivets',
         uuid:'vendor/uuid',
+        moment:'vendor/moment',
         templates:'../templates',
         data:'../data',
         sprintf: 'vendor/sprintf'
@@ -79,6 +80,7 @@ require(['spec/AppHostTest',
     'spec/lib/turncoat/StateRegistryTest',
     'spec/lib/turncoat/FactoryTest',
     'spec/lib/turncoat/GameStateModelTest',
+    'spec/lib/turncoat/LogEntryTest',
     'spec/lib/marshallers/JSONMarshallerTest',
     'spec/lib/persisters/LocalStoragePersisterTest'], function(){
     setTimeout(function () {

@@ -16,6 +16,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
         "MOCK_GENERATED_ID"
     )
   )
+  Isolate.mapAsFactory("moment", "AppState", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      utc:()->
+        "MOCK_MOMENT_UTC"
+    )
+  )
   Isolate.mapAsFactory("lib/turncoat/Factory","AppState", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       {
@@ -180,23 +186,38 @@ define(['isolate!AppState'], (AppState)->
 
       test("noCurrentUserAndValidState_throws", ()->
         AppState.unset("currentUser")
+        state = new Backbone.Model(
+          id:"TEMPLATE_ID"
+          players:new Backbone.Collection()
+        )
+        state.logEvent=JsMockito.mockFunction()
         chai.assert.throws(()->
-          AppState.createGameFromTemplate(new Backbone.Model(
-            id:"TEMPLATE_ID"
-            players:new Backbone.Collection()
-          ))
+          AppState.createGameFromTemplate(state)
         )
       )
 
       test("validState_callsPersisterSaveWithIdAsTemplateId", ()->
-        AppState.createGameFromTemplate(new Backbone.Model(
+        state = new Backbone.Model(
           id:"TEMPLATE_ID"
           players:new Backbone.Collection()
-        ))
+        )
+        state.logEvent=JsMockito.mockFunction()
+        AppState.createGameFromTemplate(state)
         JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER", new JsHamcrest.SimpleMatcher(
           matches:(s)->
             s.get("templateId") is "TEMPLATE_ID"
         ))
+      )
+
+      test("validState_logsCreatedTimeAsCurrentUtc", ()->
+        state = new Backbone.Model(
+          id:"TEMPLATE_ID"
+          players:new Backbone.Collection()
+        )
+        state.logEvent=JsMockito.mockFunction()
+        AppState.createGameFromTemplate(state)
+        JsMockito.verify(state.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
+
       )
 
     )

@@ -95,12 +95,12 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       label:"MOCK_GAME1"
       type:"MOCK_GAMETYPE"
       id:"MOCK_ID1"
-      userStatus:"PENDING"
+      userStatus:"CREATED"
     ,
       label:"MOCK_GAME2"
       type:"MOCK_OTHERGAMETYPE"
       id:"MOCK_ID2"
-      userStatus:"PENDING"
+      userStatus:"CREATED"
     ,
       label:"MOCK_GAME3"
       type:"MOCK_GAMETYPE"
@@ -114,14 +114,14 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       id:"MOCK_ID1"
       inviter:"MOCK_INVITER1"
       time:new Date(2010,4,1)
-      status:"PENDING"
+      status:"CREATED"
     ,
       name:"MOCK_GAME2"
       type:"MOCK_OTHERGAMETYPE"
       id:"MOCK_ID2"
       inviter:"MOCK_INVITER2"
       time:new Date(2010,5,1)
-      status:"PENDING"
+      status:"CREATED"
     ,
       name:"MOCK_GAME3"
       type:"MOCK_GAMETYPE"
@@ -396,11 +396,11 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         chai.assert.equal(list.at(0).get("label"), "MOCK_GAME1")
         chai.assert.equal(list.at(0).get("type"), "MOCK_GAMETYPE")
         chai.assert.equal(list.at(0).get("id"), "MOCK_ID1")
-        chai.assert.equal(list.at(0).get("userStatus"),"PENDING")
+        chai.assert.equal(list.at(0).get("userStatus"),"CREATED")
         chai.assert.equal(list.at(1).get("label"), "MOCK_GAME2")
         chai.assert.equal(list.at(1).get("type"), "MOCK_OTHERGAMETYPE")
         chai.assert.equal(list.at(1).get("id"), "MOCK_ID2")
-        chai.assert.equal(list.at(1).get("userStatus"),"PENDING")
+        chai.assert.equal(list.at(1).get("userStatus"),"CREATED")
         chai.assert.equal(list.at(2).get("label"), "MOCK_GAME3")
         chai.assert.equal(list.at(2).get("type"), "MOCK_GAMETYPE")
         chai.assert.equal(list.at(2).get("id"), "MOCK_ID3")
@@ -709,14 +709,14 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         chai.assert.equal(list[0].get("id"), "MOCK_ID1")
         chai.assert.equal(list[0].get("inviter"), "MOCK_INVITER1")
         chai.assert.equal(list[0].get("time").toUTCString(), new Date(2010,4,1).toUTCString())
-        chai.assert.equal(list[0].get("status"), "PENDING")
+        chai.assert.equal(list[0].get("status"), "CREATED")
 
         chai.assert.equal(list[1].get("name"), "MOCK_GAME2")
         chai.assert.equal(list[1].get("type"), "MOCK_OTHERGAMETYPE")
         chai.assert.equal(list[1].get("id"), "MOCK_ID2")
         chai.assert.equal(list[1].get("inviter"), "MOCK_INVITER2")
         chai.assert.equal(list[1].get("time").toUTCString(), new Date(2010,5,1).toUTCString())
-        chai.assert.equal(list[1].get("status"), "PENDING")
+        chai.assert.equal(list[1].get("status"), "CREATED")
 
         chai.assert.equal(list[2].get("name"), "MOCK_GAME3")
         chai.assert.equal(list[2].get("type"), "MOCK_GAMETYPE")
@@ -734,21 +734,21 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       test("returnsFilteredListIfInviteStatusSpecified", ()->
         lps = new LocalStoragePersister()
         list = lps.loadPendingGamesList("mock_user",
-          status:"PENDING"
+          status:"CREATED"
         )
         chai.assert.equal(list[0].get("name"), "MOCK_GAME1")
         chai.assert.equal(list[0].get("type"), "MOCK_GAMETYPE")
         chai.assert.equal(list[0].get("id"), "MOCK_ID1")
         chai.assert.equal(list[0].get("inviter"), "MOCK_INVITER1")
         chai.assert.equal(list[0].get("time").toUTCString(), new Date(2010,4,1).toUTCString())
-        chai.assert.equal(list[0].get("status"), "PENDING")
+        chai.assert.equal(list[0].get("status"), "CREATED")
 
         chai.assert.equal(list[1].get("name"), "MOCK_GAME2")
         chai.assert.equal(list[1].get("type"), "MOCK_OTHERGAMETYPE")
         chai.assert.equal(list[1].get("id"), "MOCK_ID2")
         chai.assert.equal(list[1].get("inviter"), "MOCK_INVITER2")
         chai.assert.equal(list[1].get("time").toUTCString(), new Date(2010,5,1).toUTCString())
-        chai.assert.equal(list[1].get("status"), "PENDING")
+        chai.assert.equal(list[1].get("status"), "CREATED")
 
       )
 
@@ -762,7 +762,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         chai.assert.equal(list[0].get("id"), "MOCK_ID1")
         chai.assert.equal(list[0].get("inviter"), "MOCK_INVITER1")
         chai.assert.equal(list[0].get("time").toUTCString(), new Date(2010,4,1).toUTCString())
-        chai.assert.equal(list[0].get("status"), "PENDING")
+        chai.assert.equal(list[0].get("status"), "CREATED")
 
         chai.assert.equal(list[1].get("name"), "MOCK_GAME3")
         chai.assert.equal(list[1].get("type"), "MOCK_GAMETYPE")
@@ -775,7 +775,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
       test("returnsFilteredListIfBothSpecified", ()->
         lps = new LocalStoragePersister()
         list = lps.loadPendingGamesList("mock_user",
-          status:"PENDING"
+          status:"CREATED"
           type:"MOCK_GAMETYPE"
         )
         chai.assert.equal(list[0].get("name"), "MOCK_GAME1")
@@ -783,7 +783,7 @@ define(['isolate!lib/persisters/LocalStoragePersister', 'underscore',"backbone"]
         chai.assert.equal(list[0].get("id"), "MOCK_ID1")
         chai.assert.equal(list[0].get("inviter"), "MOCK_INVITER1")
         chai.assert.equal(list[0].get("time").toUTCString(), new Date(2010,4,1).toUTCString())
-        chai.assert.equal(list[0].get("status"), "PENDING")
+        chai.assert.equal(list[0].get("status"), "CREATED")
       )
     )
     teardown(()->

@@ -1,17 +1,13 @@
 define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (StateRegistry, Backbone, Factory)->
   vivify = (dataObject, ignoreTypeInfo)->
     if (Array.isArray(dataObject))
-      dataObject[index] = vivify(subObject) for subObject, index in dataObject when (typeof(subObject)=="object")
+      dataObject[index] = vivify(subObject, ignoreTypeInfo) for subObject, index in dataObject when (typeof(subObject)=="object")
       new Backbone.Collection(dataObject)
     else
-      dataObject[subObject] = vivify(dataObject[subObject]) for subObject of dataObject when (typeof(dataObject[subObject])=="object")
+      dataObject[subObject] = vivify(dataObject[subObject], ignoreTypeInfo) for subObject of dataObject when (typeof(dataObject[subObject])=="object")
       dataObject[subObject]
       if (!ignoreTypeInfo && dataObject._type? && StateRegistry[dataObject._type]?)
-        vivified = new StateRegistry[dataObject._type]()
-        vivified.set(dataObject)
-        vivified.unset("_type")
-        vivified._type = undefined
-        vivified
+        StateRegistry[dataObject._type](dataObject)
       else
         new Backbone.Model(dataObject)
 
