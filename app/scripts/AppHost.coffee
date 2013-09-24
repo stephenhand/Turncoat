@@ -4,16 +4,39 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
       prefix:"rv"
       adapter:
         subscribe:(obj,keypath,callback)->
-          obj.on('change:' + keypath, callback)
+          keypath?=[]
+          if !_.isArray(keypath) then keypath=keypath.split('.')
+          if (keypath[1])
+            key = keypath.shift()
+            val = obj.get(key)
+            if !val? && keypath.length>0
+              val=new Backbone.Model()
+              obj.set(key, val)
+            @subscribe(val ,keypath, callback)
+          else
+            obj._subscribeCallback = callback
+            obj.on('change:' + keypath[0], callback)
+
         unsubscribe:(obj,keypath,callback)->
-          obj.off('change:' + keypath, callback)
+          keypath?=[]
+          if !_.isArray(keypath) then keypath=keypath.split('.')
+          if (keypath[1])
+            key = keypath.shift()
+            val = obj.get(key)
+            if !val? && keypath.length>0
+              return
+            @unsubscribe(val ,keypath, callback)
+          else
+            obj._subscribeCallback = undefined
+            obj.off('change:' + keypath[0], callback)
+
         read:(obj,keypath)->
           keypath?=[]
           if !_.isArray(keypath) then keypath=keypath.split('.')
           if (keypath[0])
             key = keypath.shift()
             val = obj.get(key)
-            if !val? && keypath.length>0
+            if !val?
               val
             else
               @read(val ,keypath)
@@ -32,6 +55,10 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
             if !val? && keypath.length>0
               val=new Backbone.Model()
               obj.set(key, val)
+              if (obj._subscribeCallback)
+                @subscribe(val, key,
+
+                  obj._subscribeCallback)
             @publish(val ,keypath, value)
           else
             obj.set(keypath[0],value)

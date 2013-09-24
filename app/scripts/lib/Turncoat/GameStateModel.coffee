@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, Factory, UUID)->
+define(['underscore', 'uuid', 'backbone', 'lib/turncoat/Factory', 'lib/turncoat/LogEntry'], (_, UUID, Backbone, Factory, LogEntry)->
 
   recurseChildren = (item, processor, deep, earlyOut)->
     deep ?= true
@@ -52,12 +52,32 @@ define(['underscore', 'backbone', 'lib/turncoat/Factory','uuid'], (_, Backbone, 
       , true)
       if (chain.length) then chain.push(root) else chain = null
       chain
+
+    logEvent:(moment, eventName, eventDetails)->
+      GameStateModel.logEvent(@, moment, eventName, eventDetails)
+
   )
 
   GameStateModel.fromString = (state)->
     GameStateModel.marshaller ?= Factory.buildStateMarshaller()
     GameStateModel.marshaller.unmarshalState(state)
 
+  GameStateModel.logEvent = (gsm, moment, eventName, eventDetails)->
+    if !gsm.get("_eventLog")? then gsm.set("_eventLog", new Backbone.Collection([]))
+    gsm.get("_eventLog").push(
+      new LogEntry(
+        timestamp:moment
+        name:eventName
+        details:eventDetails
+      )
+    )
+
+  GameStateModel.vivifier = (unvivified, constructor)->
+    vivified = new constructor()
+    vivified.set(unvivified)
+    vivified.unset("_type")
+    vivified._type = undefined
+    vivified
 
   GameStateModel
 )

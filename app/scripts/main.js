@@ -8,7 +8,7 @@ require.config({
     jqModal: 'vendor/jqModal',
     underscore: 'vendor/underscore',
     backbone: 'vendor/backbone',
-    rivets: 'vendor/rivets',
+    rivets: 'vendor/rivets-0.5.13',
     text: 'vendor/text',
     uuid:'vendor/uuid',
     sprintf: 'vendor/sprintf',

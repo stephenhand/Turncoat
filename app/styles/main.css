@@ -134,7 +134,7 @@ margin-bottom:30px;
     vertical-align: middle;
     width:360px
 }
-.selected-player:hover{
+.player-item:hover{
     background-color:#F0F0F0
 }
 

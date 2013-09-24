@@ -44,7 +44,7 @@
           {
               "_type":"Player",
               "name":"Dead Ted",
-              "id":"1-PLAYER1-deadted",
+              "id":"2-PLAYER1-deadted",
               "description":"A notorious pirate captain and fugitive from the emperor's justice!",
               "fleet":[
                   {
@@ -63,7 +63,7 @@
           {
               "_type":"Player",
               "name":"Red Fred",
-              "id":"1-PLAYER2-redfred",
+              "id":"2-PLAYER2-redfred",
               "description":"An imperial war galley captain tasked with keeping the trade routes of the Great Ocean clear of pirates.",
               "fleet":[
                   {

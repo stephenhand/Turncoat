@@ -19,8 +19,7 @@ define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/B
 
       @gameTypes.onSourceUpdated()
 
-      @selectedGameType = new Backbone.Model(
-      )
+      @selectedGameType = new Backbone.Model()
       @selectedGameType.on("change:id", ()=>
         @selectedGameType.set("template",AppState.loadGameTemplate(@selectedGameType.get("id")))
         @selectUsersPlayer( @selectedGameType.get("template").get("players").at(0).get("id"))
@@ -65,7 +64,7 @@ define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/B
       true
 
     createGame:()->
-      AppState.createNewGame(@selectedGameType.get("template"))
+      AppState.createGameFromTemplate(@selectedGameType.get("template"))
 
   )
 

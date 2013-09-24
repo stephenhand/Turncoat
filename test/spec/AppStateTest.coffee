@@ -1,4 +1,5 @@
-
+READY_STATE='READY'
+CREATED_STATE='CREATED'
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("lib/turncoat/Game","AppState", (actual, modulePath, requestingModulePath)->
@@ -171,6 +172,7 @@ define(['isolate!AppState'], (AppState)->
             id:"MOCK_USER"
           )
         )
+        mocks["persister"].saveGameState=JsMockito.mockFunction()
       )
       test("noState_throws", ()->
         chai.assert.throws(()->
@@ -220,6 +222,78 @@ define(['isolate!AppState'], (AppState)->
 
       )
 
+      test("validStateOnlyCreatorPlaying_setsCurrentUserToReadyState", ()->
+        state = new Backbone.Model(
+          id:"TEMPLATE_ID"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"MOCK_USER"
+              )
+            )
+          ])
+        )
+        state.logEvent=JsMockito.mockFunction()
+        AppState.createGameFromTemplate(state)
+        JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER", new JsHamcrest.SimpleMatcher(
+          matches:(s)->
+            s.get("players").find((p)->p.get("user").get("id") is "MOCK_USER").get("user").get("status") is READY_STATE
+        ))
+      )
+      test("validStateOnlyOtherUsersPlaying_setsOtherUsersToCreatedState", ()->
+        state = new Backbone.Model(
+          id:"TEMPLATE_ID"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"OTHER_USER"
+              )
+            ),
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"ANOTHER_OTHER_USER"
+              )
+            )
+          ])
+        )
+        state.logEvent=JsMockito.mockFunction()
+        AppState.createGameFromTemplate(state)
+        JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER", new JsHamcrest.SimpleMatcher(
+          matches:(s)->
+            s.get("players").find((p)->p.get("user").get("id") is "OTHER_USER").get("user").get("status") is CREATED_STATE
+            s.get("players").find((p)->p.get("user").get("id") is "ANOTHER_OTHER_USER").get("user").get("status") is CREATED_STATE
+        ))
+      )
+      test("validStateCreatorPlayingOthers_setsCurrentUserToReadyStateAndOthersToCreated", ()->
+        state = new Backbone.Model(
+          id:"TEMPLATE_ID"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"OTHER_USER"
+              )
+            ),
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"ANOTHER_OTHER_USER"
+              )
+            ),
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"MOCK_USER"
+              )
+            )
+          ])
+        )
+        state.logEvent=JsMockito.mockFunction()
+        AppState.createGameFromTemplate(state)
+        JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER", new JsHamcrest.SimpleMatcher(
+          matches:(s)->
+            s.get("players").find((p)->p.get("user").get("id") is "MOCK_USER").get("user").get("status") is READY_STATE
+            s.get("players").find((p)->p.get("user").get("id") is "OTHER_USER").get("user").get("status") is CREATED_STATE
+            s.get("players").find((p)->p.get("user").get("id") is "ANOTHER_OTHER_USER").get("user").get("status") is CREATED_STATE
+        ))
+      )
     )
   )
 

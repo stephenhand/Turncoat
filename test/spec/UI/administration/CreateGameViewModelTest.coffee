@@ -3,7 +3,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 
   Isolate.mapAsFactory("AppState","UI/administration/CreateGameViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      createNewGame:JsMockito.mockFunction()
+      createGameFromTemplate:JsMockito.mockFunction()
       loadGameTemplate:(id)->
         if (id is 'MOCK_TEMPLATE2')
           new Backbone.Model(
@@ -243,13 +243,13 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
     )
 
     suite("createGame", ()->
-      test("CallsAppStateCreateNewGame", ()->
+      test("CallsAppStateCreateGameFromTemplate", ()->
         cgvm=new CreateGameViewModel()
         cgvm.selectedGameType = new Backbone.Model(
           template:{}
         )
         cgvm.createGame()
-        JsMockito.verify(mocks["AppState"].createNewGame)(cgvm.selectedGameType.get("template"))
+        JsMockito.verify(mocks["AppState"].createGameFromTemplate)(cgvm.selectedGameType.get("template"))
       )
     )
   )
