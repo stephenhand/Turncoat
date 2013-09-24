@@ -288,7 +288,8 @@ class Rivets.View
       if b.model? then @bindings.push(b)
 
     parse = (node) =>
-      unless node in skipNodes
+      parse(child) for child in node.children
+      unless !node.attributes?
         if node.nodeType is Node.TEXT_NODE
           parser = Rivets.TextTemplateParser
 
@@ -335,15 +336,8 @@ class Rivets.View
               type = attribute.name.replace bindingRegExp, ''
               buildBinding 'Binding', node, type, attribute.value
 
-        #parse childNode for childNode in node.childNodes
-
-
-    recursiveParse = (node)=>
-      recursiveParse(child) for child in node.children
-      if (node.attributes?) then parse(node)
-
     for el in @els
-      recursiveParse el
+      parse el
 
     return
 
