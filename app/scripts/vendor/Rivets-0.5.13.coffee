@@ -259,7 +259,6 @@ class Rivets.View
   # binding declaration.
   build: =>
     @bindings = []
-    skipNodes = []
     bindingRegExp = @bindingRegExp()
     componentRegExp = @componentRegExp()
 
@@ -328,7 +327,6 @@ class Rivets.View
               binder or= @binders['*']
 
               if binder.block
-                skipNodes.push n for n in node.childNodes
                 attributes = [attribute]
 
           for attribute in attributes or node.attributes
