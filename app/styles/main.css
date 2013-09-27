@@ -52,8 +52,11 @@ div{
     margin:4px;
     padding:4px;
     border-top:solid 1px black;
-
+    display:none;
     border-bottom:solid 1px black;
+}
+.administration-tab.active-tab .tab-content {
+    display:inherit;
 }
 .tab-header{
     position:absolute;

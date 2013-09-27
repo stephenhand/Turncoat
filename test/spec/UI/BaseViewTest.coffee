@@ -62,13 +62,15 @@ define(["isolate!UI/BaseView"], (BaseView)->
             bv.render()
             JsMockito.verify(bv.createModel)()
           )
-          test("bindsUsingRootSelector",()->
+          test("bindsUsingRootSelectorsFirstChild",()->
             bv = new BaseView(
              rootSelector:"TEST_SELECTOR"
             )
             bv.createModel=JsMockito.mockFunction()
             bv.render()
-            JsMockito.verify(mocks.rivets.bind)(mocks.jqueryObjects["TEST_SELECTOR"],JsHamcrest.Matchers.anything())
+            JsMockito.verify(mocks.jqueryObjects["TEST_SELECTOR"].children)()
+            JsMockito.verify(mocks.jqueryObjects.methodResults.children.first)()
+            JsMockito.verify(mocks.rivets.bind)(mocks.jqueryObjects.methodResults.first,JsHamcrest.Matchers.anything())
           )
           test("attachesTemplateToRootSelectorNode", ()->
             bv = new BaseView(
@@ -86,7 +88,7 @@ define(["isolate!UI/BaseView"], (BaseView)->
             bv.createModel=JsMockito.mockFunction()
             bv.render()
             chai.assert.equal(bv.view.id, "MOCK_RIVETS_VIEW")
-            chai.assert.equal(bv.view.selector, mocks.jqueryObjects["TEST_SELECTOR"])
+            chai.assert.equal(bv.view.selector, mocks.jqueryObjects.methodResults.first)
           )
           test("sets$elToRootSelectorResult", ()->
             bv = new BaseView(

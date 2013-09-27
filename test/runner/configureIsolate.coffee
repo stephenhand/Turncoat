@@ -21,20 +21,33 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
     )
   )
 
-  setMocks = (jqm,actual,requestingModulePath)->
-    JsMockito.when(jqm.parent)().then(
-      ()->
-        mockJQueryObj = JsMockito.mock(actual)
-        mockJQueryObj.jqm=JsMockito.mockFunction()
-        mockJQueryObj.jqmShow=JsMockito.mockFunction()
-        mockJQueryObj.jqmHide=JsMockito.mockFunction()
-        mockJQueryObj.jqmAddTrigger=JsMockito.mockFunction()
-        mockJQueryObj.jqmAddClose=JsMockito.mockFunction()
-        mockJQueryObj.on=JsMockito.mockFunction()
-        window.mockLibrary[requestingModulePath].jqueryObjects.methodResults ?= []
-        window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.parent = mockJQueryObj
-        mockJQueryObj
+  createMock = (actual,requestingModulePath)->
+    jqm = JsMockito.mock(actual)
+    jqm.jqm=JsMockito.mockFunction()
+    jqm.jqmShow=JsMockito.mockFunction()
+    jqm.jqmHide=JsMockito.mockFunction()
+    jqm.jqmAddTrigger=JsMockito.mockFunction()
+    jqm.jqmAddClose=JsMockito.mockFunction()
+    jqm.on=JsMockito.mockFunction()
+    jqm.first=JsMockito.mockFunction()
+    window.mockLibrary[requestingModulePath].jqueryObjects.methodResults ?= []
+
+    JsMockito.when(jqm.parent)().then(()->
+      ret = createMock(actual, requestingModulePath)
+      window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.parent = ret
+      ret
     )
+    JsMockito.when(jqm.children)().then(()->
+      ret = createMock(actual, requestingModulePath)
+      window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.children = ret
+      ret
+    )
+    JsMockito.when(jqm.first)().then(()->
+      ret = createMock(actual, requestingModulePath)
+      window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.first = ret
+      ret
+    )
+
     JsMockito.when(jqm.on)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything()).then(
       (eventName, cb)->
         window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks ?= []
@@ -42,6 +55,7 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
         window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks.on[eventName]= cb
         @
     )
+    jqm
 
 
   Isolate.mapAsFactory("jquery", (actual, modulePath, requestingModulePath)->
@@ -67,14 +81,8 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
 
         if typeof selector is "object" then _.extend(selector, new UniquelyIdentifiable())
         if typeof context is "object" then _.extend(selector, new UniquelyIdentifiable())
-        mockJQueryObj = JsMockito.mock(actual)
-        mockJQueryObj.jqm=JsMockito.mockFunction()
-        mockJQueryObj.jqmShow=JsMockito.mockFunction()
-        mockJQueryObj.jqmHide=JsMockito.mockFunction()
-        mockJQueryObj.jqmAddTrigger=JsMockito.mockFunction()
-        mockJQueryObj.jqmAddClose=JsMockito.mockFunction()
-        mockJQueryObj.on=JsMockito.mockFunction()
-        setMocks(mockJQueryObj,actual,requestingModulePath)
+
+        mockJQueryObj =createMock(actual,requestingModulePath)
         if context?
           window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
         else
