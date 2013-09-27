@@ -13,7 +13,7 @@ define(["underscore", "backbone", "rivets", "jquery"], (_, Backbone, rivets, $)-
         @createModel()
         @$el = $(@rootSelector, @rootContext)
         @$el.html(@template)
-        @view = rivets.bind(@$el, @model)
+        @view = rivets.bind(@$el.children().first(), @model)
         @delegateEvents(@events)
     )
 

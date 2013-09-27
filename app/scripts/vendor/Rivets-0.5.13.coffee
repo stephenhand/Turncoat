@@ -259,6 +259,8 @@ class Rivets.View
   # binding declaration.
   build: =>
     @bindings = []
+
+    skipNodes = []
     bindingRegExp = @bindingRegExp()
     componentRegExp = @componentRegExp()
 
@@ -283,12 +285,11 @@ class Rivets.View
 
       if dependencies = context.shift()
         options.dependencies = dependencies.split /\s+/
-      b = new Rivets[binding] @, node, type, key, keypath, options
-      if b.model? then @bindings.push(b)
+
+      @bindings.push new Rivets[binding] @, node, type, key, keypath, options
 
     parse = (node) =>
-      parse(child) for child in node.children
-      unless !node.attributes?
+      unless node in skipNodes
         if node.nodeType is Node.TEXT_NODE
           parser = Rivets.TextTemplateParser
 
@@ -327,6 +328,7 @@ class Rivets.View
               binder or= @binders['*']
 
               if binder.block
+                skipNodes.push n for n in node.childNodes
                 attributes = [attribute]
 
           for attribute in attributes or node.attributes
@@ -334,8 +336,9 @@ class Rivets.View
               type = attribute.name.replace bindingRegExp, ''
               buildBinding 'Binding', node, type, attribute.value
 
-    for el in @els
-      parse el
+        parse childNode for childNode in node.childNodes
+
+    parse el for el in @els
 
     return
 

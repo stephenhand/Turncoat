@@ -10,8 +10,7 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
             key = keypath.shift()
             val = obj.get(key)
             if !val? && keypath.length>0
-              val=new Backbone.Model()
-              obj.set(key, val)
+              return
             @subscribe(val ,keypath, callback)
           else
             obj._subscribeCallback = callback
