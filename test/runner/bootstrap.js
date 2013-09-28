@@ -81,6 +81,7 @@ require(['spec/AppHostTest',
     'spec/lib/turncoat/FactoryTest',
     'spec/lib/turncoat/GameStateModelTest',
     'spec/lib/turncoat/LogEntryTest',
+    'spec/lib/turncoat/GameHeaderTest',
     'spec/lib/marshallers/JSONMarshallerTest',
     'spec/lib/persisters/LocalStoragePersisterTest'], function(){
     setTimeout(function () {

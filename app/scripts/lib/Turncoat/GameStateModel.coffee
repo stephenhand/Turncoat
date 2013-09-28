@@ -56,6 +56,10 @@ define(['underscore', 'uuid', 'backbone', 'lib/turncoat/Factory', 'lib/turncoat/
     logEvent:(moment, eventName, eventDetails)->
       GameStateModel.logEvent(@, moment, eventName, eventDetails)
 
+    getLatestEvent:(name)->
+      if @get("_eventLog")?
+        @get("_eventLog").find((l)->(!name? || name is l.get("name")))
+
   )
 
   GameStateModel.fromString = (state)->
@@ -64,7 +68,7 @@ define(['underscore', 'uuid', 'backbone', 'lib/turncoat/Factory', 'lib/turncoat/
 
   GameStateModel.logEvent = (gsm, moment, eventName, eventDetails)->
     if !gsm.get("_eventLog")? then gsm.set("_eventLog", new Backbone.Collection([]))
-    gsm.get("_eventLog").push(
+    gsm.get("_eventLog").unshift(
       new LogEntry(
         timestamp:moment
         name:eventName

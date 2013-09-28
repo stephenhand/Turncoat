@@ -74,6 +74,7 @@ define(['uuid','underscore', 'jquery', 'backbone', "lib/turncoat/Factory", "lib/
         id:state.get("id")
         type:state.get("_type")
 
+
       (newListItem.userStatus=player.get("user")?.get("status")) for player in state.get("players")?.models ? [] when player.get("user")?.get("id") is user
 
       list.add(

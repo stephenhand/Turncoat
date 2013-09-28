@@ -5,7 +5,7 @@ define(['underscore', 'backbone', 'moment', 'lib/turncoat/GameStateModel', 'lib/
 
   StateRegistry.registerType("LogEntry", (unvivified)->
     vivified = GameStateModel.vivifier(unvivified, LogEntry)
-    vivified.set("timestamp", moment.utc())
+    vivified.set("timestamp", moment.utc(unvivified.timestamp))
   )
   LogEntry
 )

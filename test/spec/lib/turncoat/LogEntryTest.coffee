@@ -15,8 +15,8 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ret=
         utc:JsMockito.mockFunction()
-      JsMockito.when(ret.utc)().then(()->
-        "MOCK_MOMENT_CURRENT_UTC"
+      JsMockito.when(ret.utc)(JsHamcrest.Matchers.anything()).then((input)->
+        "MOCK_MOMENT_UTC:"+input
       )
       ret
     )
@@ -49,9 +49,9 @@ define(['isolate!lib/turncoat/LogEntry',], (LogEntry)->
         JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("LogEntry",new JsHamcrest.SimpleMatcher(
           describeTo:(d)->d.append("vivified")
           matches:(v)->
-            v({})
+            v({timestamp:"MOCK_TIME"})
             try
-              JsMockito.verify(vivifierResult.set)("timestamp","MOCK_MOMENT_CURRENT_UTC")
+              JsMockito.verify(vivifierResult.set)("timestamp","MOCK_MOMENT_UTC:MOCK_TIME")
               true
             catch e
               false

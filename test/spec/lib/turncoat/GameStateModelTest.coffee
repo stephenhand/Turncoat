@@ -399,22 +399,74 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
         chai.assert.equal(res[3], gsmChildThreeLevelsDeep)
       )
     )
-    suite("logEvent", ()->
-      test("gameStateModelWithEventLog_AddsNewEventToEnd", ()->
-        gsm = new GameStateModel(
-          _eventLog:new Backbone.Collection([
-            name:"MOCK_EVENT_TYPE"
-            details:"MOCK_DETAILS"
-            timestamp:"MOCK_TIME"
-          ])
-        )
-        GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
-        chai.assert.equal(gsm.get("_eventLog").length, 2)
-        chai.assert.equal(gsm.get("_eventLog").at(1).get("timestamp"), "CURRENT_TIME")
-        chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_NEW_EVENT")
-        chai.assert.equal(gsm.get("_eventLog").at(1).get("details"), "MOCK_NEW_DETAILS")
+    suite("getLatestEvent", ()->
+      test("gameStateModelWithoutEventLogNoEventName_ReturnsUndefined", ()->
+        gsm = new GameStateModel()
+        chai.assert.isUndefined(gsm.getLatestEvent())
       )
-      test("gameStateModelWithEventLog_AddsNewEventAsLogEntry", ()->
+      test("gameStateModelWithoutEventLogEventName_ReturnsUndefined", ()->
+        gsm = new GameStateModel()
+        chai.assert.isUndefined(gsm.getLatestEvent("EVENT_NAME"))
+      )
+      test("gameStateModelWithEventLogNoEventName_ReturnsTopEvent", ()->
+        gsm = new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME"
+          ,
+            name:"MOCK_EVENT_TYPE_2"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_2"
+          ])
+        )
+        ret= gsm.getLatestEvent()
+        chai.assert.equal("MOCK_EVENT_TYPE",ret.get("name"))
+        chai.assert.equal("MOCK_DETAILS",ret.get("details"))
+        chai.assert.equal("MOCK_TIME",ret.get("timestamp"))
+      )
+      test("gameStateModelWithEventLogEventNameInLog_ReturnsTopEventOfThatName", ()->
+        gsm = new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME"
+          ,
+            name:"MOCK_EVENT_TYPE_2"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_2"
+          ,
+            name:"MOCK_EVENT_TYPE_2"
+            details:"MOCK_DETAILS_3"
+            timestamp:"MOCK_TIME_3"
+          ])
+        )
+        ret= gsm.getLatestEvent("MOCK_EVENT_TYPE_2")
+        chai.assert.equal("MOCK_EVENT_TYPE_2",ret.get("name"))
+        chai.assert.equal("MOCK_DETAILS_2",ret.get("details"))
+        chai.assert.equal("MOCK_TIME_2",ret.get("timestamp"))
+      )
+      test("gameStateModelWithEventLogEventNameNotInLog_ReturnsUndefined", ()->
+        gsm = new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME"
+          ,
+            name:"MOCK_EVENT_TYPE_2"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_2"
+          ,
+            name:"MOCK_EVENT_TYPE_2"
+            details:"MOCK_DETAILS_3"
+            timestamp:"MOCK_TIME_3"
+          ])
+        )
+        chai.assert.isUndefined(gsm.getLatestEvent("MOCK_EVENT_TYPE_3"))
+      )
+    )
+    suite("logEvent", ()->
+      test("gameStateModelWithEventLog_AddsNewEventToStart", ()->
         gsm = new GameStateModel(
           _eventLog:new Backbone.Collection([
             name:"MOCK_EVENT_TYPE"
@@ -424,9 +476,23 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
         )
         GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
         chai.assert.equal(gsm.get("_eventLog").length, 2)
-        chai.assert.equal(gsm.get("_eventLog").at(1).get("timestamp"), "CURRENT_TIME")
-        chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_NEW_EVENT")
-        chai.assert.equal(gsm.get("_eventLog").at(1).get("details"), "MOCK_NEW_DETAILS")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp"), "CURRENT_TIME")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
+      )
+      test("gameStateModelWithEventLog_AddsNewEventAsLogEntryToTop", ()->
+        gsm = new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME"
+          ])
+        )
+        GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+        chai.assert.equal(gsm.get("_eventLog").length, 2)
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp"), "CURRENT_TIME")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
       )
       test("gameStateModelWithEventLog_PreservesExistingEvents", ()->
         gsm = new GameStateModel(
@@ -437,7 +503,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
           ])
         )
         GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
-        chai.assert.instanceOf(gsm.get("_eventLog").at(1), LogEntry)
+        chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_EVENT_TYPE")
       )
       test("gameStateModelWithoutEventLog_CreatesNewLog", ()->
         gsm = new GameStateModel()

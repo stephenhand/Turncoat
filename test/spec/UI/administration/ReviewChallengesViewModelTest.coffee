@@ -174,63 +174,133 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             JsHamcrest.Matchers.anything()
           )
         )
-        test("callsUpdateFromWatchedCollectionsWithAdderThatCopiesId", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+        suite("adder", ()->
+          test("CopiesId", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.challenges.onSourceUpdated()
+            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
 
-            JsHamcrest.Matchers.anything(),
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                ret=input(
-                  get:(key)->
-                    if key is "id" then return "MOCK_ID"
-                )
-                "MOCK_ID" is ret.get("id")
-            ),
-            JsHamcrest.Matchers.anything()
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    getLatestEvent:(key)->
+                      get:()->
+                        format:()->
+                    get:(key)->
+                      if key is "id" then return "MOCK_ID"
+                  )
+                  "MOCK_ID" is ret.get("id")
+              ),
+              JsHamcrest.Matchers.anything()
+            )
           )
-        )
-        test("callsUpdateFromWatchedCollectionsWithAdderThatSetsStatusTextIfUserStatusCHALLENGED", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
-            JsHamcrest.Matchers.anything(),
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                ret=input(
-                  get:(key)->
-                    if key is "userStatus" then return "CHALLENGED"
-                )
-                _.isString(ret.get("statusText"))
-            ),
-            JsHamcrest.Matchers.anything()
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithAdderThatSetsStatusTextIfUserStatusREADY", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
-            JsHamcrest.Matchers.anything(),
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                ret=input(
-                  get:(key)->
-                    if key is "userStatus" then return "READY"
-                )
-                _.isString(ret.get("statusText"))
-            ),
-            JsHamcrest.Matchers.anything()
-          )
-        )
+          test("SetsCreatedUsingEventLog", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.challenges.onSourceUpdated()
+            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
 
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    get:()->
+                    getLatestEvent:(key)->
+                      if key is "CREATED"
+                        get:(tskey)->
+                          if tskey is "timestamp"
+                            format:(pattern)->
+                              "STRING FROM MOMENT: "+pattern
+                  )
+                  "STRING FROM MOMENT" is ret.get("created").substr(0,18)
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+          test("EventLogCreatedTimeUnavailable_UsesPlaceholder", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.challenges.onSourceUpdated()
+            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    get:()->
+                    getLatestEvent:(key)->
+                  )
+                  typeof ret.get("created") is "string"
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+          test("CopiesLabel", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.challenges.onSourceUpdated()
+            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    getLatestEvent:(key)->
+                      get:()->
+                        format:()->
+                    get:(key)->
+                      if key is "label" then return "MOCK_LABEL"
+                  )
+                  "MOCK_LABEL" is ret.get("label")
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+          test("UserStatusCHALLENGED_SetsStatusText", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.challenges.onSourceUpdated()
+            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    getLatestEvent:(key)->
+                      get:()->
+                        format:()->
+                    get:(key)->
+                      if key is "userStatus" then return "CHALLENGED"
+                  )
+                  _.isString(ret.get("statusText"))
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+          test("UserStatusREADY_SetsStatusTextIf", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.challenges.onSourceUpdated()
+            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    getLatestEvent:(key)->
+                      get:()->
+                        format:()->
+                    get:(key)->
+                      if key is "userStatus" then return "READY"
+                  )
+                  _.isString(ret.get("statusText"))
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+        )
       )
     )
   )
-
 
 )
 

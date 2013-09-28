@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/AdministrationDialogueViewModel", "UI/administration/CreateGameView", "text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, AdministrationDialogueViewModel, CreateGameView, templateText)->
+define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/AdministrationDialogueViewModel", "UI/administration/CreateGameView", "UI/administration/ReviewChallengesView", "text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, AdministrationDialogueViewModel, CreateGameView,ReviewChallengesView, templateText)->
   setActiveTab=(tabElement)->
     $(".administration-tab").toggleClass("active-tab",false)
     $(tabElement).parent().toggleClass("active-tab",true)
@@ -10,6 +10,7 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/Ad
       options.rootSelector = "#administrationDialogue"
       super(options)
       @createCreateGameTabView()
+      @createChallengesTabView()
 
     events:
       "click .tab-header" : "tabClicked"
@@ -23,9 +24,15 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/Ad
     render:()->
       super()
       @createGameView.render()
+      @reviewChallengesView.render()
 
     createCreateGameTabView:()->
       @createGameView = new CreateGameView($("#createGame"))
+
+    createChallengesTabView:()->
+      @reviewChallengesView = new ReviewChallengesView($("#reviewChallenges"))
+
+
   AdministrationDialogueView
 )
 
