@@ -2,6 +2,8 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
   class FleetAsset extends GameStateModel
     defaults:
       position:null
+  FleetAsset.toString=()->
+      "FleetAsset"
 
   StateRegistry.registerType("FleetAsset", (unvivified)->
     GameStateModel.vivifier(unvivified, FleetAsset)

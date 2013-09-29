@@ -121,7 +121,7 @@ define(['isolate!AppState'], (AppState)->
                   list:new Backbone.Collection([])
                 input.call(AppState, newVal)
                 try
-                  JsMockito.verify(AppState.get("games").set)(newVal.list)
+                  JsMockito.verify(AppState.get("games").set)(newVal.list.models)
                   true
                 catch e
                   false

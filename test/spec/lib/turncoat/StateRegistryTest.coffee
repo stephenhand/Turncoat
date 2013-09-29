@@ -7,6 +7,8 @@ define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
           constructor:()->
             @mockProperty="MOCK_VALUE"
 
+        testGameStateType.toString = ()->
+          "ME AS A STRING!"
         StateRegistry.registerType("testGameStateType",testGameStateType)
         testObj = new StateRegistry["testGameStateType"]()
         chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
@@ -24,7 +26,7 @@ define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
             @mockProperty="MOCK_VALUE"
 
         StateRegistry.registerType("testGameStateType",testGameStateType)
-        testType = StateRegistry.reverse[testGameStateType]
+        testType = StateRegistry.reverseLookup(testGameStateType)
         chai.assert.equal(testType, "testGameStateType")
       )
 
@@ -32,7 +34,7 @@ define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
         class anotherGameStateType
           constructor:()->
             @mockProperty="MOCK_VALUE"
-        lookup = StateRegistry.reverse[anotherGameStateType]
+        lookup = StateRegistry.reverseLookup(anotherGameStateType)
         chai.assert.isUndefined(lookup)
       )
     )

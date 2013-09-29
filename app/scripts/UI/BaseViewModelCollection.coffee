@@ -6,9 +6,9 @@ define(["underscore", "backbone"], (_, Backbone)->
       @watchedCollections ?= []
       for collection in collections
         if !_.contains(@watchedCollections, collection)
-          collection.on("add", @onSourceUpdated)
-          collection.on("remove", @onSourceUpdated)
-          collection.on("reset", @onSourceUpdated)
+          collection.on("add", ()=>@onSourceUpdated())
+          collection.on("remove", ()=>@onSourceUpdated())
+          collection.on("reset", ()=>@onSourceUpdated())
           @watchedCollections.push(collection)
 
     onSourceUpdated:()=>

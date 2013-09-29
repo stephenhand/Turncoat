@@ -20,7 +20,7 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
         ,
           (input)->
             new Backbone.Model(
-              created:input.getLatestEvent("CREATED")?.get("timestamp")?.format('MMMM Do YYYY, h:mm:ss a') ? "--"
+              created:input.get("created")?.format?('MMMM Do YYYY, h:mm:ss a') ? "--"
               id:input.get("id")
               label:input.get("label")
               statusText: GetStatusText(input.get("userStatus"))

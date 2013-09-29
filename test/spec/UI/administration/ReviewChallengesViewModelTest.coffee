@@ -196,7 +196,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
               JsHamcrest.Matchers.anything()
             )
           )
-          test("SetsCreatedUsingEventLog", ()->
+          test("SetsCreatedUsingCreatedMoment", ()->
             rcvm = new ReviewChallengesViewModel()
             rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
             rcvm.challenges.onSourceUpdated()
@@ -206,20 +206,17 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
               new JsHamcrest.SimpleMatcher(
                 matches:(input)->
                   ret=input(
-                    get:()->
-                    getLatestEvent:(key)->
-                      if key is "CREATED"
-                        get:(tskey)->
-                          if tskey is "timestamp"
-                            format:(pattern)->
-                              "STRING FROM MOMENT: "+pattern
+                    get:(key)->
+                      if key is "created"
+                        format:(pattern)->
+                          "STRING FROM MOMENT: "+pattern
                   )
                   "STRING FROM MOMENT" is ret.get("created").substr(0,18)
               ),
               JsHamcrest.Matchers.anything()
             )
           )
-          test("EventLogCreatedTimeUnavailable_UsesPlaceholder", ()->
+          test("CreatedNotMoment_UsesPlaceholder", ()->
             rcvm = new ReviewChallengesViewModel()
             rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
             rcvm.challenges.onSourceUpdated()
@@ -230,7 +227,25 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                 matches:(input)->
                   ret=input(
                     get:()->
-                    getLatestEvent:(key)->
+                      "NOT_MOMENT"
+                  )
+                  typeof ret.get("created") is "string"
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+          test("CreatedUnavailable_UsesPlaceholder", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.challenges.onSourceUpdated()
+            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    get:()->
+                      undefined
                   )
                   typeof ret.get("created") is "string"
               ),
@@ -277,7 +292,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
               JsHamcrest.Matchers.anything()
             )
           )
-          test("UserStatusREADY_SetsStatusTextIf", ()->
+          test("UserStatusREADY_SetsStatusText", ()->
             rcvm = new ReviewChallengesViewModel()
             rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
             rcvm.challenges.onSourceUpdated()

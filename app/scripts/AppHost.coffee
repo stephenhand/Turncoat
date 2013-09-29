@@ -14,7 +14,11 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
             @subscribe(val ,keypath, callback)
           else
             obj._subscribeCallback = callback
-            obj.on('change:' + keypath[0], callback)
+            obj.on("change:" + keypath[0], callback)
+            if obj.get(keypath[0])? && obj.get(keypath[0]) instanceof Backbone.Collection
+              obj.get(keypath[0]).on("add", callback)
+              obj.get(keypath[0]).on("remove", callback)
+              obj.get(keypath[0]).on("reset", callback)
 
         unsubscribe:(obj,keypath,callback)->
           keypath?=[]
@@ -27,7 +31,10 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
             @unsubscribe(val ,keypath, callback)
           else
             obj._subscribeCallback = undefined
-            obj.off('change:' + keypath[0], callback)
+            obj.off("change:" + keypath[0], callback)
+            obj.get(keypath[0])?.off?("add", callback)
+            obj.get(keypath[0])?.off?("remove", callback)
+            obj.get(keypath[0])?.off?("reset", callback)
 
         read:(obj,keypath)->
           keypath?=[]

@@ -15,7 +15,7 @@ define(['uuid', 'moment', 'underscore', 'backbone', 'lib/turncoat/Game','lib/tur
       persister.off("gameListUpdated", null, @)
       persister.on("gameListUpdated", (data)->
         if (data.userId is @get("currentUser").get("id"))
-          @get("games").set(data.list)
+          @get("games").set(data.list.models)
       ,@)
     loadGameTemplate:(id)->
       if (!id?) then throw new Error("loadGameTemplate requires an ID parameter")

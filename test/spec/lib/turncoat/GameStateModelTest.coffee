@@ -1,4 +1,4 @@
-define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntry"], (GameStateModel, Backbone, LogEntry)->
+define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (GameStateModel, Backbone, LogEntry, GameHeader)->
   #GameStateModelTest.coffee test file    
   suite("GameStateModelTest", ()->
     mockMarshaller ={}
@@ -399,6 +399,195 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
         chai.assert.equal(res[3], gsmChildThreeLevelsDeep)
       )
     )
+    suite("getHeaderForUser", ()->
+      test("returnsGameHeader",()->
+        gh = new GameStateModel().getHeaderForUser()
+        chai.assert.instanceOf(gh,GameHeader)
+      )
+
+      test("stateWithIdAndLabel_copiesIdAndLabel", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection()
+        )
+        gh = gsm.getHeaderForUser("mock_user")
+        chai.assert.equal(gh.get("id"), "MOCK_SAVED_ID")
+        chai.assert.equal(gh.get("label"), "MOCK GAME TO SAVE")
+      )
+      test("stateWithPlayerAsCurrentUserWithStatus_setsUserStatusAsMatchedUserStatus", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_user"
+                status:"MOCK_STATUS1"
+              )
+            )
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_other_user"
+                status:"MOCK_STATUS2"
+              )
+            )
+          ])
+        )
+        chai.assert.equal(gsm.getHeaderForUser("mock_user").get("userStatus"), "MOCK_STATUS1")
+      )
+      test("noUserSpecified_doesntSetUserStatus", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_user"
+                status:"MOCK_STATUS1"
+              )
+            )
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_other_user"
+                status:"MOCK_STATUS2"
+              )
+            )
+          ])
+        )
+        chai.assert.isUndefined(gsm.getHeaderForUser().get("userStatus"))
+      )
+      test("stateWithPlayerAsCurrentUserWithoutStatus_doesntSetUserStatus", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_user"
+              )
+            )
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_other_user"
+                status:"MOCK_STATUS2"
+              )
+            )
+          ])
+        )
+        chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("userStatus"))
+      )
+      test("stateWithNoPlayerAsCurrentUser_doesntSetUserStatus", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection([
+            new Backbone.Model(
+              user:new Backbone.Model(
+                id:"mock_other_user"
+                status:"MOCK_STATUS2"
+              )
+            )
+          ])
+        )
+        chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("userStatus"))
+      )
+      test("stateWithNoPlayers_doesntSetUserStatus", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection()
+        )
+        chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("userStatus"))
+      )
+      test("stateWithSingleCreatedLogEntry_setsCreatedToTimestamp", ()->
+        gsm =new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"CREATED"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME_1"
+          ,
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_2"
+          ])
+        )
+        chai.assert.equal("MOCK_TIME_1", gsm.getHeaderForUser("mock_user").get("created"))
+      )
+      test("stateWithMultipleCreatedLogEntries_setsCreatedToTimestampToNearestToTop", ()->
+        gsm =new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME_1"
+          ,
+            name:"CREATED"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_2"
+          ,
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME_3"
+          ,
+            name:"CREATED"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_4"
+          ])
+        )
+        chai.assert.equal("MOCK_TIME_2", gsm.getHeaderForUser("mock_user").get("created"))
+      )
+
+      test("stateWithNoCreatedLogEntry_doesntSetCreated", ()->
+        gsm =new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME_1"
+          ,
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME_2"
+          ])
+        )
+        chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("created"))
+      )
+      test("stateWithNoEventLog_doesntSetCreated", ()->
+        gsm =new GameStateModel()
+        chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("created"))
+      )
+      test("stateWithEventLog_setsLastActivityToTimestampOnTopEvent", ()->
+        gsm =new GameStateModel(
+          _eventLog:new Backbone.Collection([
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME_1"
+          ,
+            name:"CREATED"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_2"
+          ,
+            name:"MOCK_EVENT_TYPE"
+            details:"MOCK_DETAILS"
+            timestamp:"MOCK_TIME_3"
+          ,
+            name:"CREATED"
+            details:"MOCK_DETAILS_2"
+            timestamp:"MOCK_TIME_4"
+          ])
+        )
+        chai.assert.equal("MOCK_TIME_1", gsm.getHeaderForUser("mock_user").get("lastActivity"))
+      )
+      test("stateWithNoEventLog_doesntSetLastActivity", ()->
+        gsm =new GameStateModel()
+        chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("lastActivity"))
+      )
+    )
     suite("getLatestEvent", ()->
       test("gameStateModelWithoutEventLogNoEventName_ReturnsUndefined", ()->
         gsm = new GameStateModel()
@@ -418,6 +607,10 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
             name:"MOCK_EVENT_TYPE_2"
             details:"MOCK_DETAILS_2"
             timestamp:"MOCK_TIME_2"
+          ,
+            name:"MOCK_EVENT_TYPE_2"
+            details:"MOCK_DETAILS_3"
+            timestamp:"MOCK_TIME_3"
           ])
         )
         ret= gsm.getLatestEvent()

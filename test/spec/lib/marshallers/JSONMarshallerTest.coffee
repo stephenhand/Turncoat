@@ -1,3 +1,15 @@
+require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("lib/turncoat/StateRegistry", "lib/marshallers/JSONMarshaller", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      m=
+        reverseLookup:JsMockito.mockFunction()
+        registerPersister:JsMockito.mockFunction()
+      m
+    )
+  )
+)
+
+
 define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JSONMarshaller, _, Backbone)->
   #JSONMarshallerTest.coffee test file    
   suite("JSONMarshaller", ()->
@@ -9,7 +21,11 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         C:"C"
       mockMethod:()->
         "CHEESE"
+      toString:()->
+        "MOCK_TYPE"
     )
+    mockType.toString = ()->
+      "ME AS A STRING!"
     MOCK_TYPE = Backbone.Model.extend()
     mockMarshalledType ="{ "+
       "\"_type\":\"MOCK_TYPE\","+
@@ -41,7 +57,8 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         val.data = data
         val
       )
-      mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[mockType]="MOCK_TYPE"
+      JsMockito.when(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverseLookup)(JsHamcrest.Matchers.anything()).then(()->"MOCK_TYPE")
+
     )
     suite("marshalState", ()->
       test("correctlyMarshalsBackboneModelsAttributes", ()->
@@ -110,6 +127,48 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         json = marshaller.marshalState(testModel)
         parsedModel = JSON.parse(json)
         chai.assert.equal(parsedModel.propC.propF.propI._type, "MOCK_TYPE")
+      )
+
+      test("correctlyPreservesType_typeAttributeInCollection", ()->
+
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:42
+          propC:new mockType()
+        )
+
+
+        json = marshaller.marshalState(new Backbone.Collection([testModel]))
+        parsedModel = JSON.parse(json)
+        chai.assert.equal(parsedModel[0].propC._type, "MOCK_TYPE")
+      )
+
+      test("correctlyPreservesType_typeAttributeInDeepCollection", ()->
+
+
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:42
+          propC:new mockType()
+        )
+
+        testModel.get("propC").set(
+            propD:"TEST_STRING"
+            propE:""
+            propF:new Backbone.Collection([new mockType()])
+        )
+
+
+        testModel.get("propC").get("propF").at(0).set(
+          propG:"TEST_STRING"
+          propH:""
+          propI:new mockType()
+        )
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        chai.assert.equal(parsedModel.propC.propF[0].propI._type, "MOCK_TYPE")
       )
 
       test("recursiveTypeRecordingIgnoresNonModelObjects", ()->
@@ -187,11 +246,50 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         chai.assert.equal(origAttrCount, newAttrCount)
       )
 
-      test("createsArraysFromCollections", ()->
-        testModelType = Backbone.Model.extend(
-          toString:JsMockito.mockFunction()
-          initialize:()->
+
+      test("leavesAttributesUnmodifiedInCollections", ()->
+
+        testModel = new mockType()
+        testModel.set(
+          id:"CHEESE"
+          propA:"TEST_STRING"
+          propB:42
+          propC:new mockType()
         )
+
+        testModel.get("propC").set(
+          propD:"TEST_STRING"
+          propE:""
+          propF:new mockType()
+        )
+
+
+        testModel.get("propC").get("propF").set(
+          propG:"TEST_STRING"
+          propH:""
+          propI:new mockType()
+        )
+        origAttr = {}
+        origAttrCount = 0
+        for attrName, attrVal of testModel.attributes
+          origAttr[attrName] = attrVal
+          origAttrCount++
+        marshaller.marshalState(new Backbone.Collection([
+          testModel
+        ,
+          new mockType()
+        ,
+          new mockType()
+        ]
+        ))
+        newAttrCount = 0
+        for attrName, attrVal of testModel.attributes
+          chai.assert.equal(attrVal, origAttr[attrName])
+          newAttrCount++
+        chai.assert.equal(origAttrCount, newAttrCount)
+      )
+
+      test("createsArraysFromCollections", ()->
         testModel = new mockType()
         testModel.set(
           propA:"TEST_STRING"
@@ -221,7 +319,6 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
         ])
         testModel.set("propC", col)
         #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
-
         json = marshaller.marshalState(testModel)
         parsedModel = JSON.parse(json)
         chai.assert.equal(parsedModel.propC.length, 3)
@@ -229,10 +326,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
       )
 
       test("setsTypeForKnownTypesInArrays", ()->
-        testModelType = Backbone.Model.extend(
-          toString:JsMockito.mockFunction()
-          initialize:()->
-        )
+
         testModel = new mockType()
         testModel.set(
           propA:"TEST_STRING"
@@ -261,7 +355,6 @@ define(["isolate!lib/marshallers/JSONMarshaller", "underscore", "backbone"], (JS
           modelC
         ])
         testModel.set("propC", col)
-        #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
 
         json = marshaller.marshalState(testModel)
         parsedModel = JSON.parse(json)

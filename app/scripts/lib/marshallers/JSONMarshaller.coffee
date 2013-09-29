@@ -7,7 +7,7 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
       dataObject[subObject] = vivify(dataObject[subObject], ignoreTypeInfo) for subObject of dataObject when (typeof(dataObject[subObject])=="object")
       dataObject[subObject]
       if (!ignoreTypeInfo && dataObject._type? && StateRegistry[dataObject._type]?)
-        StateRegistry[dataObject._type](dataObject)
+        new StateRegistry[dataObject._type](dataObject)
       else
         new Backbone.Model(dataObject)
 
@@ -18,12 +18,15 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
     recordType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when stateObject.attributes[subObject] instanceof Backbone.Collection or stateObject.attributes[subObject] instanceof Backbone.Model
     if (stateObject instanceof Backbone.Model)
       stateObject.set(
-        "_type" : StateRegistry.reverse[stateObject.constructor]
+        "_type" : StateRegistry.reverseLookup(stateObject.prototype)
       )
 
   forgetType = (stateObject)->
-    forgetType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when typeof(stateObject.attributes[subObject])=="object" and stateObject.attributes[subObject].set? and stateObject.attributes[subObject].attributes?
-    stateObject.unset("_type")
+    if (stateObject instanceof Backbone.Collection)
+      forgetType(subObject) for subObject in stateObject.models
+    else if (stateObject instanceof Backbone.Model)
+      forgetType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when typeof(stateObject.attributes[subObject])=="object" and stateObject.attributes[subObject].set? and stateObject.attributes[subObject].attributes?
+      stateObject.unset("_type")
 
 
   class JSONMarshaller

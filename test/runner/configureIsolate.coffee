@@ -2,12 +2,10 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
   class UniquelyIdentifiable
     constructor:()->
       hashVal = UUID()
-      hashProp = UUID()
-      @[hashProp]=hashVal
 
       @__origToString = @toString()
       @toString=()->
-        @[hashProp]
+        hashVal
 
 
 

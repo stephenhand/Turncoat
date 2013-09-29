@@ -1,17 +1,17 @@
-define(['uuid','underscore', 'jquery', 'backbone', "lib/turncoat/Factory", "lib/turncoat/GameStateModel", 'text!data/manOWarGameTemplates.txt', 'text!data/config.txt'], (UUID, _, $, Backbone, Factory, GameStateModel, templatesListText, configText)->
+define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factory", "lib/turncoat/GameStateModel", "text!data/manOWarGameTemplates.txt", "text!data/config.txt"], (UUID, _, $, Backbone, moment, Factory, GameStateModel, templatesListText, configText)->
   CURRENT_GAMES = "current-games"
 
   class LocalStoragePersister
     constructor:(marshaller)->
       @marshaller = marshaller ? Factory.buildStateMarshaller()
       _.extend(@, Backbone.Events)
-      $(window).on('storage',(event)=>
-        keyParts = event.key.split("::")
+      $(window).on("storage",(event)=>
+        keyParts = event.originalEvent.key.split("::")
         switch keyParts[0]
           when CURRENT_GAMES
             if keyParts.length is 2 then @trigger("gameListUpdated",
               userId:keyParts[1]
-              list:@marshaller.unmarshalModel(event.newValue)
+              list:@marshaller.unmarshalModel(event.originalEvent.newValue)
             )
 
       )
@@ -47,15 +47,9 @@ define(['uuid','underscore', 'jquery', 'backbone', "lib/turncoat/Factory", "lib/
       if !storedVal
         return null
       if (!type)
-        @marshaller.unmarshalModel(window.localStorage.getItem(CURRENT_GAMES+"::"+user))
+        @marshaller.unmarshalState(window.localStorage.getItem(CURRENT_GAMES+"::"+user))
       else
-        filtered = (for game in @marshaller.unmarshalModel(window.localStorage.getItem(CURRENT_GAMES+"::"+user)).models when !type? or game.get("type") is type
-          new Backbone.Model(
-            label:game.get("label")
-            id:game.get("id")
-            type:game.get("type")
-            userStatus:game.get("userStatus")
-          ))
+        filtered = (game for game in @marshaller.unmarshalState(window.localStorage.getItem(CURRENT_GAMES+"::"+user)).models when !type? or game.get("type") is type)
         new Backbone.Collection(filtered)
 
 
@@ -68,21 +62,16 @@ define(['uuid','underscore', 'jquery', 'backbone', "lib/turncoat/Factory", "lib/
       if (!user? or !state?) then throw new Error("Must specify user id and state to save a game")
       listJSON = window.localStorage.getItem(CURRENT_GAMES+"::"+user)
       list=new Backbone.Collection()
-      if (listJSON?) then list = @marshaller.unmarshalModel(listJSON)
-      newListItem =
-        label:state.get("label")
-        id:state.get("id")
-        type:state.get("_type")
+      if (listJSON?) then list = @marshaller.unmarshalState(listJSON)
+      newListItem = state.getHeaderForUser(user)
 
-
-      (newListItem.userStatus=player.get("user")?.get("status")) for player in state.get("players")?.models ? [] when player.get("user")?.get("id") is user
 
       list.add(
         newListItem
       ,
         merge:true
       )
-      window.localStorage.setItem(CURRENT_GAMES+"::"+user,@marshaller.marshalModel(list))
+      window.localStorage.setItem(CURRENT_GAMES+"::"+user,@marshaller.marshalState(list))
       window.localStorage.setItem(CURRENT_GAMES+"::"+user+"::"+state.get("id"), state.toString())
 
     loadPendingGamesList:(user, filter)->

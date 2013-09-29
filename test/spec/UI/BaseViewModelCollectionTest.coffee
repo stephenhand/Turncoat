@@ -3,9 +3,31 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
 
     suite("watch", ()->
       coll1 = coll2 = coll3 = coll4 = coll5 = null
+      bvmc=null
+      mockOnSourceUpdatedHandler = null
+      mockOnSourceUpdatedHandler2 = null
+      onsourceupdatedHandlerMatcher = null
       setup(()->
-        coll1 =
-          on:JsMockito.mockFunction()
+        invokes = 0
+        mockOnSourceUpdatedHandler = JsMockito.mockFunction()
+        onsourceupdatedHandlerMatcher = new JsHamcrest.SimpleMatcher(
+          describeTo:(d)->"OnSourceUpdated Handler"
+          matches:(input)->
+            input()
+            try
+              JsMockito.verify(mockOnSourceUpdatedHandler, JsMockito.Verifiers.times(++invokes))()
+              true
+            catch e
+              false
+        )
+        onsourceupdatedHandlerMatcher.handlerToCheck=mockOnSourceUpdatedHandler
+        bvmc = new BaseViewModelCollection()
+        bvmc.onSourceUpdated = mockOnSourceUpdatedHandler
+
+        coll1 = {}
+        _.extend(coll1, Backbone.Events)
+        coll1.on=JsMockito.mockFunction()
+
         coll2 =
           on:JsMockito.mockFunction()
         coll3 =
@@ -16,57 +38,64 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
           on:JsMockito.mockFunction()
       )
       test("singleCollection_BindsOnSourceUpdatedToCollectionAddEvent", ()->
-        bvmc = new BaseViewModelCollection()
+
         bvmc.watch([coll1])
-        JsMockito.verify(coll1.on)("add", bvmc.onSourceUpdated)
+        JsMockito.verify(coll1.on)("add", onsourceupdatedHandlerMatcher)
       )
       test("multipleCollections_BindsOnSourceUpdatedToCollectionAddEvent", ()->
-        bvmc = new BaseViewModelCollection()
         bvmc.watch([coll2,coll3,coll4])
-        JsMockito.verify(coll2.on)("add", bvmc.onSourceUpdated)
-        JsMockito.verify(coll3.on)("add", bvmc.onSourceUpdated)
-        JsMockito.verify(coll4.on)("add", bvmc.onSourceUpdated)
+        JsMockito.verify(coll2.on)("add", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.on)("add", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.on)("add", onsourceupdatedHandlerMatcher)
       )
 
       test("singleCollection_BindsOnSourceUpdatedToCollectionRemoveEvent", ()->
-        bvmc = new BaseViewModelCollection()
         bvmc.watch([coll1])
-        JsMockito.verify(coll1.on)("remove", bvmc.onSourceUpdated)
+        JsMockito.verify(coll1.on)("remove", onsourceupdatedHandlerMatcher)
       )
       test("multipleCollections_BindsOnSourceUpdatedToCollectionRemoveEvent", ()->
-        bvmc = new BaseViewModelCollection()
         bvmc.watch([coll2,coll3,coll4])
-        JsMockito.verify(coll2.on)("remove", bvmc.onSourceUpdated)
-        JsMockito.verify(coll3.on)("remove", bvmc.onSourceUpdated)
-        JsMockito.verify(coll4.on)("remove", bvmc.onSourceUpdated)
+        JsMockito.verify(coll2.on)("remove", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.on)("remove", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.on)("remove", onsourceupdatedHandlerMatcher)
       )
 
       test("singleCollection_BindsOnSourceUpdatedToCollectionResetEvent", ()->
-        bvmc = new BaseViewModelCollection()
         bvmc.watch([coll1])
-        JsMockito.verify(coll1.on)("reset", bvmc.onSourceUpdated)
+        JsMockito.verify(coll1.on)("reset", onsourceupdatedHandlerMatcher)
       )
       test("multipleCollections_BindsOnSourceUpdatedToCollectionResetEvent", ()->
-        bvmc = new BaseViewModelCollection()
         bvmc.watch([coll2,coll3,coll4])
-        JsMockito.verify(coll2.on)("reset", bvmc.onSourceUpdated)
-        JsMockito.verify(coll3.on)("reset", bvmc.onSourceUpdated)
-        JsMockito.verify(coll4.on)("reset", bvmc.onSourceUpdated)
+        JsMockito.verify(coll2.on)("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.on)("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.on)("reset", onsourceupdatedHandlerMatcher)
       )
 
       test("singleCollection_DoesntDupBinds", ()->
-        bvmc = new BaseViewModelCollection()
         bvmc.watch([coll1])
         bvmc.watch([coll1])
-        JsMockito.verify(coll1.on, JsMockito.Verifiers.once())("reset", bvmc.onSourceUpdated)
+        JsMockito.verify(coll1.on, JsMockito.Verifiers.once())("reset", onsourceupdatedHandlerMatcher)
       )
       test("multipleCollections_DoesntDupBinds", ()->
-        bvmc = new BaseViewModelCollection()
         bvmc.watch([coll2,coll3,coll4])
         bvmc.watch([coll2,coll3,coll4])
-        JsMockito.verify(coll2.on, JsMockito.Verifiers.once())("reset", bvmc.onSourceUpdated)
-        JsMockito.verify(coll3.on, JsMockito.Verifiers.once())("reset", bvmc.onSourceUpdated)
-        JsMockito.verify(coll4.on, JsMockito.Verifiers.once())("reset", bvmc.onSourceUpdated)
+        JsMockito.verify(coll2.on, JsMockito.Verifiers.once())("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.on, JsMockito.Verifiers.once())("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.on, JsMockito.Verifiers.once())("reset", onsourceupdatedHandlerMatcher)
+      )
+      test("reassigningHandlerAfterWatch_CallsUpdatedHandler", ()->
+
+        mockOnSourceUpdatedHandler2 = JsMockito.mockFunction()
+        mockOnSourceUpdatedHandler3 = JsMockito.mockFunction()
+        coll = {}
+        _.extend(coll, Backbone.Events)
+        bvmc.watch([coll])
+        bvmc.onSourceUpdated = mockOnSourceUpdatedHandler2
+        coll.trigger("reset")
+        JsMockito.verify(mockOnSourceUpdatedHandler2)()
+        bvmc.onSourceUpdated = mockOnSourceUpdatedHandler3
+        coll.trigger("reset")
+        JsMockito.verify(mockOnSourceUpdatedHandler3)()
       )
     )
     suite("updateFromWatchedCollection", ()->

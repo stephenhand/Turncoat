@@ -3,6 +3,8 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
     players:new Backbone.Collection(
       model:Player
     )
+  ManOWarGameState.toString=()->
+      "ManOWarGameState"
   StateRegistry.registerType("ManOWarGameState", (unvivified)->
     GameStateModel.vivifier(unvivified, ManOWarGameState)
   )
