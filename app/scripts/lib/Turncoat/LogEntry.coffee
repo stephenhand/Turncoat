@@ -1,13 +1,12 @@
 define(['underscore', 'backbone', 'moment', 'lib/turncoat/GameStateModel', 'lib/turncoat/StateRegistry'], (_, Backbone, moment, GameStateModel, StateRegistry)->
-  LogEntry = Backbone.Model.extend()
+  LogEntry = Backbone.Model.extend(
+    initialize:()->
+      if typeof(@get("timestamp")) is "string" then @set("timestamp", moment.utc(@get("timestamp")))
+  )
   LogEntry.toString=()->
     "LogEntry"
 
-
-  StateRegistry.registerType("LogEntry", (unvivified)->
-    vivified = GameStateModel.vivifier(unvivified, LogEntry)
-    vivified.set("timestamp", moment.utc(unvivified.timestamp))
-  )
+  StateRegistry.registerType("LogEntry", LogEntry)
   LogEntry
 )
 
