@@ -32,50 +32,22 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 define(['isolate!lib/turncoat/GameHeader'], (GameHeader)->
   mocks = window.mockLibrary["lib/turncoat/GameHeader"]
   suite("GameHeader", ()->
+    suite("constructor", ()->
+      test("createdIsString_setsCreatedAsMomentUtc", ()->
+        gh = new GameHeader({created:"MOCK_CREATED_TIME"})
+        chai.assert.equal(gh.get("created"),"MOCK_MOMENT_UTC:MOCK_CREATED_TIME")
+      )
+      test("lastActivityIsString_setsLastActivityAsMomentUtc", ()->
+
+        gh = new GameHeader({lastActivity:"MOCK_LASTACTIVITY_TIME"})
+        chai.assert.equal(gh.get("lastActivity"),"MOCK_MOMENT_UTC:MOCK_LASTACTIVITY_TIME")
+      )
+    )
     suite("RegisterType", ()->
-      test("usesGameStateModelVivifierWithDataAndGameHeaderConstriuctor", ()->
-        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("GameHeader", new JsHamcrest.SimpleMatcher(
-          describeTo:(d)->d.append("vivified")
-          matches:(v)->
-            input={}
-            v(input)
-            try
-              JsMockito.verify(mocks["lib/turncoat/GameStateModel"].vivifier)(input, GameHeader)
-              true
-            catch e
-              false
-        ))
+      test("registersGameHeaderConstriuctor", ()->
+        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("GameHeader",GameHeader)
       )
-      test("setsCreatedAsMomentUtc", ()->
-        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("GameHeader",new JsHamcrest.SimpleMatcher(
-          describeTo:(d)->d.append("vivified")
-          matches:(v)->
-            v(
-              created:"MOCK_CREATED_TIME"
-              lastActivity:"MOCK_LASTACTIVITY_TIME"
-            )
-            try
-              JsMockito.verify(vivifierResult.set)("created","MOCK_MOMENT_UTC:MOCK_CREATED_TIME")
-              true
-            catch e
-              false
-        ))
-      )
-      test("setsLastActivityAsMomentUtc", ()->
-        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("GameHeader",new JsHamcrest.SimpleMatcher(
-          describeTo:(d)->d.append("vivified")
-          matches:(v)->
-            v(
-              created:"MOCK_CREATED_TIME"
-              lastActivity:"MOCK_LASTACTIVITY_TIME"
-            )
-            try
-              JsMockito.verify(vivifierResult.set)("lastActivity","MOCK_MOMENT_UTC:MOCK_LASTACTIVITY_TIME")
-              true
-            catch e
-              false
-        ))
-      )
+
     )
   )
 

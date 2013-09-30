@@ -10,10 +10,10 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
 
   ReviewChallengesViewModel = Backbone.Model.extend(
     initialize:()->
-      @challenges=new BaseViewModelCollection()
-      @challenges.watch([AppState.get("games")])
+      @set("challenges", new BaseViewModelCollection())
+      @get("challenges").watch([AppState.get("games")])
 
-      @challenges.onSourceUpdated=()->
+      @get("challenges").onSourceUpdated=()->
         @updateFromWatchedCollections(
           (item, watched)->
             item.get("id")? and (item.get("id") is watched.get("id"))
@@ -30,7 +30,7 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
             item.get("userStatus")? && item.get("userStatus") isnt PLAYING_USERSTATUS
         )
 
-      @challenges.onSourceUpdated()
+      @get("challenges").onSourceUpdated()
   )
 
 

@@ -31,31 +31,20 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 define(['isolate!lib/turncoat/LogEntry',], (LogEntry)->
   mocks = window.mockLibrary["lib/turncoat/LogEntry"]
   suite("LogEntry", ()->
-    suite("RegisterType", ()->
-      test("usesGameStateModelVivifierWithDataAndLogEntryConstriuctor", ()->
-        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("LogEntry", new JsHamcrest.SimpleMatcher(
-          describeTo:(d)->d.append("vivified")
-          matches:(v)->
-            input={}
-            v(input)
-            try
-              JsMockito.verify(mocks["lib/turncoat/GameStateModel"].vivifier)(input, LogEntry)
-              true
-            catch e
-              false
-        ))
+    suite("constructor", ()->
+
+      test("timeStampIsString_setsTimeStampAsMomentUtc", ()->
+        le = new LogEntry({timestamp:"MOCK_TIME"})
+        chai.assert.equal("MOCK_MOMENT_UTC:MOCK_TIME", le.get("timestamp"))
       )
-      test("setsTimeStampAsMomentUtc", ()->
-        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("LogEntry",new JsHamcrest.SimpleMatcher(
-          describeTo:(d)->d.append("vivified")
-          matches:(v)->
-            v({timestamp:"MOCK_TIME"})
-            try
-              JsMockito.verify(vivifierResult.set)("timestamp","MOCK_MOMENT_UTC:MOCK_TIME")
-              true
-            catch e
-              false
-        ))
+      test("timeStampIsNotString_copiesTimestampAsIs", ()->
+        le = new LogEntry({timestamp:{prop:"MOCK_TIME"}})
+        chai.assert.equal("MOCK_TIME", le.get("timestamp").prop)
+      )
+    )
+    suite("RegisterType", ()->
+      test("usesLogEntryConstriuctor", ()->
+        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("LogEntry", LogEntry)
       )
     )
   )

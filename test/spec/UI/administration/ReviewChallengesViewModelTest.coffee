@@ -41,20 +41,20 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
       )
       test("createsChallenges", ()->
         rcvm = new ReviewChallengesViewModel()
-        chai.assert.instanceOf(rcvm.challenges, Backbone.Collection)
+        chai.assert.instanceOf(rcvm.get("challenges"), Backbone.Collection)
       )
 
       test("challengesWatchesAppStateGames", ()->
         rcvm = new ReviewChallengesViewModel()
-        JsMockito.verify(rcvm.challenges.watch)(JsHamcrest.Matchers.hasItem(mockGameList))
+        JsMockito.verify(rcvm.get("challenges").watch)(JsHamcrest.Matchers.hasItem(mockGameList))
       )
       test("setsChallengesOnSourceUpdated", ()->
         rcvm = new ReviewChallengesViewModel()
-        chai.assert.isFunction(rcvm.challenges.onSourceUpdated)
+        chai.assert.isFunction(rcvm.get("challenges").onSourceUpdated)
       )
       test("callsChallengesUpdateFromWatchedCollections", ()->
         rcvm = new ReviewChallengesViewModel()
-        JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+        JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
           JsHamcrest.Matchers.anything(),
           JsHamcrest.Matchers.anything(),
           JsHamcrest.Matchers.anything()
@@ -63,9 +63,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
       suite("onSourceUpdated", ()->
         test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutPLAYINGUserStatus", ()->
           rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+          rcvm.get("challenges").onSourceUpdated()
+          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
             JsHamcrest.Matchers.anything(),
             JsHamcrest.Matchers.anything(),
             new JsHamcrest.SimpleMatcher(
@@ -73,13 +73,12 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                 !input(new Backbone.Model({userId:"PLAYING"}))
             )
           )
-
         )
         test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutMissingUserStatus", ()->
           rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+          rcvm.get("challenges").onSourceUpdated()
+          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
             JsHamcrest.Matchers.anything(),
             JsHamcrest.Matchers.anything(),
             new JsHamcrest.SimpleMatcher(
@@ -91,9 +90,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         )
         test("callsUpdateFromWatchedCollectionsWithSelectorThatRetainsOtherUserStatus", ()->
           rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+          rcvm.get("challenges").onSourceUpdated()
+          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
             JsHamcrest.Matchers.anything(),
             JsHamcrest.Matchers.anything(),
             new JsHamcrest.SimpleMatcher(
@@ -104,9 +103,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         )
         test("callsUpdateFromWatchedCollectionsWithSelectorThatThrowsIfNonModel", ()->
           rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+          rcvm.get("challenges").onSourceUpdated()
+          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
             JsHamcrest.Matchers.anything(),
             JsHamcrest.Matchers.anything(),
             new JsHamcrest.SimpleMatcher(
@@ -121,9 +120,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         )
         test("callsUpdateFromWatchedCollectionsWithMatcherThatMatchesSameId", ()->
           rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+          rcvm.get("challenges").onSourceUpdated()
+          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
             new JsHamcrest.SimpleMatcher(
               matches:(input)->
                 input(
@@ -140,9 +139,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         )
         test("callsUpdateFromWatchedCollectionsWithMatcherThatDoesntMatchesDifferentId", ()->
           rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+          rcvm.get("challenges").onSourceUpdated()
+          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
             new JsHamcrest.SimpleMatcher(
               matches:(input)->
                 !input(
@@ -159,9 +158,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         )
         test("callsUpdateFromWatchedCollectionsWithMatcherThatDoesntMatchesBothUndefinedId", ()->
           rcvm = new ReviewChallengesViewModel()
-          rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.challenges.onSourceUpdated()
-          JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+          rcvm.get("challenges").onSourceUpdated()
+          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
             new JsHamcrest.SimpleMatcher(
               matches:(input)->
                 !input(
@@ -177,9 +176,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         suite("adder", ()->
           test("CopiesId", ()->
             rcvm = new ReviewChallengesViewModel()
-            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.challenges.onSourceUpdated()
-            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
 
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
@@ -198,9 +197,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           )
           test("SetsCreatedUsingCreatedMoment", ()->
             rcvm = new ReviewChallengesViewModel()
-            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.challenges.onSourceUpdated()
-            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
 
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
@@ -218,9 +217,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           )
           test("CreatedNotMoment_UsesPlaceholder", ()->
             rcvm = new ReviewChallengesViewModel()
-            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.challenges.onSourceUpdated()
-            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
 
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
@@ -236,9 +235,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           )
           test("CreatedUnavailable_UsesPlaceholder", ()->
             rcvm = new ReviewChallengesViewModel()
-            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.challenges.onSourceUpdated()
-            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
 
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
@@ -254,9 +253,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           )
           test("CopiesLabel", ()->
             rcvm = new ReviewChallengesViewModel()
-            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.challenges.onSourceUpdated()
-            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
                 matches:(input)->
@@ -274,9 +273,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           )
           test("UserStatusCHALLENGED_SetsStatusText", ()->
             rcvm = new ReviewChallengesViewModel()
-            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.challenges.onSourceUpdated()
-            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
                 matches:(input)->
@@ -294,9 +293,9 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           )
           test("UserStatusREADY_SetsStatusText", ()->
             rcvm = new ReviewChallengesViewModel()
-            rcvm.challenges.updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.challenges.onSourceUpdated()
-            JsMockito.verify(rcvm.challenges.updateFromWatchedCollections)(
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
                 matches:(input)->

@@ -9,7 +9,7 @@ define(['uuid', 'moment', 'underscore', 'backbone', 'lib/turncoat/Game','lib/tur
       @set("currentUser", persister.loadUser(id))
       @set("gameTemplates", persister.loadGameTemplateList(null, id))
       @set("gameTypes", persister.loadGameTypes())
-      @set("games",persister.loadGameList(id))
+      @set("games",persister.loadGameList(id) ? new Backbone.Collection([]))
 
 
       persister.off("gameListUpdated", null, @)

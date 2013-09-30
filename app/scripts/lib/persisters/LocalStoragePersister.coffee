@@ -6,15 +6,22 @@ define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factor
       @marshaller = marshaller ? Factory.buildStateMarshaller()
       _.extend(@, Backbone.Events)
       $(window).on("storage",(event)=>
-        keyParts = event.originalEvent.key.split("::")
-        switch keyParts[0]
-          when CURRENT_GAMES
-            if keyParts.length is 2 then @trigger("gameListUpdated",
-              userId:keyParts[1]
-              list:@marshaller.unmarshalModel(event.originalEvent.newValue)
-            )
+        onLocalStorageUpdated(@, event.originalEvent.key, event.originalEvent.newValue)
 
       )
+
+    onLocalStorageUpdated = (context, key, newValue)->
+      keyParts = key.split("::")
+      switch keyParts[0]
+        when CURRENT_GAMES
+          if keyParts.length is 2 then context.trigger("gameListUpdated",
+            userId:keyParts[1]
+            list:context.marshaller.unmarshalState(newValue)
+          )
+
+    setLocalStorageItem = (context, key, data)->
+      window.localStorage.setItem(key, data)
+      onLocalStorageUpdated(context, key, data)
 
     loadUser:(id)->
       if !id? then throw new Error("Must specify a player id.")
@@ -64,15 +71,13 @@ define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factor
       list=new Backbone.Collection()
       if (listJSON?) then list = @marshaller.unmarshalState(listJSON)
       newListItem = state.getHeaderForUser(user)
-
-
       list.add(
         newListItem
       ,
         merge:true
       )
-      window.localStorage.setItem(CURRENT_GAMES+"::"+user,@marshaller.marshalState(list))
-      window.localStorage.setItem(CURRENT_GAMES+"::"+user+"::"+state.get("id"), state.toString())
+      setLocalStorageItem(@, CURRENT_GAMES+"::"+user,@marshaller.marshalState(list))
+      setLocalStorageItem(@, CURRENT_GAMES+"::"+user+"::"+state.get("id"), state.toString())
 
     loadPendingGamesList:(user, filter)->
       if (!user?) then throw new Error("User must be specified")

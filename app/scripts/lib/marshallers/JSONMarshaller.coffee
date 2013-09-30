@@ -18,7 +18,7 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
     recordType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when stateObject.attributes[subObject] instanceof Backbone.Collection or stateObject.attributes[subObject] instanceof Backbone.Model
     if (stateObject instanceof Backbone.Model)
       stateObject.set(
-        "_type" : StateRegistry.reverseLookup(stateObject.prototype)
+        "_type" : StateRegistry.reverseLookup(stateObject.constructor)
       )
 
   forgetType = (stateObject)->

@@ -225,7 +225,30 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
                       JsHamcrest.Matchers.hasMember("list","NEW_LIST_DATA")
                     )
                   )
-
+              )
+            )
+          )
+        )
+        test("currentGamesUserSpecified_unmarshalsUsingUnmarshalState", ()->
+          lps = new LocalStoragePersister()
+          lps.trigger = new JsMockito.mockFunction()
+          JsMockito.verify(
+            mocks.jqueryObjects.getSelectorResult(window).on("storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(actual)->
+                  actual(
+                    originalEvent:
+                      key:"current-games::mock_user"
+                      newValue:"NEW_LIST_DATA"
+                  )
+                  JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(
+                    new JsHamcrest.SimpleMatcher(
+                      describeTo:(d)->
+                      matches:(s)->
+                        obj=JSON.parse(s)
+                        obj.userId is "mock_user" and obj.list is"NEW_LIST_DATA"
+                    )
+                  )
               )
             )
           )
@@ -535,8 +558,6 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
         chai.assert.equal(game.id, "MOCK_SAVED_ID")
       )
 
-
-
       test("validUserAndValidState_addsGameHeaderCalledWithSuppliedUserToPlayerList", ()->
         lps=new LocalStoragePersister()
         state =new Backbone.Model(
@@ -574,23 +595,51 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
 
         lps.saveGameState("mock_user",state)
         games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
-        chai.assert(_.find(games,
+        chai.assert(_.find(
+          games,
           (game)->
             (game.id is "MOCK_ID1") &&
             (game.label is "MOCK_GAME1")
           )
         )
-        chai.assert(_.find(games,
-        (game)->
-          (game.id is "MOCK_ID2") &&
-          (game.label is "MOCK_GAME2")
+        chai.assert(_.find(
+          games,
+          (game)->
+            (game.id is "MOCK_ID2") &&
+            (game.label is "MOCK_GAME2")
+          )
         )
+        chai.assert(_.find(
+          games,
+          (game)->
+            (game.id is "MOCK_ID3") &&
+            (game.label is "MOCK_GAME3")
+          )
         )
-        chai.assert(_.find(games,
-        (game)->
-          (game.id is "MOCK_ID3") &&
-          (game.label is "MOCK_GAME3")
+      )
+      test("validUserAndValidState_triggersGameListUpdatedEvent", ()->
+        lps=new LocalStoragePersister()
+        lps.trigger = JsMockito.mockFunction()
+        state =new Backbone.Model(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          players:new Backbone.Collection()
         )
+        state.getHeaderForUser = JsMockito.mockFunction()
+        JsMockito.when(state.getHeaderForUser)(JsHamcrest.Matchers.anything()).then((usr)->HEADER_FOR:usr+"::"+state.get("id"))
+        state.toString=()->
+          JSON.stringify(@)
+
+        lps.saveGameState("mock_user",state)
+        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
+        JsMockito.verify(lps.trigger)(
+          "gameListUpdated",
+          new JsHamcrest.SimpleMatcher(
+            matches:(gl)->
+              gl.userId is "mock_user"
+
+          )
         )
       )
     )
