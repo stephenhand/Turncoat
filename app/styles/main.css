@@ -1,8 +1,8 @@
-/* Will be compiled down to a single stylesheet with your sass files */
+﻿/* Will be compiled down to a single stylesheet with your sass files */
 @font-face {
     font-family: 'Caslon Antique';
     src: url('styles/CASLANTR.ttf');
-    src: local('☺'),
+    src: local('?'),
     url('CASLANTR.woff') format('woff'), url('CASLANTR.ttf') format('truetype');
 }@font-face{
     font-family: "caslon antique";
@@ -50,10 +50,15 @@ div{
 }
 .administration-tab .tab-content {
     margin:4px;
+padding-bottom:24px;
     padding:4px;
     border-top:solid 1px black;
     display:none;
     border-bottom:solid 1px black;
+    position: absolute;
+    left:1%;
+    right:1%;
+    height:97%
 }
 .administration-tab.active-tab .tab-content {
     display:inherit;
@@ -118,29 +123,39 @@ margin-bottom:30px;
 
 }
 
-.player-item{
+.list-item{
     padding-top:9px;
     border-top: solid 1px #868686;
 }
 
-.player-item .info-panel{
+.list-item .info-panel{
     display:inline-block;
     vertical-align: middle;
     height:60px;
     width:500px
 }
+.panel-list .list-item .info-panel{
+    width:350px;
+    height:40px;
+}
 
-.player-item .user-info{
+.list-item .user-info{
     display:inline-block;
     height:60px;
     line-height:60px;
     vertical-align: middle;
     width:360px
 }
-.player-item:hover{
+.list-item:hover{
     background-color:#F0F0F0
 }
+.list-item .tag{
+    float:right;
+}
 
+.list-item .comment{
+    font-style: italic;
+}
 .selected-player-only{
     display:none
 }
@@ -196,10 +211,10 @@ input[type=button]:active{
 .selected-player .selected-player-marker {
     opacity: 1
 }
-#playArea .playAreaLayer {
+#playArea .play-area-layer {
     float:left;
 }
-.playAreaLayer {
+.play-area-layer {
     position:absolute;
 }
 
@@ -212,3 +227,22 @@ input[type=button]:active{
     width:30px;
     height:60px
 }
+
+.list-view {
+    position:absolute;
+    top:1%;
+    bottom:1%;
+    width:50%
+}
+
+.list-view.left-panel {
+    left:0%;
+    overflow-y:scroll;
+    border-right:solid 1px black
+}
+
+.list-view.right-panel {
+
+    left:50%;
+}
+

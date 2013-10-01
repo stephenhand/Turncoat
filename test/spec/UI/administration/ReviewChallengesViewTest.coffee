@@ -4,13 +4,14 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("UI/administration/ReviewChallengesViewModel","UI/administration/ReviewChallengesView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ()->
-        mockModelInstance={}
-        mockModelInstance
+        mockModelInstance = selectChallenge:JsMockito.mockFunction()
+
     )
   )
 )
 
-define(['isolate!UI/administration/ReviewChallengesView'], (ReviewChallengesView)->
+define(["isolate!UI/administration/ReviewChallengesView"], (ReviewChallengesView)->
+  mocks = window.mockLibrary["UI/administration/ReviewChallengesView"]
   suite("ReviewChallengesView", ()->
     suite("constructor", ()->
       test("setsRootSelectorIfNotSet", ()->
@@ -32,6 +33,39 @@ define(['isolate!UI/administration/ReviewChallengesView'], (ReviewChallengesView
         rcv.createModel()
         chai.assert.equal(rcv.model, mockModelInstance)
         chai.assert.isNotNull(rcv.model)
+      )
+    )
+    suite("challengeListItem_clicked", ()->
+      test("eventTargetIdPresent_callsModelsSelectChallengeWithEventTargetId", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        rcv.challengeListItem_clicked(
+          target:
+            id:"MOCK_TARGET_ID"
+        )
+        JsMockito.verify(rcv.model.selectChallenge)("MOCK_TARGET_ID")
+      )
+      test("eventTargetIdUndefined_callsModelsSelectChallengeWithNothing", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        rcv.challengeListItem_clicked(
+          target:{}
+        )
+        JsMockito.verify(rcv.model.selectChallenge)(JsHamcrest.Matchers.nil())
+      )
+      test("eventTargetUndefined_throws", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        chai.assert.throws(()->
+          rcv.challengeListItem_clicked({})
+        )
+      )
+      test("eventUndefined_throws", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        chai.assert.throws(()->
+          rcv.challengeListItem_clicked()
+        )
       )
     )
   )

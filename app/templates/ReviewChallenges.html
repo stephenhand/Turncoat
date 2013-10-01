@@ -1,6 +1,16 @@
-<div>
-
-    <div data-rv-each-challenge=".challenges">
-        <span data-rv-text="challenge.created"></span> :- <span data-rv-text="challenge.label"></span> (<span data-rv-text="challenge.statusText"></span>)
+<div data-rv-class-game-selected=".gameSelected">
+    <div class="list-view left-panel panel-list">
+        <div class="list-item" data-rv-each-challenge=".challenges">
+            <div class="tag" data-rv-text="challenge.created"></div><span class="info-panel large" data-rv-text="challenge.label"></span><br/> <span class="list-comment" data-rv-text="challenge.statusText"></span>
+        </div>
     </div>
+
+    <div class="list-view right-panel">
+        <div class="current-game"/>
+        <div class="button-row">
+            <input type="button" id="accept-challenge" value="Accept"/>
+            <input type="button" id="reject-challenge" value="Reject"/>
+        </div>
+    </div>
+
 </div>
