@@ -31,6 +31,16 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
         )
 
       @get("challenges").onSourceUpdated()
+      @on()
+
+    selectChallenge:(id)->
+      for challenge in @get("challenges").models
+        if challenge.get("id") is id
+          @set("selectedChallengeId", id)
+          challenge.set("selected", true)
+        else
+          challenge.unset("selected")
+      if @get("selectedChallengeId") isnt id then @unset("selectedChallengeId")
   )
 
 

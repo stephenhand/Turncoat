@@ -9,10 +9,10 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/administration/ReviewChalle
     createModel:()->
       @model = new ReviewChallengesViewModel()
     events:
-      'click .challenges-tab .list-item':'challengeListItem_clicked'
+      'click .list-item':'challengeListItem_clicked'
 
     challengeListItem_clicked:(event)->
-      @model.selectChallenge(event.target.id)
+      @model.selectChallenge(event.currentTarget.id)
 
   ReviewChallengesView
 )

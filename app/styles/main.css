@@ -149,6 +149,9 @@ margin-bottom:30px;
 .list-item:hover{
     background-color:#F0F0F0
 }
+.list-item.selected{
+    background-color:#c0c0c0
+}
 .list-item .tag{
     float:right;
 }
@@ -229,20 +232,32 @@ input[type=button]:active{
 }
 
 .list-view {
+    transition: width .3s ease-out, left .3s ease-out;
+    -moz-transition: width .3s ease-out, left .3s ease-out;
+    -webkit-transition: width .3s ease-out, left .3s ease-out;
+    -o-transition: width .3s ease-out, left .3s ease-out;
     position:absolute;
     top:1%;
     bottom:1%;
     width:50%
 }
-
 .list-view.left-panel {
     left:0%;
     overflow-y:scroll;
-    border-right:solid 1px black
+    border-right:solid 1px black;
+    width:100%
+}
+.right-panel-open .list-view.left-panel {
+    left:0%;
+    width:50%
+}
+.list-view.right-panel {
+    width:0%;
+    left:100%;
 }
 
-.list-view.right-panel {
-
+.right-panel-open .list-view.right-panel {
+    width:50%;
     left:50%;
 }
 

@@ -36,11 +36,11 @@ define(["isolate!UI/administration/ReviewChallengesView"], (ReviewChallengesView
       )
     )
     suite("challengeListItem_clicked", ()->
-      test("eventTargetIdPresent_callsModelsSelectChallengeWithEventTargetId", ()->
+      test("eventTargetIdPresent_callsModelsSelectChallengeWithEventCurrentTargetId", ()->
         rcv = new ReviewChallengesView()
         rcv.createModel()
         rcv.challengeListItem_clicked(
-          target:
+          currentTarget:
             id:"MOCK_TARGET_ID"
         )
         JsMockito.verify(rcv.model.selectChallenge)("MOCK_TARGET_ID")
@@ -49,7 +49,7 @@ define(["isolate!UI/administration/ReviewChallengesView"], (ReviewChallengesView
         rcv = new ReviewChallengesView()
         rcv.createModel()
         rcv.challengeListItem_clicked(
-          target:{}
+          currentTarget:{}
         )
         JsMockito.verify(rcv.model.selectChallenge)(JsHamcrest.Matchers.nil())
       )

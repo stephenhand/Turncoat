@@ -22,16 +22,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
   mocks = window.mockLibrary['UI/administration/ReviewChallengesViewModel']
   suite("ReviewChallengesViewModel", ()->
     suite("initialize", ()->
-      mockGameList = new Backbone.Collection([
-#        id:"MOCK_GAME_ID1"
-#        userStatus:"MOCK_OTHER_STATUS"
-#      ,
-#        id:"MOCK_GAME_ID2"
-#        userStatus:"PLAYING"
-#      ,
-#        id:"MOCK_GAME_ID3"
-#        userStatus:"MOCK_OTHER_STATUS"
-      ])
+      mockGameList = new Backbone.Collection([])
       setup(()->
         mocks['AppState'].get = JsMockito.mockFunction()
         JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
@@ -61,6 +52,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         )
       )
       suite("onSourceUpdated", ()->
+
         test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutPLAYINGUserStatus", ()->
           rcvm = new ReviewChallengesViewModel()
           rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
@@ -311,6 +303,62 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
               JsHamcrest.Matchers.anything()
             )
           )
+        )
+        suite("selectChallenge", ()->
+          rcvm = null
+          setup(()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("challenges", new Backbone.Collection([
+              id:"MOCK_GAME_ID1"
+              userStatus:"MOCK_OTHER_STATUS"
+            ,
+              id:"MOCK_GAME_ID2"
+              userStatus:"PLAYING"
+            ,
+              id:"MOCK_GAME_ID3"
+              userStatus:"MOCK_OTHER_STATUS"
+            ]))
+          )
+          test("inputMatchesIdInChallengesList_setsSelectedChallengeIdToInput", ()->
+            rcvm.selectChallenge("MOCK_GAME_ID2")
+            chai.assert.equal("MOCK_GAME_ID2",rcvm.get("selectedChallengeId"))
+          )
+
+          test("inputIdNotInChallengesList_unsetsSelectedChallengeId", ()->
+            rcvm.selectChallenge("NOT AN ID")
+            chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
+          )
+
+          test("noInput_setsSelectedChallengeIdToInput", ()->
+            chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
+          )
+
+          test("inputMatchesIdInChallengesList_setsSelectedFlagOnMatchedItem", ()->
+            rcvm.selectChallenge("MOCK_GAME_ID2")
+            chai.assert(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
+          )
+
+          test("inputMatchesIdInChallengesList_unsetsSelectedFlagOnNotMatchedItem", ()->
+            c.set("selected", true) for c in rcvm.get("challenges").models
+            rcvm.selectChallenge("MOCK_GAME_ID2")
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
+          )
+          test("inputIdNotInChallengesList_unsetsSelectedFlagOnAll", ()->
+            c.set("selected", true) for c in rcvm.get("challenges").models
+            rcvm.selectChallenge("NOT AN ID")
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
+          )
+          test("noInput_unsetsSelectedFlagOnAll", ()->
+            c.set("selected", true) for c in rcvm.get("challenges").models
+            rcvm.selectChallenge("NOT AN ID")
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
+            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
+          )
+
         )
       )
     )
