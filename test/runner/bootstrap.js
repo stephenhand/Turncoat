@@ -71,6 +71,8 @@ require(['spec/AppHostTest',
     'spec/UI/ManOWarTableTopViewModelTest',
     'spec/UI/PlayAreaViewTest',
     'spec/UI/administration/AdministrationDialogueViewTest',
+    'spec/UI/administration/AdministrationDialogueViewModelTest',
+
     'spec/UI/administration/CreateGameViewTest',
     'spec/UI/administration/CreateGameViewModelTest',
     'spec/UI/administration/ReviewChallengesViewTest',

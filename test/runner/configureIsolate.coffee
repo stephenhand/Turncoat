@@ -45,6 +45,11 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
       window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.first = ret
       ret
     )
+    JsMockito.when(jqm.attr)(JsHamcrest.Matchers.anything()).then((attrName)->
+      window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.attr?=[]
+      window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.attr[attrName] = attrName+"::VALUE"
+      attrName+"::VALUE"
+    )
 
     JsMockito.when(jqm.on)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything()).then(
       (eventName, cb)->
@@ -82,6 +87,7 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
 
         mockJQueryObj =createMock(actual,requestingModulePath)
         if context?
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector]?=[]
           window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
         else
           window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj

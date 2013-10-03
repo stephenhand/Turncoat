@@ -25,22 +25,23 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
   suite("AdministrationDialogueView", ()->
     mocks = window.mockLibrary["UI/administration/AdministrationDialogueView"]
     suite("tabClicked", ()->
-      contextCaller =
-        call:(func, param)->
-          func(param)
-
-
-      test("removesActiveClassFromAnyElementWithATabClass", ()->
-        contextCaller.call(new AdministrationDialogueView().tabClicked, {currentTarget:{}})
-        JsMockito.verify(mocks.jqueryObjects[".administration-tab"].toggleClass)("active-tab", false)
+      adv = null
+      setup(()->
+        adv=new AdministrationDialogueView()
+        adv.model = setActiveTab:JsMockito.mockFunction()
       )
-      test("appliesActiveClassToCurrentContext", ()->
-        event=
-          currentTarget:{}
-        new AdministrationDialogueView().tabClicked(event)
-        JsMockito.verify(mocks.jqueryObjects[event.currentTarget].parent)()
-        JsMockito.verify(mocks.jqueryObjects.methodResults.parent.toggleClass)("active-tab", true)
 
+
+
+      test("ValidInputEvent_CallsModelSetActiveTabWithEventCurrentTargetAssociatedTabContentPaneId", ()->
+        event = {currentTarget:{id:"AN ID"}}
+        adv.tabClicked(event)
+        JsMockito.verify(mocks.jqueryObjects[event.currentTarget].parent)()
+        JsMockito.verify(mocks.jqueryObjects["div.tab-content"][mocks.jqueryObjects.methodResults.parent].attr)("id")
+        JsMockito.verify(adv.model.setActiveTab)("id::VALUE")
+      )
+      test("InvalidInputEvent_Throws", ()->
+        chai.assert.throw(()->adv.tabClicked({}))
       )
     )
     suite("render", ()->

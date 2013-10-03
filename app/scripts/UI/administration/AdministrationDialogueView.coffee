@@ -16,10 +16,12 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/Ad
       "click .tab-header" : "tabClicked"
 
     tabClicked:(event)->
-      setActiveTab(event.currentTarget)
+      if (!event? || !event.currentTarget?)
+        throw new Error("tabClicked called with invalid event")
+      @model.setActiveTab($("div.tab-content",$(event.currentTarget).parent()).attr("id"))
 
     createModel:()->
-       @model = new AdministrationDialogueViewModel()
+      @model = new AdministrationDialogueViewModel()
 
     render:()->
       super()
