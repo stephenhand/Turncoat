@@ -1,8 +1,4 @@
 define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/AdministrationDialogueViewModel", "UI/administration/CreateGameView", "UI/administration/ReviewChallengesView", "text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, AdministrationDialogueViewModel, CreateGameView,ReviewChallengesView, templateText)->
-  setActiveTab=(tabElement)->
-    $(".administration-tab").toggleClass("active-tab",false)
-    $(tabElement).parent().toggleClass("active-tab",true)
-
   class AdministrationDialogueView extends BaseView
     initialize:(options)->
       options ?={}
@@ -25,6 +21,8 @@ define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/Ad
 
     render:()->
       super()
+      @createGameView.setTab(@model.get("tabs").findWhere(name:"createGame"))
+      @reviewChallengesView.setTab(@model.get("tabs").findWhere(name:"reviewChallenges"))
       @createGameView.render()
       @reviewChallengesView.render()
 

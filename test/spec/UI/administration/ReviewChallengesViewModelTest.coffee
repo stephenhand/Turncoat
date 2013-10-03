@@ -304,65 +304,119 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             )
           )
         )
-        suite("selectChallenge", ()->
-          rcvm = null
-          setup(()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.set("challenges", new Backbone.Collection([
-              id:"MOCK_GAME_ID1"
-              userStatus:"MOCK_OTHER_STATUS"
-            ,
-              id:"MOCK_GAME_ID2"
-              userStatus:"PLAYING"
-            ,
-              id:"MOCK_GAME_ID3"
-              userStatus:"MOCK_OTHER_STATUS"
-            ]))
+        test("hasTabAttribute_bindsTabActiveChanged", ()->
+          rcvm = new ReviewChallengesViewModel(
+            tab:
+              on:JsMockito.mockFunction()
           )
-          test("inputMatchesIdInChallengesList_setsSelectedChallengeIdToInput", ()->
-            rcvm.selectChallenge("MOCK_GAME_ID2")
-            chai.assert.equal("MOCK_GAME_ID2",rcvm.get("selectedChallengeId"))
-          )
-
-          test("inputIdNotInChallengesList_unsetsSelectedChallengeId", ()->
-            rcvm.selectChallenge("NOT AN ID")
-            chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
-          )
-
-          test("noInput_setsSelectedChallengeIdToInput", ()->
-            chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
-          )
-
-          test("inputMatchesIdInChallengesList_setsSelectedFlagOnMatchedItem", ()->
-            rcvm.selectChallenge("MOCK_GAME_ID2")
-            chai.assert(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
-          )
-
-          test("inputMatchesIdInChallengesList_unsetsSelectedFlagOnNotMatchedItem", ()->
-            c.set("selected", true) for c in rcvm.get("challenges").models
-            rcvm.selectChallenge("MOCK_GAME_ID2")
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
-          )
-          test("inputIdNotInChallengesList_unsetsSelectedFlagOnAll", ()->
-            c.set("selected", true) for c in rcvm.get("challenges").models
-            rcvm.selectChallenge("NOT AN ID")
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
-          )
-          test("noInput_unsetsSelectedFlagOnAll", ()->
-            c.set("selected", true) for c in rcvm.get("challenges").models
-            rcvm.selectChallenge("NOT AN ID")
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
-            chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
-          )
-
+          JsMockito.verify(rcvm.get("tab").on)("change:active", JsHamcrest.Matchers.func())
         )
+        suite("tabActiveHandler", ()->
+          rcvm = null
+          mockOn = JsMockito.mockFunction()
+          mockGet = JsMockito.mockFunction()
+          setup(()->
+          )
+          test("tabBecomesActive_DoesNothing", ()->
+            JsMockito.when(mockGet)("active").then(()->true)
+            rcvm = new ReviewChallengesViewModel(
+              tab:
+                on:mockOn
+                get:mockGet
+            )
+            rcvm.selectChallenge = JsMockito.mockFunction()
+            JsMockito.verify(mockOn)("change:active",new JsHamcrest.SimpleMatcher(
+              describeTo:()->"tab handler"
+              matches:(handler)->
+                handler(rcvm.get("tab"))
+                try
+                  JsMockito.verify(rcvm.selectChallenge, JsMockito.Verifiers.never())()
+                  true
+                catch e
+                  false
+            ))
+          )
+          test("tabBecomesInactive_UnselectsChallenge", ()->
+            JsMockito.when(mockGet)("active").then(()->false)
+            rcvm = new ReviewChallengesViewModel(
+              tab:
+                on:mockOn
+                get:mockGet
+            )
+            rcvm.selectChallenge = JsMockito.mockFunction()
+            JsMockito.verify(mockOn)("change:active",new JsHamcrest.SimpleMatcher(
+              describeTo:()->"tab handler"
+              matches:(handler)->
+                handler(rcvm.get("tab"))
+                try
+                  JsMockito.verify(rcvm.selectChallenge)()
+                  true
+                catch e
+                  false
+            ))
+          )
+        )
+      )
+      suite("selectChallenge", ()->
+        rcvm = null
+        setup(()->
+          rcvm = new ReviewChallengesViewModel()
+          rcvm.set("challenges", new Backbone.Collection([
+            id:"MOCK_GAME_ID1"
+            userStatus:"MOCK_OTHER_STATUS"
+          ,
+            id:"MOCK_GAME_ID2"
+            userStatus:"PLAYING"
+          ,
+            id:"MOCK_GAME_ID3"
+            userStatus:"MOCK_OTHER_STATUS"
+          ]))
+        )
+        test("inputMatchesIdInChallengesList_setsSelectedChallengeIdToInput", ()->
+          rcvm.selectChallenge("MOCK_GAME_ID2")
+          chai.assert.equal("MOCK_GAME_ID2",rcvm.get("selectedChallengeId"))
+        )
+
+        test("inputIdNotInChallengesList_unsetsSelectedChallengeId", ()->
+          rcvm.selectChallenge("NOT AN ID")
+          chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
+        )
+
+        test("noInput_setsSelectedChallengeIdToInput", ()->
+          chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
+        )
+
+        test("inputMatchesIdInChallengesList_setsSelectedFlagOnMatchedItem", ()->
+          rcvm.selectChallenge("MOCK_GAME_ID2")
+          chai.assert(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
+        )
+
+        test("inputMatchesIdInChallengesList_unsetsSelectedFlagOnNotMatchedItem", ()->
+          c.set("selected", true) for c in rcvm.get("challenges").models
+          rcvm.selectChallenge("MOCK_GAME_ID2")
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
+        )
+        test("inputIdNotInChallengesList_unsetsSelectedFlagOnAll", ()->
+          c.set("selected", true) for c in rcvm.get("challenges").models
+          rcvm.selectChallenge("NOT AN ID")
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
+        )
+
+        test("noInput_unsetsSelectedFlagOnAll", ()->
+          c.set("selected", true) for c in rcvm.get("challenges").models
+          rcvm.selectChallenge("NOT AN ID")
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
+          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
+        )
+
       )
     )
   )
+
 
 )
 

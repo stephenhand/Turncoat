@@ -31,7 +31,9 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
         )
 
       @get("challenges").onSourceUpdated()
-      @on()
+      @get("tab")?.on("change:active", (model)=>
+        if !model.get("active") then @selectChallenge()
+      )
 
     selectChallenge:(id)->
       for challenge in @get("challenges").models

@@ -6,8 +6,10 @@ define(['underscore', 'backbone', 'UI/BaseView', 'UI/administration/ReviewChalle
       options.rootSelector ?= "#reviewChallenges"
       super(options)
 
+    setTab:(@tabModel)->
+
     createModel:()->
-      @model = new ReviewChallengesViewModel()
+      @model = new ReviewChallengesViewModel(tab:@tabModel)
     events:
       'click .list-item':'challengeListItem_clicked'
 

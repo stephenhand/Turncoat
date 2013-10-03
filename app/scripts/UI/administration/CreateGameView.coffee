@@ -7,12 +7,14 @@ define(['underscore', 'backbone', 'UI/BaseView', "UI/administration/CreateGameVi
       super(options)
 
     createModel:()->
-      @model = new CreateGameViewModel()
+      @model = new CreateGameViewModel(tab:@tabModel)
 
     events:
       'click .selected-player-marker':'selectedPlayerMarker_clicked'
       'click #confirm-create-game':'confirmCreateGame_clicked'
 
+
+    setTab:(@tabModel)->
 
     selectedPlayerMarker_clicked:(event)->
       @model.selectUsersPlayer(event.target.id)
