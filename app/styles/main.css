@@ -232,10 +232,10 @@ input[type=button]:active{
 }
 
 .list-view {
-    transition: width .3s ease-out, left .3s ease-out;
-    -moz-transition: width .3s ease-out, left .3s ease-out;
-    -webkit-transition: width .3s ease-out, left .3s ease-out;
-    -o-transition: width .3s ease-out, left .3s ease-out;
+    transition: width .3s ease-out, left .3s ease-out, opacity .2s .2s ease-out;
+    -moz-transition: width .3s ease-out, left .3s ease-out, opacity .2s .2s ease-out;
+    -webkit-transition: width .3s ease-out, left .3s ease-out, opacity .2s .2s ease-out;
+    -o-transition: width .3s ease-out, left .3s ease-out, opacity .2s .2s ease-out;
     position:absolute;
     top:1%;
     bottom:1%;
@@ -252,11 +252,14 @@ input[type=button]:active{
     width:50%
 }
 .list-view.right-panel {
+    opacity: 0;
     width:0%;
     left:100%;
 }
 
 .right-panel-open .list-view.right-panel {
+    display: inherit;
+    opacity: 1;
     width:50%;
     left:50%;
 }

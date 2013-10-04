@@ -3,6 +3,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("AppState","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(kay)->
+      loadGame:()->
     )
 
   )
@@ -356,6 +357,37 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             ))
           )
         )
+        suite("change:selectedChallengeId Handler", ()->
+          setup(()->
+            mocks["AppState"].loadGame = JsMockito.mockFunction()
+            JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->
+              "GAME FROM ID: "+a
+            )
+          )
+          test("validIdentifier_loadsGameStateUsingIdentifier", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            JsMockito.verify(mocks["AppState"].loadGame)("AN IDENTIFIER")
+          )
+          test("validIdentifier_setsSelectedChallengeAttributeToResult", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge"))
+          )
+          test("validIdentifier_unsetsSelectedChallengeAttributeIfResultUndefined", ()->
+            JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->)
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallenge", "SOMETHING")
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert.isUndefined(rcvm.get("selectedChallenge"))
+          )
+          test("noIdentifier_unsetsSelectedChallenge", ()->
+            rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
+            rcvm.set("selectedChallenge", "SOMETHING")
+            rcvm.unset("selectedChallengeId")
+            chai.assert.isUndefined(rcvm.get("selectedChallenge"))
+          )
+        )
       )
       suite("selectChallenge", ()->
         rcvm = null
@@ -378,11 +410,14 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         )
 
         test("inputIdNotInChallengesList_unsetsSelectedChallengeId", ()->
+          rcvm.set("selectedChallengeId","SOMETHING",silent:true)
           rcvm.selectChallenge("NOT AN ID")
           chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
         )
 
         test("noInput_setsSelectedChallengeIdToInput", ()->
+          rcvm.set("selectedChallengeId","SOMETHING",silent:true)
+          rcvm.selectChallenge()
           chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
         )
 

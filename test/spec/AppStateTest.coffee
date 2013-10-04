@@ -33,6 +33,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
             loadGameTypes:JsMockito.mockFunction()
             loadGameTemplate:JsMockito.mockFunction()
             loadGameList:JsMockito.mockFunction()
+            loadGameState:JsMockito.mockFunction()
             saveGameState:JsMockito.mockFunction()
             on:JsMockito.mockFunction()
             off:JsMockito.mockFunction()
@@ -162,6 +163,44 @@ define(['isolate!AppState'], (AppState)->
         chai.assert.throws(
           ()->
             AppState.loadGameTemplate()
+        )
+      )
+    )
+    suite("loadGame", ()->
+      setup(()->
+        AppState.set("currentUser",
+          new Backbone.Model(
+            id:"MOCK_USER"
+          )
+        )
+      )
+      test("idStringProvidedUserSet_callsPersisterLoadGameStateWithIdAndUser", ()->
+        AppState.loadGame("MOCK_GAME_ID")
+        JsMockito.verify(mocks["persister"].loadGameState)("MOCK_USER", "MOCK_GAME_ID")
+      )
+      test("idObjectProvided_callsPersisterLoadGameStateWithIdObject", ()->
+        mg={}
+        AppState.loadGame(mg)
+        JsMockito.verify(mocks["persister"].loadGameState)("MOCK_USER", mg)
+      )
+      test("idNotProvided_throws", ()->
+        chai.assert.throws(
+          ()->
+            AppState.loadGame()
+        )
+      )
+      test("userNotSet_throws", ()->
+        AppState.unset("currentUser" )
+        chai.assert.throws(
+          ()->
+            AppState.loadGame("MOCK_GAME_ID")
+        )
+      )
+      test("userWithoutIdSet_throws", ()->
+        AppState.set("currentUser", "CABBAGEXORS" )
+        chai.assert.throws(
+          ()->
+            AppState.loadGame("MOCK_GAME_ID")
         )
       )
     )

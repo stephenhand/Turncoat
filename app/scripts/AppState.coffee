@@ -10,8 +10,6 @@ define(['uuid', 'moment', 'underscore', 'backbone', 'lib/turncoat/Game','lib/tur
       @set("gameTemplates", persister.loadGameTemplateList(null, id))
       @set("gameTypes", persister.loadGameTypes())
       @set("games",persister.loadGameList(id) ? new Backbone.Collection([]))
-
-
       persister.off("gameListUpdated", null, @)
       persister.on("gameListUpdated", (data)->
         if (data.userId is @get("currentUser").get("id"))
@@ -20,6 +18,10 @@ define(['uuid', 'moment', 'underscore', 'backbone', 'lib/turncoat/Game','lib/tur
     loadGameTemplate:(id)->
       if (!id?) then throw new Error("loadGameTemplate requires an ID parameter")
       persister.loadGameTemplate(id)
+    loadGame:(id)->
+      if (!id?) then throw new Error("loadGame requires an ID parameter")
+      if (!@get("currentUser")?.get("id")) then throw new Error("Valid user must be logged in to load a game")
+      persister.loadGameState(@get("currentUser").get("id"), id)
     createGameFromTemplate:(state)->
       state.set("templateId",state.get("id"))
       state.set("id",UUID())

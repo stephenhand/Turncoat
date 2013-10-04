@@ -34,6 +34,12 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
       @get("tab")?.on("change:active", (model)=>
         if !model.get("active") then @selectChallenge()
       )
+      @on("change:selectedChallengeId", ()=>
+        if @get("selectedChallengeId")?
+          @set("selectedChallenge",AppState.loadGame(@get("selectedChallengeId")))
+        else
+          @unset("selectedChallenge")
+      )
 
     selectChallenge:(id)->
       for challenge in @get("challenges").models
