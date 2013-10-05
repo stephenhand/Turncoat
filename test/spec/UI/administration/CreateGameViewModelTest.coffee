@@ -12,6 +12,14 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
             players:new Backbone.Collection([
               new Backbone.Model(
                 id:"TEST"
+                name:"TEST NAME"
+                description:"TEST DESCRIPTION"
+              )
+            ,
+              new Backbone.Model(
+                id:"TEST2"
+                name:"TEST NAME2"
+                description:"TEST DESCRIPTION 2"
               )
             ])
 
@@ -67,6 +75,9 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGameViewModel, Backbone)->
   mocks=window.mockLibrary['UI/administration/CreateGameViewModel']
   suite("CreateGameViewModel", ()->
+    setup(()->
+      mocks["AppState"].createGameFromTemplate = JsMockito.mockFunction()
+    )
     suite("initialize", ()->
       test("createsGameTypes", ()->
         cgvm = new CreateGameViewModel()
@@ -137,19 +148,36 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
         newM=cgvm.gameTypes.updateFromWatchedCollectionsRes.adder(model)
         chai.assert.notEqual(newM.attributes,model.attributes)
       )
-      test("setsUpSelectedGameTypeToSetTemplateWhenIdChanges",()->
-        cgvm = new CreateGameViewModel()
+      suite("change:selectedPlayerIdHandler", ()->
+        test("ValidId_setsTemplateUsingId",()->
+          cgvm = new CreateGameViewModel()
 
-        cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
-        chai.assert.equal(cgvm.selectedGameType.get("template").get("label"), "Another Mock Template")
+          cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
+          chai.assert.equal(cgvm.selectedGameType.get("template").get("label"), "Another Mock Template")
+        )
+        test("ValidId_CopiesTemplatePlayersUserIdNameAndDescToPlayerListInOrder",()->
+          cgvm = new CreateGameViewModel()
+          cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
+          chai.assert.equal("TEST", cgvm.selectedGameType.get("playerList").at(0).get("id"))
+          chai.assert.equal("TEST NAME",cgvm.selectedGameType.get("playerList").at(0).get("name"))
+          chai.assert.equal("TEST DESCRIPTION",cgvm.selectedGameType.get("playerList").at(0).get("description"))
+          chai.assert.equal("TEST2", cgvm.selectedGameType.get("playerList").at(1).get("id"))
+          chai.assert.equal("TEST NAME2",cgvm.selectedGameType.get("playerList").at(1).get("name"))
+          chai.assert.equal("TEST DESCRIPTION 2",cgvm.selectedGameType.get("playerList").at(1).get("description"))
 
-      )
-      test("setsUpSelectedGameTypeToSetPlayerForUserWhenIdChanges",()->
-        cgvm = new CreateGameViewModel()
+        )
+        test("ValidId_PlayListEditsDoNotAffectTemplatePlayers",()->
+          cgvm = new CreateGameViewModel()
+          cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
+          cgvm.selectedGameType.get("playerList").at(0).set("id", "NOT TEST")
+          chai.assert.equal("TEST", cgvm.selectedGameType.get("template").get("players").at(0).get("id", "TEST"))
 
-        cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
-        chai.assert(cgvm.selectedGameType.get("template").get("players").at(0).get("selectedForUser"))
-
+        )
+        test("ValidId_SetPlayerForUser",()->
+          cgvm = new CreateGameViewModel()
+          cgvm.selectedGameType.set("id","MOCK_TEMPLATE2")
+          chai.assert(cgvm.selectedGameType.get("playerList").at(0).get("selectedForUser"))
+        )
       )
       test("setsUpSelectedGameSetupTypeToSetTypeWhenIdChanges",()->
         cgvm = new CreateGameViewModel()
@@ -179,23 +207,34 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
               id:"PLAYER_2"
             ])
           )
+          playerList:new Backbone.Collection([
+            id:"PLAYER_1"
+          ,
+            id:"PLAYER_2"
+          ])
         )
       )
       test("validId_setsUsersPlayerToTrueOnOnlyPlayerWithCorrectId",()->
         cgvm.selectUsersPlayer("PLAYER_1")
-        chai.assert(cgvm.selectedGameType.get("template").get("players").at(0).get("selectedForUser"))
-        chai.assert.isUndefined(cgvm.selectedGameType.get("template").get("players").at(1).get("selectedForUser"))
+        chai.assert(cgvm.selectedGameType.get("playerList").at(0).get("selectedForUser"))
+        chai.assert.isUndefined(cgvm.selectedGameType.get("playerList").at(1).get("selectedForUser"))
 
       )
       test("validId_setsUserIdToCurrentUserOnSelectedPlayer",()->
         cgvm.selectUsersPlayer("PLAYER_1")
-        chai.assert.equal(cgvm.selectedGameType.get("template").get("players").at(0).get("user").get("id"), "MOCK_CURRENT_USER")
+        chai.assert.equal(cgvm.selectedGameType.get("playerList").at(0).get("user").get("id"), "MOCK_CURRENT_USER")
 
       )
       test("validId_unsetsUserOnPlayerThatIsUnselected",()->
         cgvm.selectUsersPlayer("PLAYER_1")
         cgvm.selectUsersPlayer("PLAYER_2")
-        chai.assert.isUndefined(cgvm.selectedGameType.get("template").get("players").at(0).get("user"))
+        chai.assert.isUndefined(cgvm.selectedGameType.get("playerList").at(0).get("user"))
+
+      )
+      test("validId_doesNotSetAnythingOnTemplatePlayers",()->
+        cgvm.selectUsersPlayer("PLAYER_1")
+        cgvm.selectUsersPlayer("PLAYER_2")
+        chai.assert.isUndefined(cgvm.selectedGameType.get("template").get("players").findWhere(selectedForUser:true))
 
       )
     )
@@ -204,55 +243,104 @@ define(['isolate!UI/administration/CreateGameViewModel', 'backbone'], (CreateGam
       setup(()->
         cgvm=new CreateGameViewModel()
         cgvm.selectedGameType= new Backbone.Model(
-          template:new Backbone.Model(
-            players:new Backbone.Collection([
-              id:"PLAYER_1"
-            ,
-              id:"PLAYER_2"
-            ,
-              id:"PLAYER_3"
-            ])
-          )
+          playerList:new Backbone.Collection([
+            id:"PLAYER_1"
+          ,
+            id:"PLAYER_2"
+          ,
+            id:"PLAYER_3"
+          ])
         )
       )
       test("playerHasEmptyUser_Fails",()->
-        cgvm.selectedGameType.get("template").get("players").at(0).set("user", new Backbone.Model(id:"AN_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(2).unset("user")
+        cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
+        cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
+        cgvm.selectedGameType.get("playerList").at(2).unset("user")
         chai.assert.isFalse(cgvm.validate())
       )
       test("playerHasEmptyUserId_Fails",()->
-        cgvm.selectedGameType.get("template").get("players").at(0).set("user", new Backbone.Model(id:"AN_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(2).set("user", new Backbone.Model())
+        cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
+        cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
+        cgvm.selectedGameType.get("playerList").at(2).set("user", new Backbone.Model())
         chai.assert.isFalse(cgvm.validate())
       )
       test("anyPlayersHaveSameUserIds_Fails",()->
-        cgvm.selectedGameType.get("template").get("players").at(0).set("user", new Backbone.Model(id:"AN_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(2).set("user", new Backbone.Model(id:"AN_ID"))
+        cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
+        cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
+        cgvm.selectedGameType.get("playerList").at(2).set("user", new Backbone.Model(id:"AN_ID"))
         chai.assert.isFalse(cgvm.validate())
       )
       test("allPlayersHaveDifferentUserIds_Passes",()->
-        cgvm.selectedGameType.get("template").get("players").at(0).set("user", new Backbone.Model(id:"AN_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
-        cgvm.selectedGameType.get("template").get("players").at(2).set("user", new Backbone.Model(id:"YET_ANOTHER_ID"))
+        cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
+        cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
+        cgvm.selectedGameType.get("playerList").at(2).set("user", new Backbone.Model(id:"YET_ANOTHER_ID"))
         chai.assert.isTrue(cgvm.validate())
       )
 
     )
 
     suite("createGame", ()->
+      cgvm = null
+      setup(()->
+        cgvm=new CreateGameViewModel()
+        cgvm.selectedGameType =  new Backbone.Model(
+          template:new Backbone.Model(
+            players:new Backbone.Collection([
+              id:"PLAYER1"
+            ,
+              id:"PLAYER2"
+            ])
+          )
+          playerList:new Backbone.Collection([
+            id:"PLAYER2"
+            user:new Backbone.Model(
+              id:"USER2"
+              prop2:"SOMETHING ELSE"
+            )
+            selectedForUser:true
+          ,
+            id:"PLAYER1"
+            user:new Backbone.Model(
+              id:"USER1"
+              prop1:"SOMETHING"
+            )
+          ])
+        )
+
+      )
+      test("validPlayerList_copiesUsersFromPlayerListToTemplatePlayersWithMatchingId", ()->
+        cgvm.createGame()
+        JsMockito.verify(mocks["AppState"].createGameFromTemplate)(new JsHamcrest.SimpleMatcher(
+          describeTo:(c)->
+            "hello"
+          matches:(t)->
+            t.get("players").at(0).get("user") is cgvm.selectedGameType.get("playerList").at(1).get("user") &&
+            t.get("players").at(1).get("user") is cgvm.selectedGameType.get("playerList").at(0).get("user")
+        ))
+      )
+      test("validPlayerList_doesntCopySelectedForUserFlag", ()->
+        cgvm.createGame()
+        JsMockito.verify(mocks["AppState"].createGameFromTemplate)(new JsHamcrest.SimpleMatcher(
+          describeTo:(c)->
+            "hello"
+          matches:(t)->
+            !(t.get("players").findWhere(selectedForUser:true))?
+        ))
+      )
       test("CallsAppStateCreateGameFromTemplate", ()->
         cgvm=new CreateGameViewModel()
         cgvm.selectedGameType = new Backbone.Model(
-          template:{}
+          template:new Backbone.Model(
+            players:new Backbone.Collection()
+          )
+          playerList:new Backbone.Collection()
         )
         cgvm.createGame()
         JsMockito.verify(mocks["AppState"].createGameFromTemplate)(cgvm.selectedGameType.get("template"))
       )
     )
   )
+
 
 
 )

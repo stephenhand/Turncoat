@@ -11,10 +11,22 @@
                 <span class="heading" data-rv-text=".selectedChallenge.label < .selectedChallenge"></span><br/>
                 <span data-rv-text=".selectedChallenge.description < .selectedChallenge"></span>
             </div>
+            <div class="player-selection">
+                <span class="large">Player Roster: </span>
+
+                <div data-rv-each-player=".selectedChallenge.players < .selectedChallenge .selectedChallenge.players" class="list-item" data-rv-class-selected-player="player.selectedForUser">
+                    <div class="x-info-panel">
+                        <span data-rv-text="player.name" class="large" /><br/>
+                        <span data-rv-text="player.description" />
+                    </div>
+                    <div class="x-user-info"><span data-rv-text="player.user.id < player.user"></span><span class="selected-player-only"> (you)</span></div>
+                    <div class="challenge-response-marker"></div>
+                </div>
+            </div>
         </div>
         <div class="button-row">
-            <input type="button" id="accept-challenge" value="Accept"/>
-            <input type="button" id="reject-challenge" value="Reject"/>
+            <input type="button" class="awaiting-response-only" id="accept-challenge" value="Accept"/>
+            <input type="button" class="awaiting-response-only" id="reject-challenge" value="Reject"/>
         </div>
     </div>
 
