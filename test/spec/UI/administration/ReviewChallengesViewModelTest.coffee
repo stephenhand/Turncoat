@@ -55,8 +55,58 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           JsHamcrest.Matchers.anything()
         )
       )
-      suite("onSourceUpdated", ()->
+      suite("challenges sort", ()->
+        rcvm = null
+        setup(()->
 
+          rcvm = new ReviewChallengesViewModel()
+        )
+        test("createdAsvalidMoments_descendingOrder",()->
+          rcvm.get("challenges").add(
+            created:
+              unix:()->5
+          )
+          rcvm.get("challenges").add(
+            created:
+              unix:()->1
+          )
+          rcvm.get("challenges").add(
+            created:
+              unix:()->3
+          )
+          chai.assert.equal(rcvm.get("challenges").at(0).get("created").unix(), 5)
+          chai.assert.equal(rcvm.get("challenges").at(1).get("created").unix(), 3)
+          chai.assert.equal(rcvm.get("challenges").at(2).get("created").unix(), 1)
+        )
+        test("missingCreatedAndValidCreated_prioritisesValidMoments",()->
+          rcvm.get("challenges").add(
+            created:
+              unix:()->5
+          )
+          rcvm.get("challenges").add({})
+          rcvm.get("challenges").add(
+            created:
+              unix:()->1
+          )
+          chai.assert.equal(rcvm.get("challenges").at(0).get("created").unix(), 5)
+          chai.assert.equal(rcvm.get("challenges").at(1).get("created").unix(), 1)
+        )
+        test("invalidCreatedAndValidCreated_prioritisesValidMoments",()->
+          rcvm.get("challenges").add(created:"INVALID MOMENT")
+          rcvm.get("challenges").add(
+            created:
+              unix:()->2
+          )
+          rcvm.get("challenges").add(
+            created:
+              unix:()->6
+          )
+          chai.assert.equal(rcvm.get("challenges").at(0).get("created").unix(), 6)
+          chai.assert.equal(rcvm.get("challenges").at(1).get("created").unix(), 2)
+          chai.assert.equal(rcvm.get("challenges").at(2).get("created"), "INVALID MOMENT")
+        )
+      )
+      suite("onSourceUpdated", ()->
         test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutPLAYINGUserStatus", ()->
           rcvm = new ReviewChallengesViewModel()
           rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
@@ -191,7 +241,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
               JsHamcrest.Matchers.anything()
             )
           )
-          test("SetsCreatedUsingCreatedMoment", ()->
+          test("SetsCreatedTextUsingCreatedMoment", ()->
             rcvm = new ReviewChallengesViewModel()
             rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
             rcvm.get("challenges").onSourceUpdated()
@@ -206,11 +256,32 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                         format:(pattern)->
                           "STRING FROM MOMENT: "+pattern
                   )
-                  "STRING FROM MOMENT" is ret.get("created").substr(0,18)
+                  "STRING FROM MOMENT" is ret.get("createdText").substr(0,18)
               ),
               JsHamcrest.Matchers.anything()
             )
           )
+          test("SetsCreatedAsCreatedMoment", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
+
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  moment = {}
+                  ret=input(
+                    get:(key)->
+                      if key is "created"
+                        moment
+                  )
+                  moment is ret.get("created")
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+
           test("CreatedNotMoment_UsesPlaceholder", ()->
             rcvm = new ReviewChallengesViewModel()
             rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
@@ -224,7 +295,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                     get:()->
                       "NOT_MOMENT"
                   )
-                  typeof ret.get("created") is "string"
+                  typeof ret.get("createdText") is "string"
               ),
               JsHamcrest.Matchers.anything()
             )
@@ -242,7 +313,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                     get:()->
                       undefined
                   )
-                  typeof ret.get("created") is "string"
+                  typeof ret.get("createdText") is "string"
               ),
               JsHamcrest.Matchers.anything()
             )

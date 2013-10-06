@@ -11,6 +11,15 @@ define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', '
   ReviewChallengesViewModel = Backbone.Model.extend(
     initialize:()->
       @set("challenges", new ObservingViewModelCollection())
+      @get("challenges").comparator=(a, b)->
+        switch
+          when !a.get("created")?.unix? && !b.get("created")?.unix? then 0
+          when !a.get("created")?.unix? then 1
+          when !b.get("created")?.unix? then -1
+          when a.get("created").unix() > b.get("created").unix() then -1
+          when a.get("created").unix() < b.get("created").unix() then 1
+          else 0
+
       @get("challenges").watch([AppState.get("games")])
 
       @get("challenges").onSourceUpdated=()->
@@ -20,7 +29,8 @@ define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', '
         ,
           (input)->
             new Backbone.Model(
-              created:input.get("created")?.format?('MMMM Do YYYY, h:mm:ss a') ? "--"
+              created:input.get("created")
+              createdText:input.get("created")?.format?('MMMM Do YYYY, h:mm:ss a') ? "--"
               id:input.get("id")
               label:input.get("label")
               statusText: GetStatusText(input.get("userStatus"))

@@ -21,7 +21,7 @@ define(["underscore", "backbone"], (_, Backbone)->
             comparer(item, watchedItem)
             #watchedItem instanceof FleetAsset and item.get("modelId") is watchedItem.id
           )
-          if !VM? then @push(adder(watchedItem)) #new FleetAsset2DViewModel(model:fleetAsset))
+          if !VM? then @add(adder(watchedItem)) #new FleetAsset2DViewModel(model:fleetAsset))
           processed.push(watchedItem)
 
       #remove surplus ships

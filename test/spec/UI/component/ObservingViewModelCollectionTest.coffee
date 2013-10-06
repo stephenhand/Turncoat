@@ -268,7 +268,7 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
         chai.assert.equal(bvmc.at(4).get("match"),"realCollectionThreeItems_MOCK2")
         chai.assert.equal(bvmc.at(5).get("match"),"realCollectionThreeItems_MOCK3")
       )
-      test("addingRelevantItem_pushesItem", ()->
+      test("addingRelevantItem_addsItem", ()->
         bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
@@ -282,7 +282,7 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
           wi.get("irrelevant") isnt true
         )
         realCollection.push({id:"MOCK2",cid:"MOCK2",matchVal:"realCollection_MOCK2"})
-        bvmc.push=JsMockito.mockFunction()
+        bvmc.add=JsMockito.mockFunction()
         bvmc.remove=JsMockito.mockFunction()
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -294,10 +294,10 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
         (wi)->
           wi.get("irrelevant") isnt true
         )
-        JsMockito.verify(bvmc.push)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK2"))
+        JsMockito.verify(bvmc.add)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK2"))
 
       )
-      test("addingThreeRelevantItems_pushesThreeItem", ()->
+      test("addingThreeRelevantItems_addsThreeItem", ()->
         bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
@@ -313,7 +313,7 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
         realCollection.push({id:"MOCK2",cid:"MOCK2",matchVal:"realCollection_MOCK2"})
         realCollection.push({id:"MOCK3",cid:"MOCK3",matchVal:"realCollection_MOCK3"})
         realCollection.push({id:"MOCK4",cid:"MOCK4",matchVal:"realCollection_MOCK4"})
-        bvmc.push=JsMockito.mockFunction()
+        bvmc.add=JsMockito.mockFunction()
         bvmc.remove=JsMockito.mockFunction()
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -325,9 +325,9 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
         (wi)->
           wi.get("irrelevant") isnt true
         )
-        JsMockito.verify(bvmc.push)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK2"))
-        JsMockito.verify(bvmc.push)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK3"))
-        JsMockito.verify(bvmc.push)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK4"))
+        JsMockito.verify(bvmc.add)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK2"))
+        JsMockito.verify(bvmc.add)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK3"))
+        JsMockito.verify(bvmc.add)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK4"))
       )
 
       test("removingRelevantItem_removesItem", ()->
@@ -344,11 +344,11 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
           wi.get("irrelevant") isnt true
         )
         realCollectionFiveMixedItems.remove(realCollectionFiveMixedItems.at(1))
-        opush=bvmc.push
+        oadd=bvmc.add
         oremove= bvmc.remove
-        bvmc.push=JsMockito.mockFunction()
-        JsMockito.when(bvmc.push)(JsHamcrest.Matchers.anything()).then((i)->
-          opush.call(bvmc,i)
+        bvmc.add=JsMockito.mockFunction()
+        JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
+          oadd.call(bvmc,i)
         )
         bvmc.remove=JsMockito.mockFunction()
         JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
@@ -381,11 +381,11 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
           wi.get("irrelevant") isnt true
         )
         realCollectionFiveMixedItems.reset()
-        opush=bvmc.push
+        oadd=bvmc.add
         oremove= bvmc.remove
-        bvmc.push=JsMockito.mockFunction()
-        JsMockito.when(bvmc.push)(JsHamcrest.Matchers.anything()).then((i)->
-          opush.call(bvmc,i)
+        bvmc.add=JsMockito.mockFunction()
+        JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
+          oadd.call(bvmc,i)
         )
         bvmc.remove=JsMockito.mockFunction()
         JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
