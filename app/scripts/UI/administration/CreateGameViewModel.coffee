@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'sprintf', 'UI/BaseViewModelCollection', 'UI/BaseViewModelItem', 'AppState'], (_, Backbone, sprintf, BackboneViewModelCollection, BackboneViewModelItem, AppState)->
+define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCollection', 'AppState'], (_, Backbone, sprintf, BackboneViewModelCollection, AppState)->
 
   CreateGameViewModel = Backbone.Model.extend(
     initialize:()->

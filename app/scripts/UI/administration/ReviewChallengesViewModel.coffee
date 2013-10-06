@@ -1,6 +1,6 @@
 PLAYING_USERSTATUS = "PLAYING"
 
-define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_, Backbone, BaseViewModelCollection, AppState)->
+define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', 'AppState'], (_, Backbone, ObservingViewModelCollection, AppState)->
   GetStatusText = (userStatus)->
     switch userStatus
       when "READY"
@@ -10,7 +10,7 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
 
   ReviewChallengesViewModel = Backbone.Model.extend(
     initialize:()->
-      @set("challenges", new BaseViewModelCollection())
+      @set("challenges", new ObservingViewModelCollection())
       @get("challenges").watch([AppState.get("games")])
 
       @get("challenges").onSourceUpdated=()->
@@ -37,8 +37,22 @@ define(['underscore', 'backbone', 'UI/BaseViewModelCollection', 'AppState'], (_,
       @on("change:selectedChallengeId", ()=>
         if @get("selectedChallengeId")?
           @set("selectedChallenge",AppState.loadGame(@get("selectedChallengeId")))
+          if @get("selectedChallenge")?
+            @set("challengePlayerList", new Backbone.Collection(
+
+              for player in @get("selectedChallenge").get("players").models
+                new Backbone.Model(
+                  id:player.get("id")
+                  label:player.get("label")
+                  user:player.get("user")
+                  description:player.get("description")
+
+                )
+            ))
+          @get("challengePlayerList")?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))?.set("selectedForUser",true)
         else
           @unset("selectedChallenge")
+          @unset("challengePlayerList")
       )
 
     selectChallenge:(id)->

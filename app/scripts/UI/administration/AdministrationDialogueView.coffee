@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', "jquery", "UI/BaseView", "UI/administration/AdministrationDialogueViewModel", "UI/administration/CreateGameView", "UI/administration/ReviewChallengesView", "text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, AdministrationDialogueViewModel, CreateGameView,ReviewChallengesView, templateText)->
+define(['underscore', 'backbone', "jquery", "UI/component/BaseView", "UI/administration/AdministrationDialogueViewModel", "UI/administration/CreateGameView", "UI/administration/ReviewChallengesView", "text!templates/AdministrationDialogue.html"], (_, Backbone, $, BaseView, AdministrationDialogueViewModel, CreateGameView,ReviewChallengesView, templateText)->
   class AdministrationDialogueView extends BaseView
     initialize:(options)->
       options ?={}

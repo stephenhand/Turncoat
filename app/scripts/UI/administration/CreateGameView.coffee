@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'UI/BaseView', "UI/administration/CreateGameViewModel","text!templates/createGame.html"], (_, Backbone, BaseView, CreateGameViewModel, templateText)->
+define(['underscore', 'backbone', 'UI/component/BaseView', "UI/administration/CreateGameViewModel","text!templates/createGame.html"], (_, Backbone, BaseView, CreateGameViewModel, templateText)->
   class CreateGameView extends BaseView
     initialize:(options)->
       options?={}

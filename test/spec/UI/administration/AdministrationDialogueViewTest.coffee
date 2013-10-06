@@ -11,7 +11,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 
     )
   )
-  Isolate.mapAsFactory("UI/administration/BaseView","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("UI/component//BaseView","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ()->
         render:JsMockito.mockFunction()

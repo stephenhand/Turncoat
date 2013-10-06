@@ -56,16 +56,16 @@ require(['jquery','backbone'], function($,Backbone){
 );
 require(["isolate","configureIsolate"], function(Isolate){
     window.isolate = Isolate;
-    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jqModal','BaseView',/text!.+/,/spec\/.*/])
+    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jqModal','component/BaseView',/text!.+/,/spec\/.*/])
 });
 
 
 require(['spec/AppHostTest',
     'spec/AppStateTest',
     'spec/UI/RivetsExtensionsTest',
-    'spec/UI/BaseViewTest',
-    'spec/UI/BaseViewModelCollectionTest',
-    'spec/UI/BaseViewModelItemTest',
+    'spec/UI/component/BaseViewTest',
+    'spec/UI/component/ObservingViewModelCollectionTest',
+    'spec/UI/component/ObservingViewModelItemTest',
     'spec/UI/FleetAsset2DViewModelTest',
     'spec/UI/ManOWarTableTopViewTest',
     'spec/UI/ManOWarTableTopViewModelTest',

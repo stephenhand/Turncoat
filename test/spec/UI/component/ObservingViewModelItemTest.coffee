@@ -1,5 +1,5 @@
-define(['isolate!UI/BaseViewModelItem','backbone'], (BaseViewModelItem, Backbone)->
-  suite("BaseViewModelItem", ()->
+define(['isolate!UI/component/ObservingViewModelItem','backbone'], (ObservingViewModelItem, Backbone)->
+  suite("ObservingViewModelItem", ()->
     mockWatchDataSingleAttribute = [
       model:
         on:JsMockito.mockFunction()
@@ -38,19 +38,19 @@ define(['isolate!UI/BaseViewModelItem','backbone'], (BaseViewModelItem, Backbone
 
     suite("watch", ()->
       test("bindsUpdateFromModelToSingleAttributeChangeOnCorrectModel", ()->
-        bvmi = new BaseViewModelItem()
+        bvmi = new ObservingViewModelItem()
         bvmi.watch(mockWatchDataSingleAttribute)
         JsMockito.verify(mockWatchDataSingleAttribute[0].model.on)("change:A",JsHamcrest.Matchers.func())
       )
       test("bindsUpdateFromModelToMultipleAttributeChangeOnCorrectModel", ()->
-        bvmi = new BaseViewModelItem()
+        bvmi = new ObservingViewModelItem()
         bvmi.watch(mockWatchDataMultiAttribute)
         JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:A",JsHamcrest.Matchers.func())
         JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:B",JsHamcrest.Matchers.func())
         JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:C",JsHamcrest.Matchers.func())
       )
       test("bindsUpdateFromModelToMultipleModelChangeOnCorrectModel", ()->
-        bvmi = new BaseViewModelItem()
+        bvmi = new ObservingViewModelItem()
         bvmi.watch(mockWatchDataMultiModel)
         JsMockito.verify(mockWatchDataMultiModel[0].model.on)("change:A",JsHamcrest.Matchers.func())
         JsMockito.verify(mockWatchDataMultiModel[0].model.on)("change:B",JsHamcrest.Matchers.func())
@@ -60,21 +60,21 @@ define(['isolate!UI/BaseViewModelItem','backbone'], (BaseViewModelItem, Backbone
         JsMockito.verify(mockWatchDataMultiModel[2].model.on)("change:F",JsHamcrest.Matchers.func())
       )
       test("doesNotDupBinds", ()->
-        bvmi = new BaseViewModelItem()
+        bvmi = new ObservingViewModelItem()
         bvmi.watch(mockWatchDataDupAttribute)
         JsMockito.verify(mockWatchDataDupAttribute[0].model.on, JsMockito.Verifiers.once())("change:A",JsHamcrest.Matchers.func())
       )
     )
     suite("watchedEvent",()->
       test("watchedObjectTriggersOnModelUpdatedWhenWatchedAttributeChanged", ()->
-        bvmi = new BaseViewModelItem()
+        bvmi = new ObservingViewModelItem()
         bvmi.onModelUpdated = JsMockito.mockFunction()
         bvmi.watch(mockWatchDataRealEvent)
         mockWatchDataRealEvent[0].model.trigger("change:A")
         JsMockito.verify(bvmi.onModelUpdated)(mockWatchDataRealEvent[0].model)
       )
       test("watchedObjectNeverTriggersOnModelUpdatedWhenOtherAttributeChanged", ()->
-        bvmi = new BaseViewModelItem()
+        bvmi = new ObservingViewModelItem()
         bvmi.onModelUpdated = JsMockito.mockFunction()
         bvmi.watch(mockWatchDataRealEvent)
         mockWatchDataRealEvent[0].model.trigger("change:B")

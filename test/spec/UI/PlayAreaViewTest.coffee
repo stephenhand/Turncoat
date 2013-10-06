@@ -18,9 +18,9 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       mockFleetAsset2DModel
     )
   )
-  Isolate.mapAsFactory("UI/BaseViewModelCollection","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("UI/component/ObservingViewModelCollection","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      mockBaseViewModelCollection = (data)->
+      mockObservingViewModelCollection = (data)->
         mockConstructedBVMC = new Backbone.Collection(data)
         mockConstructedBVMC.watch = JsMockito.mockFunction()
         JsMockito.when(mockConstructedBVMC.watch)(JsHamcrest.Matchers.anything()).then((collections)->
@@ -34,7 +34,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
             selector:s
         )
         mockConstructedBVMC
-      mockBaseViewModelCollection
+      mockObservingViewModelCollection
     )
   )
 )

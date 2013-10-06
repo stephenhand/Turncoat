@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'UI/BaseView', 'UI/administration/ReviewChallengesViewModel',"text!templates/ReviewChallenges.html"], (_, Backbone, BaseView, ReviewChallengesViewModel, templateText)->
+define(['underscore', 'backbone', 'UI/component/BaseView', 'UI/administration/ReviewChallengesViewModel',"text!templates/ReviewChallenges.html"], (_, Backbone, BaseView, ReviewChallengesViewModel, templateText)->
   class ReviewChallengesView extends BaseView
     initialize:(options)->
       options?={}

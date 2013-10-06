@@ -1,5 +1,5 @@
-define(['underscore', 'backbone', 'AppState', 'UI/BaseViewModelItem'], (_, Backbone, AppState, BaseViewModelItem)->
-  class FleetAsset2DViewModel extends BaseViewModelItem
+define(['underscore', 'backbone', 'AppState', 'UI/component/ObservingViewModelItem'], (_, Backbone, AppState, ObservingViewModelItem)->
+  class FleetAsset2DViewModel extends ObservingViewModelItem
     initialize:(options)->
       super(options)
       if (options?.model?)

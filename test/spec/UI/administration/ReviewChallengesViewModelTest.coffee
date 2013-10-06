@@ -2,12 +2,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 
   Isolate.mapAsFactory("AppState","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      get:(kay)->
+      get:(key)->
       loadGame:()->
     )
 
   )
-  Isolate.mapAsFactory("UI/BaseViewModelCollection","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("UI/component/ObservingViewModelCollection","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       mockBaseViewModelCollection = (data)->
         mockConstructedBVMC = new Backbone.Collection(data)
@@ -28,7 +28,10 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         mocks['AppState'].get = JsMockito.mockFunction()
         JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
           (key)->
-            if key is "games" then mockGameList else undefined
+            switch key
+              when "games" then mockGameList
+              when "currentUser" then new Backbone.Model(id:"MOCK_USER")
+              else undefined
         )
       )
       test("createsChallenges", ()->
@@ -361,7 +364,22 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           setup(()->
             mocks["AppState"].loadGame = JsMockito.mockFunction()
             JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->
-              "GAME FROM ID: "+a
+              new Backbone.Model(
+                label:"GAME FROM ID: "+a
+                players:new Backbone.Collection([
+                  id:"SELECTED_PLAYER"
+                  label:"SELECTED_PLAYER_LABEL"
+                  user:new Backbone.Model(
+                    id:"MOCK_USER"
+                  )
+                ,
+                  id:"NOT_SELECTED_PLAYER"
+                  label:"NOT_SELECTED_PLAYER_LABEL"
+                  user:new Backbone.Model(
+                    id:"OTHER_USER"
+                  )
+                ])
+              )
             )
           )
           test("validIdentifier_loadsGameStateUsingIdentifier", ()->
@@ -372,7 +390,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           test("validIdentifier_setsSelectedChallengeAttributeToResult", ()->
             rcvm = new ReviewChallengesViewModel()
             rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-            chai.assert.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge"))
+            chai.assert.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge").get("label"))
           )
           test("validIdentifier_unsetsSelectedChallengeAttributeIfResultUndefined", ()->
             JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->)
@@ -386,6 +404,61 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             rcvm.set("selectedChallenge", "SOMETHING")
             rcvm.unset("selectedChallengeId")
             chai.assert.isUndefined(rcvm.get("selectedChallenge"))
+          )
+          test("validIdentifier_setsChallengePlayerListWithResultPlayersLabelUserAndId", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(0).get("id"),"SELECTED_PLAYER")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(0).get("label"),"SELECTED_PLAYER_LABEL")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(0).get("user").get("id"),"MOCK_USER")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(1).get("id"),"NOT_SELECTED_PLAYER")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(1).get("label"),"NOT_SELECTED_PLAYER_LABEL")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(1).get("user").get("id"),"OTHER_USER")
+
+          )
+          test("validIdentifier_setsSelectedForUserOnlyOnPlayerWithUserIdMatchingCurrentUser", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert(rcvm.get("challengePlayerList").at(0).get("selectedForUser"))
+            chai.assert.isUndefined(rcvm.get("challengePlayerList").at(1).get("selectedForUser"))
+
+          )
+          test("validIdentifierNoPlayerWithCurrentUserId_doesntSetSelectedForUserOnAnything", ()->
+            JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->
+              new Backbone.Model(
+                label:"GAME FROM ID: "+a
+                players:new Backbone.Collection([
+                  id:"SELECTED_PLAYER"
+                  label:"SELECTED_PLAYER_LABEL"
+                  user:new Backbone.Model(
+                    id:"NOT_MOCK_USER"
+                  )
+                ,
+                  id:"NOT_SELECTED_PLAYER"
+                  label:"NOT_SELECTED_PLAYER_LABEL"
+                  user:new Backbone.Model(
+                    id:"OTHER_USER"
+                  )
+                ])
+              )
+            )
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert.isUndefined(rcvm.get("challengePlayerList").findWhere(selectedForUser:true))
+
+          )
+          test("identifierDoesntReturnAnything_unsetsChallengePlayerList", ()->
+            JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->)
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallenge", "SOMETHING")
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert.isUndefined(rcvm.get("challengePlayerList"))
+          )
+          test("noIdentifier_unsetsChallengePlayerList", ()->
+            rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
+            rcvm.set("selectedChallenge", "SOMETHING")
+            rcvm.unset("selectedChallengeId")
+            chai.assert.isUndefined(rcvm.get("challengePlayerList"))
           )
         )
       )

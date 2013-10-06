@@ -1,5 +1,5 @@
-define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
-  suite("BaseViewModelCollection", ()->
+define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewModelCollection)->
+  suite("ObservingViewModelCollection", ()->
 
     suite("watch", ()->
       coll1 = coll2 = coll3 = coll4 = coll5 = null
@@ -21,7 +21,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
               false
         )
         onsourceupdatedHandlerMatcher.handlerToCheck=mockOnSourceUpdatedHandler
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.onSourceUpdated = mockOnSourceUpdatedHandler
 
         coll1 = {}
@@ -142,7 +142,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
         ])
       )
       test("watchingSingleCollectionSingleItem_createsItem", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollection])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -155,7 +155,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
         chai.assert.equal(bvmc.at(0).get("match"),"realCollection_MOCK1")
       )
       test("watchingSingleCollectionFiveItems_createsFiveItems", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -172,7 +172,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
         chai.assert.equal(bvmc.at(4).get("match"),"realCollectionFiveMixedItems_MOCK5")
       )
       test("watchingSingleCollectionAllRelevantItems_createsAllItems", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionThreeItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -190,7 +190,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
         chai.assert.equal(bvmc.at(2).get("match"),"realCollectionThreeItems_MOCK3")
       )
       test("watchingSingleCollectionAllIrrelevantItems_createsNoItems", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -206,7 +206,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
       )
 
       test("watchingSingleCollectionMixedItems_createsOnlyRelevantItems", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -224,7 +224,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
       )
 
       test("watchingMultpleCollectionsMixedItems_createsAllItems", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -248,7 +248,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
         chai.assert.equal(bvmc.at(11).get("match"),"realCollectionThreeIrrelevantItems_MOCK3")
       )
       test("watchingMultpleCollectionsMixedItems_createsAllRelevantItems", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -269,7 +269,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
         chai.assert.equal(bvmc.at(5).get("match"),"realCollectionThreeItems_MOCK3")
       )
       test("addingRelevantItem_pushesItem", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -298,7 +298,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
 
       )
       test("addingThreeRelevantItems_pushesThreeItem", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -331,7 +331,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
       )
 
       test("removingRelevantItem_removesItem", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->
@@ -368,7 +368,7 @@ define(['isolate!UI/BaseViewModelCollection'], (BaseViewModelCollection)->
 
       )
       test("clearingWatchedCollection_removesAllRelevantItems", ()->
-        bvmc = new BaseViewModelCollection()
+        bvmc = new ObservingViewModelCollection()
         bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
         bvmc.updateFromWatchedCollections(
           (i,wi)->

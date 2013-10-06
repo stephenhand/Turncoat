@@ -1,5 +1,5 @@
 define(["underscore", "backbone"], (_, Backbone)->
-  BaseViewModelCollection=Backbone.Collection.extend(
+  ObservingViewModelCollection=Backbone.Collection.extend(
     initialize: (options)->
 
     watch:(collections)->
@@ -31,6 +31,7 @@ define(["underscore", "backbone"], (_, Backbone)->
           @remove(@at(counter))
         else counter++
   )
+  ObservingViewModelCollection
 )
 
 

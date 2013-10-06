@@ -1,6 +1,6 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
 
-  Isolate.mapAsFactory("lib/2D/PolygonTools","UI/BaseView", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/2D/PolygonTools","UI/component/BaseView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       mockPolygonTools =
         pointInPoly:(poly,x,y)->
@@ -9,7 +9,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 
 
-  Isolate.mapAsFactory("rivets","UI/BaseView", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("rivets","UI/component/BaseView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       stubRivets =
         bind:JsMockito.mockFunction()
@@ -22,7 +22,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     )
   )
 
-  Isolate.mapAsFactory("lib/2D/PolygonTools","UI/BaseView", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/2D/PolygonTools","UI/component/BaseView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       mockPolygonTools =
         pointInPoly:(poly,x,y)->
@@ -31,10 +31,10 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!UI/BaseView"], (BaseView)->
+define(["isolate!UI/component/BaseView"], (BaseView)->
     #BaseViewTest.coffee test file    
 
-    mocks = window.mockLibrary["UI/BaseView"];
+    mocks = window.mockLibrary["UI/component/BaseView"];
     suite("BaseView", ()->
         suite("constructor", ()->
             test("setsTemplate", ()->

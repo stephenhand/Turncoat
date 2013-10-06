@@ -1,5 +1,5 @@
 define(["underscore", "backbone"], (_, Backbone)->
-  BaseViewModelItem=Backbone.Model.extend(
+  ObservingViewModelItem=Backbone.Model.extend(
     initialize: (options)->
       @set("classList", "view-model-item")
     watch:(modelAttributesLists)->
@@ -17,9 +17,8 @@ define(["underscore", "backbone"], (_, Backbone)->
             @watchedModels[modelAttributes.model][attribute] = true
     unwatch:()->
     onModelUpdated:(model)=>
-
-
   )
+  ObservingViewModelItem
 )
 
 
