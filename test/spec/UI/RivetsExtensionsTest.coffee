@@ -154,11 +154,44 @@ define(['isolate!UI/RivetsExtensions'], (RivetsExtensions)->
         )
       )
       suite("sprintf",()->
-
-
-        ret = RivetsExtensions.formatters.sprintf("MOCK_VALUE","MOCK_MASK")
-        chai.assert.equal(ret.mask,"MOCK_MASK")
-        chai.assert.equal(ret.value,"MOCK_VALUE")
+        test("callsSprintWithFirstParamValSecondParamPattern",()->
+          ret = RivetsExtensions.formatters.sprintf("MOCK_VALUE","MOCK_MASK")
+          chai.assert.equal(ret.mask,"MOCK_MASK")
+          chai.assert.equal(ret.value,"MOCK_VALUE")
+        )
+      )
+      suite("multiplier",()->
+        test("decimalInputdecimalMultiplierNoMask_ReturnsMultiplied",()->
+          ret = RivetsExtensions.formatters.multiplier("3.5", "2.5")
+          chai.assert.equal(ret,"8.75")
+        )
+        test("IntegerInputIntegerMultiplierNoMask_ReturnsMultiplied",()->
+          ret = RivetsExtensions.formatters.multiplier("9","5")
+          chai.assert.equal(ret, "45")
+        )
+        test("decimalInputdecimalMultiplierMaskSetMask_ReturnsSPrintfResultUsingMultipliedWithMask",()->
+          ret = RivetsExtensions.formatters.multiplier("3.5", "2.5" ,"MOCK_MASK")
+          chai.assert.equal(ret.mask,"MOCK_MASK")
+          chai.assert.equal(ret.value,"8.75")
+        )
+        test("NonNumericInputNoMask_ReturnsUnmodifiedInput",()->
+          ret = RivetsExtensions.formatters.multiplier("NOT A NUMBER", "2.5" )
+          chai.assert.equal(ret,"NOT A NUMBER")
+        )
+        test("NonNumericMultiplierNoMask_ReturnsUnmodifiedInput",()->
+          ret = RivetsExtensions.formatters.multiplier("2.5", "NOT A NUMBER")
+          chai.assert.equal(ret,"2.5")
+        )
+        test("NonNumericInputWithMask_ReturnsSPreintfResultUsingUnmodifiedInputdWithMask",()->
+          ret = RivetsExtensions.formatters.multiplier("NOT A NUMBER", "2.5" ,"MOCK_MASK")
+          chai.assert.equal(ret.mask,"MOCK_MASK")
+          chai.assert.equal(ret.value,"NOT A NUMBER")
+        )
+        test("NonNumericInputWithMask_ReturnsSPreintfResultUsingUnmodifiedInputdWithMask",()->
+          ret = RivetsExtensions.formatters.multiplier("2.5","NOT A NUMBER" ,"MOCK_MASK")
+          chai.assert.equal(ret.mask,"MOCK_MASK")
+          chai.assert.equal(ret.value,"2.5")
+        )
       )
     )
   )

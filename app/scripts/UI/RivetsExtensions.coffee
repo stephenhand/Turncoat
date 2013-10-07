@@ -1,3 +1,5 @@
+require(['UI/rivets/binders/FeedItem'])
+
 define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbone, sprintf, Rivets)->
   RivetsExtensions =
     formatters:
@@ -7,6 +9,11 @@ define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbon
         if (toggleSwitch) then toggleValue else undefined
       sprintf:(input, mask)->
         sprintf(mask, input)
+      multiplier:(input, multiplier, mask)->
+        val = input * multiplier
+        if isNaN(val) then val =input
+        if (mask?) then val = sprintf(mask, val)
+        val
     binders:
       style_top:(el, value)->
         el.style.top = value
