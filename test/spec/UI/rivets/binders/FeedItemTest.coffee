@@ -619,6 +619,154 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         chai.assert.notEqual(itView2, fi.iterated[0].view)
         chai.assert.notEqual(itView4, fi.iterated[2].view)
       )
+
+      test("populatedNew_copiesConfigSettingsFromBinderViewToNewViews", ()->
+        fi.bind()
+        fi.routine(el,[
+          MOCK_ATTRIBUTE:"MOCK_VAL1"
+        ,
+          MOCK_ATTRIBUTE:"MOCK_VAL2"
+
+        ])
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.options.config.prop1 is "A" and template.view.options.config.prop2 is "B"
+
+          )
+        ,
+          fi.marker.nextSibling
+        )
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.options.config.prop1 is "A" and template.view.options.config.prop2 is "B"
+
+          )
+        ,
+          fi.marker.nextSibling.nextSibling
+        )
+      )
+      test("populatedNew_setsPreloadConfigOptionTrueOnAllNewViews", ()->
+        fi.bind()
+        fi.routine(el,[
+          MOCK_ATTRIBUTE:"MOCK_VAL1"
+        ,
+          MOCK_ATTRIBUTE:"MOCK_VAL2"
+
+        ])
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.options.config.preloadData is true
+
+          )
+        ,
+          fi.marker.nextSibling
+        )
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.options.config.preloadData is true
+
+          )
+        ,
+          fi.marker.nextSibling.nextSibling
+        )
+      )
+      test("populatedNew_copiesDataFromBinderViewModels", ()->
+        fi.view.models =
+          A:1
+          B:2
+          C:3
+        fi.bind()
+        fi.routine(el,[
+          MOCK_ATTRIBUTE:"MOCK_VAL1"
+        ,
+          MOCK_ATTRIBUTE:"MOCK_VAL2"
+
+        ])
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.data.A is 1 and template.view.data.B is 2 and template.view.data.C is 3
+          )
+        ,
+          fi.marker.nextSibling
+        )
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.data.A is 1 and template.view.data.B is 2 and template.view.data.C is 3
+          )
+        ,
+          fi.marker.nextSibling.nextSibling
+        )
+      )
+      test("populatedNew_copiesAttributeMatchingModelNameFromCollectionNotViewModels", ()->
+        fi.view.models =
+          A:1
+          B:2
+          C:3
+          MOCK_ITEM_TYPE:"CHEESE"
+        fi.bind()
+        fi.routine(el,[
+          MOCK_ATTRIBUTE:"MOCK_VAL1"
+        ,
+          MOCK_ATTRIBUTE:"MOCK_VAL2"
+
+        ])
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.data.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL1"
+          )
+        ,
+          fi.marker.nextSibling
+        )
+        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(template)->
+              template.view.data.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL2"
+          )
+        ,
+          fi.marker.nextSibling.nextSibling
+        )
+      )
+      test("updateExistingElements_updatesExistingSubViewsWithNewDataOnly", ()->
+        fi.view.models =
+          A:1
+          B:2
+          C:3
+          MOCK_ITEM_TYPE:"CHEESE"
+        itView1 = new FakeRivetsView({b:2},{},{})
+        itView2 = new FakeRivetsView({a:1},{},{})
+        fi.iterated = [
+          identifier:"MOCK_VAL1"
+          view:itView1
+        ,
+          identifier:"MOCK_VAL2"
+          view:itView2
+        ]
+        fi.routine(el,[
+          MOCK_ATTRIBUTE:"MOCK_VAL1"
+        ,
+          MOCK_ATTRIBUTE:"MOCK_VAL2"
+
+        ])
+        JsMockito.verify(itView1.update)(new JsHamcrest.SimpleMatcher(
+          matches:(d)->
+            d.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL1" and !d.A? and !d.B? and !d.C?
+        ))
+        JsMockito.verify(itView2.update)(new JsHamcrest.SimpleMatcher(
+          matches:(d)->
+            d.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL2" and !d.A? and !d.B? and !d.C?
+        ))
+      )
+
+    )
+    suite("update", ()->
+
     )
   )
 
