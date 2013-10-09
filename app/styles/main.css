@@ -125,12 +125,17 @@ margin-bottom:30px;
 .list-item:first-child{
 }
 .list-item{
-    transition: top .5s ease-out;
-    -moz-transition: position .5s ease-out;
-    -webkit-transition: top .5s ease-out;
-    -o-transition: position .5s ease-out;
     padding-top:9px;
     border-top: solid 1px #868686;
+}
+
+.list-item.animatable{
+    width:99%;
+    position:absolute;
+    transition: top .5s ease-out;
+    -moz-transition: top .5s ease-out;
+    -webkit-transition: top .5s ease-out;
+    -o-transition: top .5s ease-out;
 }
 
 .list-item .info-panel{

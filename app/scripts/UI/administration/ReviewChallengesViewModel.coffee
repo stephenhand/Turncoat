@@ -1,6 +1,6 @@
 PLAYING_USERSTATUS = "PLAYING"
 
-define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', 'AppState'], (_, Backbone, ObservingViewModelCollection, AppState)->
+define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', 'UI/component/ObservableOrderCollection', 'AppState'], (_, Backbone, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
   GetStatusText = (userStatus)->
     switch userStatus
       when "READY"
@@ -11,6 +11,8 @@ define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', '
   ReviewChallengesViewModel = Backbone.Model.extend(
     initialize:()->
       @set("challenges", new ObservingViewModelCollection())
+      _.extend(@get("challenges"), ObservableOrderCollection)
+      @get("challenges").setOrderAttribute("ordinal")
       @get("challenges").comparator=(a, b)->
         switch
           when !a.get("created")?.unix? && !b.get("created")?.unix? then 0

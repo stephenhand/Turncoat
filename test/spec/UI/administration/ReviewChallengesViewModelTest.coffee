@@ -1,5 +1,10 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("UI/component/ObservableOrderCollection","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      setOrderAttribute:JsMockito.mockFunction()
+    )
 
+  )
   Isolate.mapAsFactory("AppState","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
@@ -26,6 +31,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
       mockGameList = new Backbone.Collection([])
       setup(()->
         mocks['AppState'].get = JsMockito.mockFunction()
+        mocks["UI/component/ObservableOrderCollection"].setOrderAttribute = JsMockito.mockFunction()
         JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
           (key)->
             switch key
@@ -39,6 +45,10 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         chai.assert.instanceOf(rcvm.get("challenges"), Backbone.Collection)
       )
 
+      test("setsUpObservableOrderingOnChallenges", ()->
+        rcvm = new ReviewChallengesViewModel()
+        JsMockito.verify(rcvm.get("challenges").setOrderAttribute)(JsHamcrest.Matchers.string())
+      )
       test("challengesWatchesAppStateGames", ()->
         rcvm = new ReviewChallengesViewModel()
         JsMockito.verify(rcvm.get("challenges").watch)(JsHamcrest.Matchers.hasItem(mockGameList))
