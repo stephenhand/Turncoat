@@ -14,7 +14,8 @@ require.config({
     sprintf: 'vendor/sprintf',
     moment:'vendor/moment',
     templates : '../templates',
-    data : '../data'
+    data : '../data',
+    setTimeout : 'lib/nativeShims/setTimeout'
   },
   shim:{
       'jquery':{
@@ -32,6 +33,9 @@ require.config({
       },
       'sprintf':{
           exports:"sprintf"
+      },
+      'setTimeout':{
+          exports:"setTimeout"
       }
   }
 

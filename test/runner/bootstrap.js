@@ -21,13 +21,13 @@ require.config({
         jqModal: 'vendor/jqModal',
         underscore: 'vendor/underscore',
         backbone: 'vendor/backbone',
-        rivets: 'vendor/rivets',
+        rivets: 'vendor/rivets-0.5.13',
         uuid:'vendor/uuid',
         moment:'vendor/moment',
         templates:'../templates',
         data:'../data',
-        sprintf: 'vendor/sprintf'
-
+        sprintf: 'vendor/sprintf',
+        setTimeout: 'lib/nativeShims/setTimeout'
     },
     shim:{
         'jquery':{
@@ -42,9 +42,12 @@ require.config({
         },
         'rivets':{
             exports:"rivets"
-        }    ,
+        },
         'sprintf':{
             exports:"sprintf"
+        },
+        'setTimeout':{
+            exports:"setTimeout"
         }
     }
 });

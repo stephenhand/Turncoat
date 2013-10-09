@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'UI/BaseView', 'UI/component/ObservingViewModelCollection', 'UI/FleetAsset2DViewModel', 'state/FleetAsset', 'text!templates/PlayArea.html'], (_, Backbone, BaseView, BaseViewModelCollection, FleetAsset2DViewModel, FleetAsset, templateText)->
+define(['underscore', 'backbone', 'UI/component/BaseView', 'UI/component/ObservingViewModelCollection', 'UI/FleetAsset2DViewModel', 'state/FleetAsset', 'text!templates/PlayArea.html'], (_, Backbone, BaseView, BaseViewModelCollection, FleetAsset2DViewModel, FleetAsset, templateText)->
   class PlayAreaView extends BaseView
     initialize: (options)->
       options ?={}

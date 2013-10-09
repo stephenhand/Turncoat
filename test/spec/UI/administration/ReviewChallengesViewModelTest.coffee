@@ -1,4 +1,11 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("setTimeout","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ret = ()->
+        ret.func.apply(ret, arguments)
+    )
+
+  )
   Isolate.mapAsFactory("UI/component/ObservableOrderCollection","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       setOrderAttribute:JsMockito.mockFunction()
@@ -230,12 +237,14 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           )
         )
         suite("adder", ()->
+          setup(()->
+            mocks["setTimeout"].func = JsMockito.mockFunction()
+          )
           test("CopiesId", ()->
             rcvm = new ReviewChallengesViewModel()
             rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
             rcvm.get("challenges").onSourceUpdated()
             JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-
               JsHamcrest.Matchers.anything(),
               new JsHamcrest.SimpleMatcher(
                 matches:(input)->
@@ -384,6 +393,53 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                       if key is "userStatus" then return "READY"
                   )
                   _.isString(ret.get("statusText"))
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+          test("SetsNewTrue", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    getLatestEvent:(key)->
+                      get:()->
+                        format:()->
+                    get:(key)->
+                  )
+                  ret.get("new") is true
+              ),
+              JsHamcrest.Matchers.anything()
+            )
+          )
+          test("SetsTimeoutToUnsetNew", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
+            rcvm.get("challenges").onSourceUpdated()
+            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
+              JsHamcrest.Matchers.anything(),
+              new JsHamcrest.SimpleMatcher(
+                matches:(input)->
+                  ret=input(
+                    getLatestEvent:(key)->
+                      get:()->
+                        format:()->
+                    get:(key)->
+                  )
+                  try
+                    JsMockito.verify(mocks["setTimeout"].func)(new JsHamcrest.SimpleMatcher(
+                      matches:(to)->
+                        to()
+                        !ret.get("new")?
+                    ))
+                    true
+                  catch e
+                    false
+
               ),
               JsHamcrest.Matchers.anything()
             )

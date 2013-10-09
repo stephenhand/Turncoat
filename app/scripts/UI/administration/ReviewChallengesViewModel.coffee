@@ -1,6 +1,6 @@
 PLAYING_USERSTATUS = "PLAYING"
 
-define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', 'UI/component/ObservableOrderCollection', 'AppState'], (_, Backbone, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
+define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
   GetStatusText = (userStatus)->
     switch userStatus
       when "READY"
@@ -30,13 +30,18 @@ define(['underscore', 'backbone', 'UI/component/ObservingViewModelCollection', '
             item.get("id")? and (item.get("id") is watched.get("id"))
         ,
           (input)->
-            new Backbone.Model(
+            newItem = new Backbone.Model(
               created:input.get("created")
               createdText:input.get("created")?.format?('MMMM Do YYYY, h:mm:ss a') ? "--"
               id:input.get("id")
               label:input.get("label")
               statusText: GetStatusText(input.get("userStatus"))
+              new:true
             )
+            setTimeout(()->
+              newItem.unset("new")
+            )
+            newItem
         ,
           (item)->
             item.get("userStatus")? && item.get("userStatus") isnt PLAYING_USERSTATUS
