@@ -2,6 +2,13 @@ READY_STATE='READY'
 CREATED_STATE='CREATED'
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("setInterval","AppState", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ret = ()->
+        ret.func.apply(ret, arguments)
+      ret
+    )
+  )
   Isolate.mapAsFactory("lib/turncoat/Game","AppState", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       mockConstructedGame =
@@ -332,6 +339,104 @@ define(['isolate!AppState'], (AppState)->
             s.get("players").find((p)->p.get("user").get("id") is "OTHER_USER").get("user").get("status") is CREATED_STATE
             s.get("players").find((p)->p.get("user").get("id") is "ANOTHER_OTHER_USER").get("user").get("status") is CREATED_STATE
         ))
+      )
+    )
+    suite("activate", ()->
+      setup(()->
+        mocks["setInterval"].func = JsMockito.mockFunction()
+        AppState.trigger = JsMockito.mockFunction()
+      )
+      test("setsPollingInterval", ()->
+        AppState.activate()
+        JsMockito.verify(mocks["setInterval"].func)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.number())
+      )
+      suite("polling call", ()->
+        test("noUserOrGameSet_triggersUserDataRequired", ()->
+          AppState.unset("currentUser")
+          AppState.unset("game")
+          AppState.activate()
+          JsMockito.verify(mocks["setInterval"].func)(new JsHamcrest.SimpleMatcher(
+            matches:(poll)->
+              try
+                poll()
+                JsMockito.verify(AppState.trigger)("userDataRequired")
+                true
+              catch e
+                false
+          ), JsHamcrest.Matchers.number())
+        )
+        test("noUserOrGameSet_doesntTriggerGameDataRequired", ()->
+          AppState.unset("currentUser")
+          AppState.unset("game")
+          AppState.activate()
+          JsMockito.verify(mocks["setInterval"].func)(new JsHamcrest.SimpleMatcher(
+            matches:(poll)->
+              try
+                poll()
+                JsMockito.verify(AppState.trigger, JsMockito.Verifiers.never())("gameDataRequired")
+                true
+              catch e
+                false
+          ), JsHamcrest.Matchers.number())
+        )
+        test("userButNoGameSet_triggersGameDataRequired", ()->
+          AppState.set("currentUser", "MOCK_USER")
+          AppState.unset("game")
+          AppState.activate()
+          JsMockito.verify(mocks["setInterval"].func)(new JsHamcrest.SimpleMatcher(
+            matches:(poll)->
+              try
+                poll()
+                JsMockito.verify(AppState.trigger)("gameDataRequired")
+                true
+              catch e
+                false
+          ), JsHamcrest.Matchers.number())
+        )
+        test("userButNoGameSet_doesnTriggersUserDataRequired", ()->
+          AppState.set("currentUser", "MOCK_USER")
+          AppState.unset("game")
+          AppState.activate()
+          JsMockito.verify(mocks["setInterval"].func)(new JsHamcrest.SimpleMatcher(
+            matches:(poll)->
+              try
+                poll()
+                JsMockito.verify(AppState.trigger, JsMockito.Verifiers.never())("userDataRequired")
+                true
+              catch e
+                false
+          ), JsHamcrest.Matchers.number())
+        )
+        test("UserAndGameSet_DoesNothing", ()->
+          AppState.set("currentUser", "MOCK_USER")
+          AppState.set("game", {})
+          AppState.activate()
+          JsMockito.verify(mocks["setInterval"].func)(new JsHamcrest.SimpleMatcher(
+            matches:(poll)->
+              try
+                poll()
+                JsMockito.verify(AppState.trigger, JsMockito.Verifiers.never())("userDataRequired")
+                JsMockito.verify(AppState.trigger, JsMockito.Verifiers.never())("gameDataRequired")
+                true
+              catch e
+                false
+          ), JsHamcrest.Matchers.number())
+        )
+        test("GameSetButNoUser_DoesNothing", ()->
+          AppState.set("currentUser", "MOCK_USER")
+          AppState.set("game", {})
+          AppState.activate()
+          JsMockito.verify(mocks["setInterval"].func)(new JsHamcrest.SimpleMatcher(
+            matches:(poll)->
+              try
+                poll()
+                JsMockito.verify(AppState.trigger, JsMockito.Verifiers.never())("userDataRequired")
+                JsMockito.verify(AppState.trigger, JsMockito.Verifiers.never())("gameDataRequired")
+                true
+              catch e
+                false
+          ), JsHamcrest.Matchers.number())
+        )
       )
     )
   )

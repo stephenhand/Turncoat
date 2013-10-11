@@ -27,7 +27,8 @@ require.config({
         templates:'../templates',
         data:'../data',
         sprintf: 'vendor/sprintf',
-        setTimeout: 'lib/nativeShims/setTimeout'
+        setTimeout: 'lib/nativeShims/setTimeout',
+        setInterval : 'lib/nativeShims/setInterval'
     },
     shim:{
         'jquery':{

@@ -15,7 +15,8 @@ require.config({
     moment:'vendor/moment',
     templates : '../templates',
     data : '../data',
-    setTimeout : 'lib/nativeShims/setTimeout'
+    setTimeout : 'lib/nativeShims/setTimeout',
+    setInterval : 'lib/nativeShims/setInterval'
   },
   shim:{
       'jquery':{

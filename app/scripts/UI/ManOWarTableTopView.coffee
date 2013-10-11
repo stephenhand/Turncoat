@@ -13,11 +13,10 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
       super()
       @playAreaView?.render()
       @administrationView.render()
-      $("#administrationDialogue").jqm()
+      $("#administrationDialogue").jqm(onHide:()=>@model?.set("administrationDialogueActive", false))
       @model.on("change:administrationDialogueActive",(m, val)=>
         if val then $("#administrationDialogue").jqmShow() else $("#administrationDialogue").jqmHide()
       )
-
 
     createModel:()->
       @model = new ManOWarTableTopViewModel(

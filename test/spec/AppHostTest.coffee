@@ -16,6 +16,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("AppState","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
+      activate:()->
     )
   )
   Isolate.mapAsFactory("lib/2D/PolygonTools","AppHost", (actual, modulePath, requestingModulePath)->
@@ -47,6 +48,9 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
     mocks = window.mockLibrary["AppHost"]
 
     suite("AppHost", ()->
+      setup(()->
+        mocks["setInterval"]=JsMockito.mockFunction()
+      )
       suite("initialise",()->
         teardown(()->
           AppHost.router.on=JsMockito.mockFunction()
@@ -191,6 +195,7 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
           mocks["AppState"].createGame = JsMockito.mockFunction()
           mocks["AppState"].loadUser = JsMockito.mockFunction()
           mocks["AppState"].trigger = JsMockito.mockFunction()
+          mocks["AppState"].activate = JsMockito.mockFunction()
 
           JsMockito.when(mocks["AppState"].createGame)().then(()->
             @game =
@@ -198,46 +203,41 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
                 if key is "state" then {}
                 undefined
           )
-        )
-        test("parameterless_triggersUserDataRequired", ()->
           AppHost.trigger = JsMockito.mockFunction()
           AppHost.initialise()
+        )
+        test("parameterless_triggersUserDataRequired", ()->
+
           AppHost.launch()
           JsMockito.verify(mocks.AppState.trigger)("userDataRequired")
 
         )
         test("userOnly_triggersGameDataRequired", ()->
-          AppHost.trigger = JsMockito.mockFunction()
-          AppHost.initialise()
           AppHost.launch("MOCK_USER")
           JsMockito.verify(mocks.AppState.trigger)("gameDataRequired")
 
         )
         test("gameIdOnly_notTriggersUserDataRequired", ()->
-          AppHost.trigger = JsMockito.mockFunction()
-          AppHost.initialise()
           AppHost.launch(null ,"MOCK_GAME")
           JsMockito.verify(mocks.AppState.trigger, JsMockito.Verifiers.never())("userDataRequired")
 
         )
         test("withPlayerId_loadsPlayer", ()->
-          AppHost.trigger = JsMockito.mockFunction()
-          AppHost.initialise()
           AppHost.launch("MOCK_USER","MOCK_GAME")
           JsMockito.verify(mocks.AppState.loadUser)("MOCK_USER")
         )
         test("withPlayerAndGameId_createsGameFromState", ()->
-          AppHost.trigger = JsMockito.mockFunction()
-          AppHost.initialise()
           AppHost.launch("MOCK_USER","MOCK_GAME")
           JsMockito.verify(mocks.AppState.createGame)()
         )
         test("withNoPlayerButGameId_createsGameFromStateWithoutLoadingUser", ()->
-          AppHost.trigger = JsMockito.mockFunction()
-          AppHost.initialise()
           AppHost.launch(null,"MOCK_GAME")
           JsMockito.verify(mocks.AppState.createGame)()
           JsMockito.verify(mocks.AppState.loadUser, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+        )
+        test("activatesAppState", ()->
+          AppHost.launch("MOCK_USER","MOCK_GAME")
+          JsMockito.verify(mocks.AppState.activate)()
         )
       )
       suite("render", ()->

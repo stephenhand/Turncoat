@@ -3,6 +3,7 @@ require(["isolate","isolateHelper","backbone"], (Isolate, Helper, Backbone)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       x = Backbone.Model.extend(
         initialize:()->
+
       )
       x
     )
@@ -108,6 +109,31 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
         )
         MOWTTV.render()
         JsMockito.verify(mocks.jqueryObjects["#administrationDialogue"].jqm)()
+      )
+      suite("Admin dialog hide handler", ()->
+        test("ModelSet_SetsModelAdministrationDialogActivePropertyToFalse", ()->
+          MOWTTV = new ManOWarTableTopView()
+          MOWTTV.createPlayAreaView(
+            gameState:{}
+          )
+          MOWTTV.createAdministrationView(
+            gameState:{}
+          )
+          MOWTTV.render()
+          JsMockito.verify(mocks.jqueryObjects["#administrationDialogue"].jqm)(JsHamcrest.Matchers.hasMember("onHide",
+            new JsHamcrest.SimpleMatcher(
+              matches:(handler)->
+                MOWTTV.model.set=JsMockito.mockFunction()
+                try
+                  handler()
+                  JsMockito.verify(MOWTTV.model.set)("administrationDialogueActive", false)
+                  true
+                catch e
+                  false
+              )
+            )
+          )
+        )
       )
     )
     suite("modelAdministrationDialogueActiveChange", ()->

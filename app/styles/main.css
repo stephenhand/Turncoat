@@ -50,7 +50,7 @@ div{
 }
 .administration-tab .tab-content {
     margin:4px;
-padding-bottom:24px;
+    padding-bottom:24px;
     padding:4px;
     border-top:solid 1px black;
     display:none;
@@ -102,11 +102,10 @@ div:nth-child(2)>.tab-header{
     width:calc(34% - 4px)
 }
 div:nth-child(3)>.tab-header{
-     left:67%;
-
-     left:calc(67%);
-     width:calc(33% - 2px);
-     border-right-width: 2px;
+    left:67%;
+    left:calc(67%);
+    width:calc(33% - 2px);
+    border-right-width: 2px;
 }
 .active-tab .tab-header{
     background-color:#FFFFFF;

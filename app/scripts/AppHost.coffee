@@ -89,6 +89,7 @@ define(['backbone','rivets', 'jqModal', 'AppState', 'UI/ManOWarTableTopView'], (
         AppState.trigger("userDataRequired")
       else if (!gameIdentifier?)
         AppState.trigger("gameDataRequired")
+      AppState.activate()
 
     render:()->
       @rootView = new ManOWarTableTopView(gameState:AppState.get("game")?.state)
