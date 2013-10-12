@@ -13,7 +13,10 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
       super()
       @playAreaView?.render()
       @administrationView.render()
-      $("#administrationDialogue").jqm(onHide:()=>@model?.set("administrationDialogueActive", false))
+      $("#administrationDialogue").jqm(onHide:()=>
+        @model?.set("administrationDialogueActive" , false)
+        true
+      )
       @model.on("change:administrationDialogueActive",(m, val)=>
         if val then $("#administrationDialogue").jqmShow() else $("#administrationDialogue").jqmHide()
       )

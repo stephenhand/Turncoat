@@ -60,7 +60,7 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
               for player in @get("selectedChallenge").get("players").models
                 new Backbone.Model(
                   id:player.get("id")
-                  label:player.get("label")
+                  name:player.get("name")
                   user:player.get("user")
                   description:player.get("description")
 

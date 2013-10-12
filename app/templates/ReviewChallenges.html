@@ -15,12 +15,12 @@
                 <span class="large">Player Roster: </span>
 
                 <div data-rv-each-player=".challengePlayerList < .selectedChallenge .challengePlayerList" class="list-item" data-rv-class-selected-player="player.selectedForUser">
-                    <div class="x-info-panel">
+                    <div class="small-info-panel">
                         <span data-rv-text="player.name" class="large" /><br/>
                         <span data-rv-text="player.description" />
                     </div>
                     <div class="challenge-response-marker" data-rv-classappend="player.user.status"></div>
-                    <div class="x-user-info"><span data-rv-text="player.user.id < player.user"></span><span class="selected-player-only"> (you)</span></div>
+                    <div class="small-user-info">Player: <span data-rv-text="player.user.id < player.user"></span>&nbsp;<span class="selected-player-only"> (you)</span></div>
 
                 </div>
             </div>

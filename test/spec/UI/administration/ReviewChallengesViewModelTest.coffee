@@ -505,13 +505,13 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                 label:"GAME FROM ID: "+a
                 players:new Backbone.Collection([
                   id:"SELECTED_PLAYER"
-                  label:"SELECTED_PLAYER_LABEL"
+                  name:"SELECTED_PLAYER_NAME"
                   user:new Backbone.Model(
                     id:"MOCK_USER"
                   )
                 ,
                   id:"NOT_SELECTED_PLAYER"
-                  label:"NOT_SELECTED_PLAYER_LABEL"
+                  name:"NOT_SELECTED_PLAYER_NAME"
                   user:new Backbone.Model(
                     id:"OTHER_USER"
                   )
@@ -546,10 +546,10 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             rcvm = new ReviewChallengesViewModel()
             rcvm.set("selectedChallengeId", "AN IDENTIFIER")
             chai.assert.equal(rcvm.get("challengePlayerList").at(0).get("id"),"SELECTED_PLAYER")
-            chai.assert.equal(rcvm.get("challengePlayerList").at(0).get("label"),"SELECTED_PLAYER_LABEL")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(0).get("name"),"SELECTED_PLAYER_NAME")
             chai.assert.equal(rcvm.get("challengePlayerList").at(0).get("user").get("id"),"MOCK_USER")
             chai.assert.equal(rcvm.get("challengePlayerList").at(1).get("id"),"NOT_SELECTED_PLAYER")
-            chai.assert.equal(rcvm.get("challengePlayerList").at(1).get("label"),"NOT_SELECTED_PLAYER_LABEL")
+            chai.assert.equal(rcvm.get("challengePlayerList").at(1).get("name"),"NOT_SELECTED_PLAYER_NAME")
             chai.assert.equal(rcvm.get("challengePlayerList").at(1).get("user").get("id"),"OTHER_USER")
 
           )
@@ -566,13 +566,13 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                 label:"GAME FROM ID: "+a
                 players:new Backbone.Collection([
                   id:"SELECTED_PLAYER"
-                  label:"SELECTED_PLAYER_LABEL"
+                  name:"SELECTED_PLAYER_NAME"
                   user:new Backbone.Model(
                     id:"NOT_MOCK_USER"
                   )
                 ,
                   id:"NOT_SELECTED_PLAYER"
-                  label:"NOT_SELECTED_PLAYER_LABEL"
+                  name:"NOT_SELECTED_PLAYER_NAME"
                   user:new Backbone.Model(
                     id:"OTHER_USER"
                   )

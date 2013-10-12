@@ -55,7 +55,8 @@ define(["jquery"],function($) {
         close:function(s){var h=H[s];if(!h.a)return F;h.a=F;
             if(A[0]){A.pop();if(!A[0])L('unbind');}
             if(h.c.toTop&&h.o)$('#jqmP'+h.w[0]._jqm).after(h.w).remove();
-            if(h.c.onHide)h.c.onHide(h);else{h.w.hide();if(h.o)h.o.remove();} return F;
+            normalHide = true;
+            if(h.c.onHide)normalHide = h.c.onHide(h);if(normalHide){h.w.hide();if(h.o)h.o.remove();} return F;
         },
         params:{}};
     var s=0,H=$.jqm.hash,A=[],ie6=false,F=false,

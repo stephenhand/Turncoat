@@ -153,6 +153,12 @@ margin-bottom:30px;
     height:60px;
     width:500px
 }
+.small-info-panel{
+    height:55px;
+}
+.small-user-info{
+    height:35px;
+}
 .panel-list .list-item .info-panel{
     width:350px;
     height:40px;
@@ -294,4 +300,27 @@ input[type=button]:active{
 .challenge-response-marker.CREATED,
 .challenge-response-marker.INVITED{
     background-image: url("/images/nothing-in-a-box.png");
+}
+.jqmOverlay{
+transition: opacity .5s ease-out;
+-moz-transition: opacity .5s ease-out;
+-webkit-transition: opacity .5s ease-out;
+-o-transition: opacity .5s ease-out;
+}
+
+/*webkit only*/
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    opacity:0;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    opacity:1;
+    border-radius: 8px;
+    background-color: #DEDEDE;
+    width:10px
 }
