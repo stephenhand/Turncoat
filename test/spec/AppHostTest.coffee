@@ -4,13 +4,15 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       rivetConfig = null
       stubRivets =
-        configure:(opts)=>
-          rivetConfig = opts
-        getRivetConfig:()->
-          rivetConfig
+        configure:JsMockito.mockFunction()
         binders:{}
         formatters:{}
       stubRivets
+    )
+  )
+  Isolate.mapAsFactory("UI/rivets/Adapter","AppHost", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      {}
     )
   )
   Isolate.mapAsFactory("AppState","AppHost", (actual, modulePath, requestingModulePath)->
@@ -50,130 +52,20 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
     suite("AppHost", ()->
       setup(()->
         mocks["setInterval"]=JsMockito.mockFunction()
+        mocks["rivets"].configure=JsMockito.mockFunction()
       )
       suite("initialise",()->
         teardown(()->
           AppHost.router.on=JsMockito.mockFunction()
         )
-        test("setsPrefix", ()->
+        test("configuresRivetsWithAdapter", ()->
           AppHost.initialise()
-          chai.assert.equal(mocks.rivets.getRivetConfig().prefix, "rv")
+          JsMockito.verify(mocks["rivets"].configure)(JsHamcrest.Matchers.hasMember("adapter", mocks["UI/rivets/Adapter"]))
+
         )
-        suite("rivetsAdapter", ()->
-          test("setsUpAdapter", ()->
-            AppHost.initialise()
-            chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.subscribe)
-            chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.unsubscribe)
-            chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.read)
-            chai.assert.isFunction(mocks.rivets.getRivetConfig().adapter.publish)
-          )
-          suite("subscribe", ()->
-            test("SimpleBackboneModelAttribute_BindsToModelChangeEventForAttribute", ()->
-              AppHost.initialise()
-              mod= new Backbone.Model(
-                MOCK_ATTRIBUTE:"MOCK_VALUE"
-              )
-              callback = JsMockito.mockFunction()
-              mod.on=JsMockito.mockFunction()
-              mocks.rivets.getRivetConfig().adapter.subscribe(mod,"MOCK_ATTRIBUTE",callback)
-              JsMockito.verify(mod.on)("change:MOCK_ATTRIBUTE")
-            )
-            test("SimpleBackboneModelAttributeThatSupportsEvents_BindsToModelAttributesAddRemoveResetEvents", ()->
-              AppHost.initialise()
-              mod= new Backbone.Model(
-                MOCK_ATTRIBUTE:new Backbone.Collection()
-              )
-              mod.get("MOCK_ATTRIBUTE").on=JsMockito.mockFunction()
-              callback = JsMockito.mockFunction()
-              mocks.rivets.getRivetConfig().adapter.subscribe(mod,"MOCK_ATTRIBUTE",callback)
-              JsMockito.verify(mod.get("MOCK_ATTRIBUTE").on)("add", callback)
-              JsMockito.verify(mod.get("MOCK_ATTRIBUTE").on)("remove", callback)
-              JsMockito.verify(mod.get("MOCK_ATTRIBUTE").on)("reset", callback)
-            )
-
-          )
-          suite("unsubscribe", ()->
-            test("SimpleBackboneModelAttribute_UnbindsFromModelChangeEventForAttribute", ()->
-              AppHost.initialise()
-              mod= new Backbone.Model(
-                MOCK_ATTRIBUTE:"MOCK_VALUE"
-              )
-              mod.off=JsMockito.mockFunction()
-              callback = JsMockito.mockFunction()
-              mocks.rivets.getRivetConfig().adapter.unsubscribe(mod,"MOCK_ATTRIBUTE",callback)
-              JsMockito.verify(mod.off)("change:MOCK_ATTRIBUTE")
-            )
-
-          )
-          suite("read", ()->
-            test("SimpleBackboneModelAttribute_Reads", ()->
-              AppHost.initialise()
-              mod= new Backbone.Model(
-                MOCK_ATTRIBUTE:"MOCK_VALUE"
-              )
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_ATTRIBUTE"),"MOCK_VALUE")
-            )
-            test("BackboneCollection_ReadsAsModels", ()->
-              AppHost.initialise()
-              mod= new Backbone.Collection([
-                a:3
-              ,
-                a:5
-              ,
-                a:9
-              ])
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod)[0].get("a"),3)
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod)[1].get("a"),5)
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod)[2].get("a"),9)
-            )
-            test("ChainedBackboneModel_ReadsAttribute", ()->
-              AppHost.initialise()
-              mod= new Backbone.Model(
-                MOCK_SUBMODEL:new Backbone.Model(
-                  MOCK_FURTHER_SUBMODEL:new Backbone.Model(
-                    MOCK_ATTRIBUTE:"MOCK_NESTED_VALUE"
-                  )
-                )
-                MOCK_ATTRIBUTE:"MOCK_VALUE"
-              )
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_ATTRIBUTE"),"MOCK_NESTED_VALUE")
-            )
-            test("MissingChainLink_ReturnsUndefined", ()->
-              AppHost.initialise()
-              mod= new Backbone.Model(
-
-              )
-              chai.assert.isUndefined(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_ATTRIBUTE"))
-            )
-            test("ChainedBackboneCollection_ReadsAsModels", ()->
-              AppHost.initialise()
-              mod= new Backbone.Model(
-                MOCK_SUBMODEL:new Backbone.Model(
-                  MOCK_FURTHER_SUBMODEL:new Backbone.Model(
-                    MOCK_COLLECTION:new Backbone.Collection([
-                      a:2
-                    ,
-                      a:4
-                    ,
-                      a:8
-                    ])
-                  )
-                )
-                MOCK_ATTRIBUTE:"MOCK_VALUE"
-                MOCK_COLLECTION:new Backbone.Collection([
-                  a:3
-                ,
-                  a:5
-                ,
-                  a:9
-                ])
-
-              )
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_COLLECTION")[0].get("a"),2)
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_COLLECTION")[1].get("a"),4)
-              chai.assert.equal(mocks.rivets.getRivetConfig().adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_COLLECTION")[2].get("a"),8)
-            )
-          )
+        test("configuresRivetsWithPrefix", ()->
+          AppHost.initialise()
+          JsMockito.verify(mocks["rivets"].configure)(JsHamcrest.Matchers.hasMember("prefix", JsHamcrest.Matchers.string()))
         )
         test("bindsRouterEvents", ()->
           o=AppHost.launch
