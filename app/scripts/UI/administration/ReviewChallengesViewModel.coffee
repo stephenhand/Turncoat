@@ -66,7 +66,10 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
 
                 )
             ))
-          @get("challengePlayerList")?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))?.set("selectedForUser",true)
+          currentPlayer = @get("challengePlayerList")?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))
+          if currentPlayer?
+            currentPlayer.set("selectedForUser",true)
+            @set("selectedChallengeUserStatus", currentPlayer.get("user").get("status"))
         else
           @unset("selectedChallenge")
           @unset("challengePlayerList")

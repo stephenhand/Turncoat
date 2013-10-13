@@ -128,10 +128,12 @@ margin-bottom:30px;
 }
 .list-item{
     padding-top:9px;
-    border-top: solid 1px #868686;
-}
-.list-item:last-child{
     border-bottom: solid 1px #868686;
+    margin-bottom:20px;
+
+}
+.list-item:first-child{
+    border-top: solid 1px #868686;
 }
 
 .list-item.animatable.new{
@@ -155,9 +157,6 @@ margin-bottom:30px;
 }
 .small-info-panel{
     height:55px;
-}
-.small-user-info{
-    height:35px;
 }
 .panel-list .list-item .info-panel{
     width:350px;
@@ -205,6 +204,12 @@ margin-bottom:30px;
 .button-row{
     margin-top:30px;
     float:right
+}
+.invited-only{
+    display: none
+}
+.INVITED .invited-only{
+    display:inherit;
 }
 input[type=button]{
     background-color: #F0F0F0;

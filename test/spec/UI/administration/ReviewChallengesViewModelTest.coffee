@@ -508,12 +508,14 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                   name:"SELECTED_PLAYER_NAME"
                   user:new Backbone.Model(
                     id:"MOCK_USER"
+                    status:"MOCK_USER_STATUS"
                   )
                 ,
                   id:"NOT_SELECTED_PLAYER"
                   name:"NOT_SELECTED_PLAYER_NAME"
                   user:new Backbone.Model(
                     id:"OTHER_USER"
+                    status:"OTHER_USER_STATUS"
                   )
                 ])
               )
@@ -529,6 +531,11 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             rcvm.set("selectedChallengeId", "AN IDENTIFIER")
             chai.assert.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge").get("label"))
           )
+          test("validIdentifier_setsSelectedChallengeUserStatusAttributeToResult", ()->
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert.equal("MOCK_USER_STATUS", rcvm.get("selectedChallengeUserStatus"))
+          )
           test("validIdentifier_unsetsSelectedChallengeAttributeIfResultUndefined", ()->
             JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->)
             rcvm = new ReviewChallengesViewModel()
@@ -536,11 +543,24 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             rcvm.set("selectedChallengeId", "AN IDENTIFIER")
             chai.assert.isUndefined(rcvm.get("selectedChallenge"))
           )
+          test("validIdentifier_unsetsSelectedChallengeUserStatusAttributeIfResultUndefined", ()->
+            JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->)
+            rcvm = new ReviewChallengesViewModel()
+            rcvm.set("selectedChallenge", "SOMETHING")
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            chai.assert.isUndefined(rcvm.get("selectedChallengeUserStatus"))
+          )
           test("noIdentifier_unsetsSelectedChallenge", ()->
             rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
             rcvm.set("selectedChallenge", "SOMETHING")
             rcvm.unset("selectedChallengeId")
             chai.assert.isUndefined(rcvm.get("selectedChallenge"))
+          )
+          test("noIdentifier_unsetsSelectedChallengeUserStatus", ()->
+            rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
+            rcvm.set("selectedChallenge", "SOMETHING")
+            rcvm.unset("selectedChallengeId")
+            chai.assert.isUndefined(rcvm.get("selectedChallengeUserStatus"))
           )
           test("validIdentifier_setsChallengePlayerListWithResultPlayersLabelUserAndId", ()->
             rcvm = new ReviewChallengesViewModel()

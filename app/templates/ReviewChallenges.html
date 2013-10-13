@@ -20,14 +20,14 @@
                         <span data-rv-text="player.description" />
                     </div>
                     <div class="challenge-response-marker" data-rv-classappend="player.user.status"></div>
-                    <div class="small-user-info">Player: <span data-rv-text="player.user.id < player.user"></span>&nbsp;<span class="selected-player-only"> (you)</span></div>
+                    <div class="small-user-info">Played By: <span data-rv-text="player.user.id < player.user"></span>&nbsp;<span class="selected-player-only"> (you)</span></div>
 
                 </div>
             </div>
         </div>
-        <div class="button-row">
-            <input type="button" class="awaiting-response-only" id="accept-challenge" value="Accept"/>
-            <input type="button" class="awaiting-response-only" id="reject-challenge" value="Reject"/>
+        <div class="button-row" data-rv-classappend=".selectedChallengeUserStatus">
+            <input type="button" class="invited-only" id="accept-challenge" value="Accept"/>
+            <input type="button" class="invited-only" id="reject-challenge" value="Reject"/>
         </div>
     </div>
 
