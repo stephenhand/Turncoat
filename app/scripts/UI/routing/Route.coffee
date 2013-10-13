@@ -48,7 +48,18 @@ define(["underscore", "backbone"], (_, Backbone)->
           lastPart = lastPart.substr(0, lastPart.length-1)
         @parts[@parts.length-1] = lastPart
 
-
+    toString:()->
+      if @absolute then path= "/" else path=""
+      path += @parts.join("/")
+      first = true
+      if @subRoutes?
+        path += "?"
+        for routeName, routeVal of @subRoutes when routeVal instanceof Route
+          if !first then path +="&"
+          path += routeName + "=" + routeVal.toString()
+          first = false
+        path += ";"
+      path
 
 
 
