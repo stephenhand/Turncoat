@@ -1,8 +1,8 @@
-define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "AppState", "UI/ManOWarTableTopView"], (Backbone, rivets, modal, adapter, AppState , ManOWarTableTopView)->
+define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route", "AppState", "UI/ManOWarTableTopView"], (Backbone, rivets, modal, Adapter, Route, AppState , ManOWarTableTopView)->
   configureRivets = ()->
     rivets.configure(
       prefix:"rv"
-      adapter:adapter
+      adapter:Adapter
 
     )
 
@@ -29,7 +29,10 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "AppState", "UI/Man
       AppState.activate()
 
     innerRoute:(user, gameIdentifier, inner)->
-      
+      if (user is AppState.get("currentUser")?.id) && (gameIdentifier is AppState.get("game")?.id)
+        @rootView.routeChanged(new Route(inner))
+      else
+        @launch(user, gameIdentifier)
 
     render:()->
       @rootView = new ManOWarTableTopView(gameState:AppState.get("game")?.state)

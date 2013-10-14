@@ -15,6 +15,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       {}
     )
   )
+  Isolate.mapAsFactory("UI/routing/Route","AppHost", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      (path)->
+        builtWithPath:path
+    )
+  )
   Isolate.mapAsFactory("AppState","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
@@ -130,6 +136,60 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
         test("activatesAppState", ()->
           AppHost.launch("MOCK_USER","MOCK_GAME")
           JsMockito.verify(mocks.AppState.activate)()
+        )
+      )
+      suite("innerRoute", ()->
+        mocks["AppState"].get = JsMockito.mockFunction()
+        mocks["UI/routing/Route"].func = JsMockito.mockFunction()
+        origLaunch = AppHost.launch
+        setup(()->
+          AppHost.launch = JsMockito.mockFunction()
+          AppHost.rootView =
+            routeChanged:JsMockito.mockFunction()
+          JsMockito.when(mocks["AppState"].get)(JsHamcrest.Matchers.anything()).then(
+            (key)->
+              switch key
+                when "game"
+                  id:"MOCK_GAME"
+                when "currentUser"
+                  id:"MOCK_USER"
+          )
+        )
+        teardown(()->
+          AppHost.launch = origLaunch
+        )
+        test("UserAndGameMatchCurrent_CallsRouteChangedOnRootViewWithRouteBuiltFromInnerRoute", ()->
+
+          AppHost.innerRoute("MOCK_USER","MOCK_GAME", "INNER_ROUTE")
+          JsMockito.verify(AppHost.rootView.routeChanged)(JsHamcrest.Matchers.hasMember("builtWithPath", "INNER_ROUTE"))
+        )
+        test("UserDoesntMatchAppStateCurrent_CallsLaunch", ()->
+          AppHost.innerRoute("OTHER_USER","MOCK_GAME", "INNER_ROUTE")
+          JsMockito.verify(AppHost.launch)("OTHER_USER","MOCK_GAME")
+        )
+        test("GameDoesntMatchAppStateCurrent_CallsLaunch", ()->
+          AppHost.innerRoute("MOCK_USER","OTHER_GAME", "INNER_ROUTE")
+          JsMockito.verify(AppHost.launch)("MOCK_USER","OTHER_GAME")
+        )
+        test("AppStateCurrentUserNotSet_CallsLaunch", ()->
+          JsMockito.when(mocks["AppState"].get)(JsHamcrest.Matchers.anything()).then(
+            (key)->
+              switch key
+                when "game"
+                  id:"MOCK_GAME"
+          )
+          AppHost.innerRoute("MOCK_USER","MOCK_GAME", "INNER_ROUTE")
+          JsMockito.verify(AppHost.launch)("MOCK_USER","MOCK_GAME")
+        )
+        test("AppStateCurrentGameNotSet_CallsLaunch", ()->
+          JsMockito.when(mocks["AppState"].get)(JsHamcrest.Matchers.anything()).then(
+            (key)->
+              switch key
+                when "currentUser"
+                  id:"MOCK_USER"
+          )
+          AppHost.innerRoute("MOCK_USER","MOCK_GAME", "INNER_ROUTE")
+          JsMockito.verify(AppHost.launch)("MOCK_USER","MOCK_GAME")
         )
       )
       suite("render", ()->
