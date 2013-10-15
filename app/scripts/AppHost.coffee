@@ -1,4 +1,4 @@
-define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route", "AppState", "UI/ManOWarTableTopView"], (Backbone, rivets, modal, Adapter, Route, AppState , ManOWarTableTopView)->
+define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route", "UI/routing/Router", "AppState", "UI/ManOWarTableTopView"], (Backbone, rivets, modal, Adapter, Route, Router, AppState , ManOWarTableTopView)->
   configureRivets = ()->
     rivets.configure(
       prefix:"rv"
@@ -7,29 +7,14 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route",
     )
 
   AppHost =
-    router:new Backbone.Router(
-      routes:
-        "":"launch"
-        ":user":"launch"
-        ":user/:gameIdentifier":"launch"
-        ":user/:gameIdentifier/:inner":"innerRoute"
-    )
 
-    launch:(user, gameIdentifier)=>
-      if (user?)
-        AppState.loadUser(user)
-      if (gameIdentifier?)
-        AppState.createGame()
+
+    launch:()=>
       AppHost.render()
-
-      if (!user? && !gameIdentifier?)
-        AppState.trigger("userDataRequired")
-      else if (!gameIdentifier?)
-        AppState.trigger("gameDataRequired")
       AppState.activate()
 
     innerRoute:(user, gameIdentifier, inner)->
-      if (user is AppState.get("currentUser")?.id) && (gameIdentifier is AppState.get("game")?.id)
+      if (user is AppState.get("currentUser")?.id) && ((gameIdentifier is "-" && !AppState.get("game")?)|| gameIdentifier is AppState.get("game")?.id)
         @rootView.routeChanged(new Route(inner))
       else
         @launch(user, gameIdentifier)
@@ -40,11 +25,24 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route",
 
     initialise:()->
       configureRivets()
-      @router.on("route:launch", (gameIdentifier, user)->
-        @launch(gameIdentifier, user)
+      Router.on("navigate", (route)=>
+        user = route?.parts?[0]
+        gameIdentifier = route?.parts?[1]
+        if (user?)
+          AppState.loadUser(user)
+        if (gameIdentifier?)
+          AppState.createGame()
+        if !@rootView? then @launch()
+        if (!user? && !gameIdentifier?)
+          AppState.trigger("userDataRequired")
+        else if (!gameIdentifier? && !(route?.subRoutes?.administrationDialogue?))
+          Router.openModal("administrationDialogue", "currentGames")
+        else
+          @rootView.routeChanged(route)
+
       ,@)
       try
-        Backbone.history.start()
+        Router.activate()
       catch error
 
   AppHost

@@ -11,8 +11,8 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
 
     render:()->
       super()
-      @playAreaView?.render()
-      @administrationView.render()
+      @subViews.get("playAreaView")?.render()
+      @subViews.get("administrationView").render()
       $("#administrationDialogue").jqm(onHide:()=>
         @model?.set("administrationDialogueActive" , false)
         true
@@ -21,20 +21,29 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
         if val then $("#administrationDialogue").jqmShow() else $("#administrationDialogue").jqmHide()
       )
 
+    routeChanged:(route)->
+      @subViews.get("playAreaView").routeChanged(route)
+      if route.subRoutes?.administrationDialogue?
+        @model.set("administrationDialogueActive", true)
+        @subViews.get("administrationView").routeChanged(route.subRoutes.administrationDialogue)
+      else
+        @model.set("administrationDialogueActive", false)
+
+
     createModel:()->
       @model = new ManOWarTableTopViewModel(
         administrationDialogueActive:false
       )
 
     createPlayAreaView:(state)->
-      @playAreaView = new PlayAreaView(
+      @subViews.set("playAreaView", new PlayAreaView(
         gameState:state
-      )
+      ))
 
     createAdministrationView:()->
-      @administrationView= new AdministrationView(
+      @subViews.set("administrationView", new AdministrationView(
         $el:$("#administrationDialogue")
-      )
+      ))
   ManOWarTableTopView
 )
 

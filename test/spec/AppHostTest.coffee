@@ -21,6 +21,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
         builtWithPath:path
     )
   )
+  Isolate.mapAsFactory("UI/routing/Router","AppHost", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      on:JsMockito.mockFunction()
+      openModal:JsMockito.mockFunction()
+    )
+  )
   Isolate.mapAsFactory("AppState","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
@@ -61,8 +67,9 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
         mocks["rivets"].configure=JsMockito.mockFunction()
       )
       suite("initialise",()->
-        teardown(()->
-          AppHost.router.on=JsMockito.mockFunction()
+        setup(()->
+          mocks["UI/routing/Router"].on=JsMockito.mockFunction()
+          mocks["UI/routing/Router"].openModal=JsMockito.mockFunction()
         )
         test("configuresRivetsWithAdapter", ()->
           AppHost.initialise()
@@ -73,124 +80,94 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
           AppHost.initialise()
           JsMockito.verify(mocks["rivets"].configure)(JsHamcrest.Matchers.hasMember("prefix", JsHamcrest.Matchers.string()))
         )
-        test("bindsRouterEvents", ()->
-          o=AppHost.launch
-          try
-            AppHost.launch=JsMockito.mockFunction()
-            JsMockito.when(AppHost.router.on)("route:launch", JsHamcrest.Matchers.func()).then((event, handler)->
-              handler.call(AppHost,"MOCK_PLAYERBIT","MOCK_GAMEBIT")
-            )
-            AppHost.initialise()
-            JsMockito.verify(AppHost.launch)("MOCK_PLAYERBIT","MOCK_GAMEBIT")
-          finally
-            AppHost.launch=o
-
-        )
-
-      )
-      suite("launch", ()->
-        setup(()->
-          mocks["AppState"].createGame = JsMockito.mockFunction()
-          mocks["AppState"].loadUser = JsMockito.mockFunction()
-          mocks["AppState"].trigger = JsMockito.mockFunction()
-          mocks["AppState"].activate = JsMockito.mockFunction()
-
-          JsMockito.when(mocks["AppState"].createGame)().then(()->
-            @game =
-              get:(key)->
-                if key is "state" then {}
-                undefined
-          )
-          AppHost.trigger = JsMockito.mockFunction()
+        test("Binds to Router Navigate event", ()->
           AppHost.initialise()
-        )
-        test("parameterless_triggersUserDataRequired", ()->
-
-          AppHost.launch()
-          JsMockito.verify(mocks.AppState.trigger)("userDataRequired")
+          JsMockito.verify(mocks["UI/routing/Router"].on)("navigate", JsHamcrest.Matchers.func())
 
         )
-        test("userOnly_triggersGameDataRequired", ()->
-          AppHost.launch("MOCK_USER")
-          JsMockito.verify(mocks.AppState.trigger)("gameDataRequired")
+        suite("Router navigate handler", ()->
+          handler = null
+          setup(()->
+            mocks["AppState"].createGame = JsMockito.mockFunction()
+            mocks["AppState"].loadUser = JsMockito.mockFunction()
+            mocks["AppState"].trigger = JsMockito.mockFunction()
+            mocks["AppState"].activate = JsMockito.mockFunction()
 
-        )
-        test("gameIdOnly_notTriggersUserDataRequired", ()->
-          AppHost.launch(null ,"MOCK_GAME")
-          JsMockito.verify(mocks.AppState.trigger, JsMockito.Verifiers.never())("userDataRequired")
-
-        )
-        test("withPlayerId_loadsPlayer", ()->
-          AppHost.launch("MOCK_USER","MOCK_GAME")
-          JsMockito.verify(mocks.AppState.loadUser)("MOCK_USER")
-        )
-        test("withPlayerAndGameId_createsGameFromState", ()->
-          AppHost.launch("MOCK_USER","MOCK_GAME")
-          JsMockito.verify(mocks.AppState.createGame)()
-        )
-        test("withNoPlayerButGameId_createsGameFromStateWithoutLoadingUser", ()->
-          AppHost.launch(null,"MOCK_GAME")
-          JsMockito.verify(mocks.AppState.createGame)()
-          JsMockito.verify(mocks.AppState.loadUser, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
-        )
-        test("activatesAppState", ()->
-          AppHost.launch("MOCK_USER","MOCK_GAME")
-          JsMockito.verify(mocks.AppState.activate)()
-        )
-      )
-      suite("innerRoute", ()->
-        mocks["AppState"].get = JsMockito.mockFunction()
-        mocks["UI/routing/Route"].func = JsMockito.mockFunction()
-        origLaunch = AppHost.launch
-        setup(()->
-          AppHost.launch = JsMockito.mockFunction()
-          AppHost.rootView =
-            routeChanged:JsMockito.mockFunction()
-          JsMockito.when(mocks["AppState"].get)(JsHamcrest.Matchers.anything()).then(
-            (key)->
-              switch key
-                when "game"
-                  id:"MOCK_GAME"
-                when "currentUser"
-                  id:"MOCK_USER"
+            JsMockito.when(mocks["AppState"].createGame)().then(()->
+              @game =
+                get:(key)->
+                  if key is "state" then {}
+                  undefined
+            )
+            AppHost.trigger = JsMockito.mockFunction()
+            JsMockito.when(mocks["UI/routing/Router"].on)("navigate", JsHamcrest.Matchers.func()).then((name, h)-> handler = h)
+            AppHost.initialise()
           )
-        )
-        teardown(()->
-          AppHost.launch = origLaunch
-        )
-        test("UserAndGameMatchCurrent_CallsRouteChangedOnRootViewWithRouteBuiltFromInnerRoute", ()->
+          suite("No first (player) part", ()->
+            test("triggersUserDataRequired", ()->
+              handler(parts:[])
+              JsMockito.verify(mocks.AppState.trigger)("userDataRequired")
+            )
 
-          AppHost.innerRoute("MOCK_USER","MOCK_GAME", "INNER_ROUTE")
-          JsMockito.verify(AppHost.rootView.routeChanged)(JsHamcrest.Matchers.hasMember("builtWithPath", "INNER_ROUTE"))
-        )
-        test("UserDoesntMatchAppStateCurrent_CallsLaunch", ()->
-          AppHost.innerRoute("OTHER_USER","MOCK_GAME", "INNER_ROUTE")
-          JsMockito.verify(AppHost.launch)("OTHER_USER","MOCK_GAME")
-        )
-        test("GameDoesntMatchAppStateCurrent_CallsLaunch", ()->
-          AppHost.innerRoute("MOCK_USER","OTHER_GAME", "INNER_ROUTE")
-          JsMockito.verify(AppHost.launch)("MOCK_USER","OTHER_GAME")
-        )
-        test("AppStateCurrentUserNotSet_CallsLaunch", ()->
-          JsMockito.when(mocks["AppState"].get)(JsHamcrest.Matchers.anything()).then(
-            (key)->
-              switch key
-                when "game"
-                  id:"MOCK_GAME"
           )
-          AppHost.innerRoute("MOCK_USER","MOCK_GAME", "INNER_ROUTE")
-          JsMockito.verify(AppHost.launch)("MOCK_USER","MOCK_GAME")
-        )
-        test("AppStateCurrentGameNotSet_CallsLaunch", ()->
-          JsMockito.when(mocks["AppState"].get)(JsHamcrest.Matchers.anything()).then(
-            (key)->
-              switch key
-                when "currentUser"
-                  id:"MOCK_USER"
+          suite("First part but no second (game) part", ()->
+            test("Loads player", ()->
+              handler(parts:["MOCK_USER"])
+              JsMockito.verify(mocks.AppState.loadUser)("MOCK_USER")
+            )
+            test("No administrationDialog modal set opens dialog on router", ()->
+              handler(parts:["MOCK_USER"])
+              JsMockito.verify(mocks["UI/routing/Router"].openModal)("administrationDialogue", "currentGames")
+            )
+            suite("No rootView set", ()->
+              test("Calls render", ()->
+                r = AppHost.render
+                try
+                  AppHost.rootView = undefined
+                  AppHost.render = JsMockito.mockFunction()
+                  handler(parts:["MOCK_USER"])
+                  JsMockito.verify(AppHost.render)()
+                finally
+                  AppHost.render = r
+              )
+
+              test("Activates AppState", ()->
+                AppHost.rootView = undefined
+                AppHost.launch("MOCK_USER","MOCK_GAME")
+                JsMockito.verify(mocks.AppState.activate)()
+              )
+            )
+            suite("administrationDialogue modal set", ()->
+              test("Doesnt set dialog on router", ()->
+                handler(
+                  parts:["MOCK_USER"]
+                  subRoutes:
+                    administrationDialogue:{}
+                )
+                JsMockito.verify(mocks["UI/routing/Router"].openModal, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything())
+              )
+
+              test("Passes route down to rootView routeChanged", ()->
+                AppHost.rootView.routeChanged = JsMockito.mockFunction()
+                r =
+                  parts:["MOCK_USER"]
+                  subRoutes:
+                    administrationDialogue:{}
+                handler(r)
+                JsMockito.verify(AppHost.rootView.routeChanged)(r)
+              )
+            )
+
           )
-          AppHost.innerRoute("MOCK_USER","MOCK_GAME", "INNER_ROUTE")
-          JsMockito.verify(AppHost.launch)("MOCK_USER","MOCK_GAME")
+          suite("First (player) and second (game) parts", ()->
+            test("withPlayerAndGameId_createsGameFromState", ()->
+              handler(parts:["MOCK_USER","MOCK_GAME"])
+              JsMockito.verify(mocks.AppState.createGame)()
+            )
+          )
+
         )
+
       )
       suite("render", ()->
         test("setsRootViewToManOWarTableTopView", ()->

@@ -19,18 +19,24 @@ define(['underscore', 'backbone', "jquery", "UI/component/BaseView", "UI/adminis
     createModel:()->
       @model = new AdministrationDialogueViewModel()
 
+    routeChanged:(route)->
+      tab = route?.parts?.shift()
+      if (tab?)
+        @model.setActiveTab(tab)
+        @subViews.get(tab+"View").routeChanged(route)
+
     render:()->
       super()
-      @createGameView.setTab(@model.get("tabs").findWhere(name:"createGame"))
-      @reviewChallengesView.setTab(@model.get("tabs").findWhere(name:"reviewChallenges"))
-      @createGameView.render()
-      @reviewChallengesView.render()
+      @subViews.get("createGameView").setTab(@model.get("tabs").findWhere(name:"createGame"))
+      @subViews.get("reviewChallengesView").setTab(@model.get("tabs").findWhere(name:"reviewChallenges"))
+      @subViews.get("createGameView").render()
+      @subViews.get("reviewChallengesView").render()
 
     createCreateGameTabView:()->
-      @createGameView = new CreateGameView($("#createGame"))
+      @subViews.set("createGameView", new CreateGameView($("#createGame")))
 
     createChallengesTabView:()->
-      @reviewChallengesView = new ReviewChallengesView($("#reviewChallenges"))
+      @subViews.set("reviewChallengesView", new ReviewChallengesView($("#reviewChallenges")))
 
 
   AdministrationDialogueView

@@ -8,7 +8,11 @@ define(["underscore", "backbone", "rivets", "jquery"], (_, Backbone, rivets, $)-
           @rootContext = (options?.context)
       createModel:()->
         throw(new Error("createModel method required for BaseViews"))
-      routeChanged:()->
+
+      subViews:new Backbone.Model()
+
+      routeChanged:(route)->
+        view.routeChanged(route) for name, view of @subViews.attributes when view instanceof BaseView
 
       render:()->
         @undelegateEvents()
