@@ -87,6 +87,10 @@ define(["isolate!UI/routing/Router"], (Router)->
             )
           ))
         )
+        test("No route does nothing", ()->
+          Router.setSubRoute("A_SUBROUTE")
+          JsMockito.verify(mockBackboneRouter.navigate, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+        )
       )
       suite("Route has sub route object but no existing subRoute matching input name", ()->
         setup(()->
@@ -119,6 +123,10 @@ define(["isolate!UI/routing/Router"], (Router)->
 
             )
           ))
+        )
+        test("No route does nothing", ()->
+          Router.setSubRoute("A_SUBROUTE")
+          JsMockito.verify(mockBackboneRouter.navigate, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
         )
       )
       suite("Route has sub route object with subRoute matching input name", ()->
@@ -154,6 +162,24 @@ define(["isolate!UI/routing/Router"], (Router)->
             )
           ))
         )
+        test("No route removes existing route, then navigates", ()->
+          Router.setSubRoute("A_SUBROUTE")
+          JsMockito.verify(mockBackboneRouter.navigate)(
+            JsHamcrest.Matchers.hasMember("fromString",
+              JsHamcrest.Matchers.hasMember("subRoutes",JsHamcrest.Matchers.not(
+                JsHamcrest.Matchers.hasMember("A_SUBROUTE" )
+              ))
+            )
+          )
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.hasMember("fromString",
+            JsHamcrest.Matchers.hasMember("subRoutes",
+              JsHamcrest.Matchers.hasMember("ANOTHER_SUBROUTE","ANOTHER_FRAGMENT")
+            )
+          ))
+        )
+      )
+      test("No route name throws", ()->
+        chai.assert.throw(()->Router.setSubRoute(null, "A_PATH_FRAGMENT"))
       )
     )
   )
