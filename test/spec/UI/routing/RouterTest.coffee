@@ -1,0 +1,161 @@
+mockBackboneRouter = {}
+mockBackboneRouter.on = JsMockito.mockFunction()
+mockRoute = {}
+require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("backbone", 'UI/routing/Router', (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      Router:()->
+        mockBackboneRouter
+      history:{}
+
+    )
+  )
+  Isolate.mapAsFactory("UI/routing/Route", 'UI/routing/Router', (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      JsMockito.mockFunction()
+    )
+  )
+)
+define(["isolate!UI/routing/Router"], (Router)->
+  mocks=window.mockLibrary['UI/routing/Router']
+  suite("Router", ()->
+    setup(()->
+
+      JsMockito.when(mocks["UI/routing/Route"])(JsHamcrest.Matchers.string()).then((s)->
+        ret =
+          builtWithPath:s
+          on:JsMockito.mockFunction()
+          toString:JsMockito.mockFunction()
+        JsMockito.when(ret.toString)().then(()->
+          fromString:ret
+        )
+        mockRoute = ret
+        ret
+      )
+      mocks["backbone"].history.start = JsMockito.mockFunction()
+      mocks["backbone"].history.getFragment = JsMockito.mockFunction()
+    )
+
+    suite("construction", ()->
+      test("Binds to globalRouter navigate event with Route built from path", ()->
+
+        JsMockito.verify(mockBackboneRouter.on)("route:navigate", new JsHamcrest.SimpleMatcher(
+          matches:(h)->
+            t = Router.trigger
+            try
+              Router.trigger = JsMockito.mockFunction()
+              h("NEW_ROUTE")
+              JsMockito.verify(Router.trigger)("navigate",JsHamcrest.Matchers.hasMember("builtWithPath","NEW_ROUTE"))
+              true
+            catch e
+              false
+            finally
+              Router.trigger = t
+
+        ))
+      )
+    )
+    test("Activate starts backbone history", ()->
+      Router.activate()
+      JsMockito.verify(mocks["backbone"].history.start)()
+    )
+    suite("setSubRoute",()->
+      setup(()->
+        mockBackboneRouter.navigate = JsMockito.mockFunction()
+        JsMockito.when(mocks["backbone"].history.getFragment)().then(()->"CURRENT_ROUTE_FRAGMENT")
+      )
+      test("Creates route with current fragment", ()->
+        Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT")
+        JsMockito.verify(mocks["UI/routing/Route"])("CURRENT_ROUTE_FRAGMENT")
+      )
+      test("Calls toString on route", ()->
+        r = null
+        JsMockito.when(mockBackboneRouter.navigate)(JsHamcrest.Matchers.anything()).then((ts)->
+          r = ts.fromString
+        )
+        Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT")
+        JsMockito.verify(r.toString)()
+      )
+      suite("Route has no sub route object", ()->
+        test("Creates sub route object with route name property and route built from fragment as value, then uses routes toString output to navigate router", ()->
+          Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT")
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.hasMember("fromString",
+            JsHamcrest.Matchers.hasMember("subRoutes",
+              JsHamcrest.Matchers.hasMember("A_SUBROUTE",
+                JsHamcrest.Matchers.hasMember("builtWithPath","A_PATH_FRAGMENT")
+              )
+            )
+          ))
+        )
+      )
+      suite("Route has sub route object but no existing subRoute matching input name", ()->
+        setup(()->
+          JsMockito.when(mocks["UI/routing/Route"])(JsHamcrest.Matchers.string()).then((s)->
+            ret =
+              builtWithPath:s
+              on:JsMockito.mockFunction()
+              toString:JsMockito.mockFunction()
+              subRoutes:
+                ANOTHER_SUBROUTE:"ANOTHER_FRAGMENT"
+            JsMockito.when(ret.toString)().then(()->
+              fromString:ret
+            )
+            mockRoute = ret
+            ret
+          )
+        )
+        test("Updates sub route object route name property and route built from fragment as value, then uses routes toString output to navigate router, leaving other subRoutes in place", ()->
+          Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT")
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.hasMember("fromString",
+            JsHamcrest.Matchers.hasMember("subRoutes",
+              JsHamcrest.Matchers.hasMember("A_SUBROUTE",
+                JsHamcrest.Matchers.hasMember("builtWithPath","A_PATH_FRAGMENT")
+              )
+            )
+          ))
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.hasMember("fromString",
+            JsHamcrest.Matchers.hasMember("subRoutes",
+              JsHamcrest.Matchers.hasMember("ANOTHER_SUBROUTE","ANOTHER_FRAGMENT")
+
+            )
+          ))
+        )
+      )
+      suite("Route has sub route object with subRoute matching input name", ()->
+        setup(()->
+          JsMockito.when(mocks["UI/routing/Route"])(JsHamcrest.Matchers.string()).then((s)->
+            ret =
+              builtWithPath:s
+              on:JsMockito.mockFunction()
+              toString:JsMockito.mockFunction()
+              subRoutes:
+                A_SUBROUTE:"NOT_A_PATH_FRAGMENT"
+                ANOTHER_SUBROUTE:"ANOTHER_FRAGMENT"
+            JsMockito.when(ret.toString)().then(()->
+              fromString:ret
+            )
+            mockRoute = ret
+            ret
+          )
+        )
+        test("Replaces, then uses routes toString output to navigate router, leaving other subRoutes in place", ()->
+          Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT")
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.hasMember("fromString",
+            JsHamcrest.Matchers.hasMember("subRoutes",
+              JsHamcrest.Matchers.hasMember("A_SUBROUTE",
+                JsHamcrest.Matchers.hasMember("builtWithPath","A_PATH_FRAGMENT")
+              )
+            )
+          ))
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.hasMember("fromString",
+            JsHamcrest.Matchers.hasMember("subRoutes",
+              JsHamcrest.Matchers.hasMember("ANOTHER_SUBROUTE","ANOTHER_FRAGMENT")
+
+            )
+          ))
+        )
+      )
+    )
+  )
+)
+

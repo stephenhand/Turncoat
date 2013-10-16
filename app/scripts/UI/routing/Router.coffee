@@ -11,13 +11,18 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
   Router =
     activate:()->
       Backbone.history.start()
-    openModal:(name, route)->
+    setSubRoute:(name, route)->
+      current = new Route(Backbone.history.getFragment())
+      if !current.subRoutes? then current.subRoutes = {}
+      current.subRoutes[name] = new Route(route)
+      globalRouter.navigate(current.toString())
 
-    closeModal:(name)->
+
+    unsetSubRoute:(name)->
 
   _.extend(Router, Backbone.Events)
-  globalRouter.on("route:navigate", ()->
-    Router.trigger()
+  globalRouter.on("route:navigate", (path)->
+    Router.trigger("navigate", new Route(path))
   )
 
 

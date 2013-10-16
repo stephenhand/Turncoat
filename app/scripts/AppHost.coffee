@@ -36,7 +36,7 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route",
         if (!user? && !gameIdentifier?)
           AppState.trigger("userDataRequired")
         else if (!gameIdentifier? && !(route?.subRoutes?.administrationDialogue?))
-          Router.openModal("administrationDialogue", "currentGames")
+          Router.setSubRoute("administrationDialogue", "currentGames")
         else
           @rootView.routeChanged(route)
 

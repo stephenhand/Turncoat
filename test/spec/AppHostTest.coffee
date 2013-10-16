@@ -24,7 +24,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("UI/routing/Router","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       on:JsMockito.mockFunction()
-      openModal:JsMockito.mockFunction()
+      setSubRoute:JsMockito.mockFunction()
     )
   )
   Isolate.mapAsFactory("AppState","AppHost", (actual, modulePath, requestingModulePath)->
@@ -69,7 +69,7 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
       suite("initialise",()->
         setup(()->
           mocks["UI/routing/Router"].on=JsMockito.mockFunction()
-          mocks["UI/routing/Router"].openModal=JsMockito.mockFunction()
+          mocks["UI/routing/Router"].setSubRoute=JsMockito.mockFunction()
         )
         test("configuresRivetsWithAdapter", ()->
           AppHost.initialise()
@@ -117,7 +117,7 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
             )
             test("No administrationDialog modal set opens dialog on router", ()->
               handler(parts:["MOCK_USER"])
-              JsMockito.verify(mocks["UI/routing/Router"].openModal)("administrationDialogue", "currentGames")
+              JsMockito.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", "currentGames")
             )
             suite("No rootView set", ()->
               test("Calls render", ()->
@@ -144,7 +144,7 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
                   subRoutes:
                     administrationDialogue:{}
                 )
-                JsMockito.verify(mocks["UI/routing/Router"].openModal, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything())
+                JsMockito.verify(mocks["UI/routing/Router"].setSubRoute, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything())
               )
 
               test("Passes route down to rootView routeChanged", ()->
