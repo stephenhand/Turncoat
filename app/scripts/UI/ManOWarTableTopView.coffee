@@ -22,7 +22,7 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
       )
 
     routeChanged:(route)->
-      @subViews.get("playAreaView").routeChanged(route)
+      @subViews.get("playAreaView")?.routeChanged(route)
       if route.subRoutes?.administrationDialogue?
         @model.set("administrationDialogueActive", true)
         @subViews.get("administrationView").routeChanged(route.subRoutes.administrationDialogue)
