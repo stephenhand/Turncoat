@@ -32,18 +32,8 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
   mocks = window.mockLibrary["UI/ManOWarTableTopView"];
   suite("ManOWarTableTopView", ()->
     suite("constructor", ()->
-      test("doesntConstructPlayAreaViewParameterless", ()->
+      test("constructsPlayAreaView", ()->
         MOWTTV = new ManOWarTableTopView()
-        chai.assert.isUndefined(MOWTTV.subViews.get("playAreaView"))
-      )
-      test("doesntConstructPlayAreaViewWithoutGameState", ()->
-        MOWTTV = new ManOWarTableTopView({})
-        chai.assert.isUndefined(MOWTTV.subViews.get("playAreaView"))
-      )
-      test("constructsPlayAreaViewIfGameStateProvided", ()->
-        MOWTTV = new ManOWarTableTopView(
-          gameState:{}
-        )
         chai.assert.equal("MOCK_PLAYAREAVIEW", MOWTTV.subViews.get("playAreaView").mockId)
       )
       test("constructsAdministrationDialogueView", ()->

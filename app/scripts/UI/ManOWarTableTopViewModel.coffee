@@ -1,4 +1,4 @@
-define(["underscore", "exports", "backbone","AppState"], (_, require, Backbone, AppState)->
+define(["underscore", "backbone", "UI/routing/Router","AppState"], (_, Backbone, Router, AppState)->
   ManOWarTableTopViewModel=Backbone.Model.extend(
     initialize: (options)->
       AppState.on("gameDataRequired",()=>

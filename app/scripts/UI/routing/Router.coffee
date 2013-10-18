@@ -14,7 +14,7 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
     setSubRoute:(name, route)->
       if !name then throw new Error("Sub route name required")
 
-      current = new Route(Backbone.history.getFragment())
+      current = @getCurrentRoute()
       if route && !current.subRoutes? then current.subRoutes = {}
       if (current.subRoutes && current.subRoutes[name]) || route
 
@@ -23,6 +23,13 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
 
 
     unsetSubRoute:@setSubRoute
+
+    getSubRoute:(name)->
+      r = @getCurrentRoute()
+      return r.subRoutes?[name]
+
+    getCurrentRoute:()->
+      new Route(Backbone.history.getFragment())
 
   _.extend(Router, Backbone.Events)
   globalRouter.on("route:navigate", (path)->

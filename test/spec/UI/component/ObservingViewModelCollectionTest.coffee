@@ -1,42 +1,47 @@
 define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewModelCollection)->
   suite("ObservingViewModelCollection", ()->
-
-    suite("watch", ()->
-      coll1 = coll2 = coll3 = coll4 = coll5 = null
-      bvmc=null
-      mockOnSourceUpdatedHandler = null
-      mockOnSourceUpdatedHandler2 = null
-      onsourceupdatedHandlerMatcher = null
-      setup(()->
-        invokes = 0
-        mockOnSourceUpdatedHandler = JsMockito.mockFunction()
-        onsourceupdatedHandlerMatcher = new JsHamcrest.SimpleMatcher(
-          describeTo:(d)->"OnSourceUpdated Handler"
-          matches:(input)->
-            input()
-            try
-              JsMockito.verify(mockOnSourceUpdatedHandler, JsMockito.Verifiers.times(++invokes))()
-              true
-            catch e
-              false
-        )
-        onsourceupdatedHandlerMatcher.handlerToCheck=mockOnSourceUpdatedHandler
-        bvmc = new ObservingViewModelCollection()
-        bvmc.onSourceUpdated = mockOnSourceUpdatedHandler
-
-        coll1 = {}
-        _.extend(coll1, Backbone.Events)
-        coll1.on=JsMockito.mockFunction()
-
-        coll2 =
-          on:JsMockito.mockFunction()
-        coll3 =
-          on:JsMockito.mockFunction()
-        coll4 =
-          on:JsMockito.mockFunction()
-        coll5 =
-          on:JsMockito.mockFunction()
+    coll1 = coll2 = coll3 = coll4 = coll5 = null
+    bvmc=null
+    mockOnSourceUpdatedHandler = null
+    mockOnSourceUpdatedHandler2 = null
+    onsourceupdatedHandlerMatcher = null
+    setup(()->
+      invokes = 0
+      mockOnSourceUpdatedHandler = JsMockito.mockFunction()
+      onsourceupdatedHandlerMatcher = new JsHamcrest.SimpleMatcher(
+        describeTo:(d)->"OnSourceUpdated Handler"
+        matches:(input)->
+          input()
+          try
+            JsMockito.verify(mockOnSourceUpdatedHandler, JsMockito.Verifiers.times(++invokes))()
+            true
+          catch e
+            false
       )
+      onsourceupdatedHandlerMatcher.handlerToCheck=mockOnSourceUpdatedHandler
+      bvmc = new ObservingViewModelCollection()
+      bvmc.onSourceUpdated = mockOnSourceUpdatedHandler
+
+      coll1 = {}
+      _.extend(coll1, Backbone.Events)
+      coll1.on=JsMockito.mockFunction()
+      coll1.off=JsMockito.mockFunction()
+
+      coll2 =
+        on:JsMockito.mockFunction()
+        off:JsMockito.mockFunction()
+      coll3 =
+        on:JsMockito.mockFunction()
+        off:JsMockito.mockFunction()
+      coll4 =
+        on:JsMockito.mockFunction()
+        off:JsMockito.mockFunction()
+      coll5 =
+        on:JsMockito.mockFunction()
+        off:JsMockito.mockFunction()
+    )
+    suite("watch", ()->
+
       test("singleCollection_BindsOnSourceUpdatedToCollectionAddEvent", ()->
 
         bvmc.watch([coll1])
@@ -96,6 +101,59 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
         bvmc.onSourceUpdated = mockOnSourceUpdatedHandler3
         coll.trigger("reset")
         JsMockito.verify(mockOnSourceUpdatedHandler3)()
+      )
+    )
+    suite("watch", ()->
+      test("Unbinds all watched collections add events", ()->
+        bvmc.watch([coll2,coll3,coll4])
+        bvmc.unwatch()
+        JsMockito.verify(coll2.off)("add", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.off)("add", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.off)("add", onsourceupdatedHandlerMatcher)
+      )
+      test("Unbinds all watched collections add events", ()->
+        bvmc.watch([coll2,coll3,coll4])
+        bvmc.unwatch()
+        JsMockito.verify(coll2.off)("remove", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.off)("remove", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.off)("remove", onsourceupdatedHandlerMatcher)
+      )
+      test("Unbinds all watched collections add events", ()->
+        bvmc.watch([coll2,coll3,coll4])
+        bvmc.unwatch()
+        JsMockito.verify(coll2.off)("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.off)("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.off)("reset", onsourceupdatedHandlerMatcher)
+      )
+      test("Empties watched collections collection", ()->
+        bvmc.watch([coll2,coll3,coll4])
+        bvmc.unwatch()
+        chai.assert.equal(bvmc.length, 0)
+
+      )
+      test("Multiple calls unbinds once", ()->
+        bvmc.watch([coll2,coll3,coll4])
+        bvmc.unwatch()
+        JsMockito.verify(coll2.off, JsMockito.Verifiers.once())("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll3.off, JsMockito.Verifiers.once())("reset", onsourceupdatedHandlerMatcher)
+        JsMockito.verify(coll4.off, JsMockito.Verifiers.once())("reset", onsourceupdatedHandlerMatcher)
+
+      )
+      test("emptyCollection flag not set - leaves collection in state prior to unwatch call", ()->
+        bvmc.watch([coll2,coll3,coll4])
+        bvmc.models = [6,4,2]
+        bvmc.unwatch()
+        chai.assert.deepEqual(bvmc.models, [6,4,2])
+
+      )
+      test("emptyCollection set - pops each element from collection starting at the end", ()->
+        bvmc.pop= JsMockito.mockFunction()
+        JsMockito.when(bvmc.pop)().then(()->bvmc.models.pop())
+        bvmc.watch([coll2,coll3,coll4])
+        bvmc.models = [6,4,2]
+        bvmc.unwatch()
+        JsMockito.verify(bvmc.pop, JsMockito.Verifiers.times(3))
+
       )
     )
     suite("updateFromWatchedCollection", ()->

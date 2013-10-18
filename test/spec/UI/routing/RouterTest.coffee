@@ -12,7 +12,10 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("UI/routing/Route", 'UI/routing/Router', (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      JsMockito.mockFunction()
+      ret = ()->
+        ret.func.apply(ret, arguments)
+      ret.func = ()->
+      ret
     )
   )
 )
@@ -20,8 +23,8 @@ define(["isolate!UI/routing/Router"], (Router)->
   mocks=window.mockLibrary['UI/routing/Router']
   suite("Router", ()->
     setup(()->
-
-      JsMockito.when(mocks["UI/routing/Route"])(JsHamcrest.Matchers.string()).then((s)->
+      mocks["UI/routing/Route"].func = JsMockito.mockFunction()
+      JsMockito.when(mocks["UI/routing/Route"].func)(JsHamcrest.Matchers.string()).then((s)->
         ret =
           builtWithPath:s
           on:JsMockito.mockFunction()
@@ -34,6 +37,7 @@ define(["isolate!UI/routing/Router"], (Router)->
       )
       mocks["backbone"].history.start = JsMockito.mockFunction()
       mocks["backbone"].history.getFragment = JsMockito.mockFunction()
+      JsMockito.when(mocks["backbone"].history.getFragment)().then(()->"CURRENT_ROUTE_FRAGMENT")
     )
 
     suite("construction", ()->
@@ -59,14 +63,66 @@ define(["isolate!UI/routing/Router"], (Router)->
       Router.activate()
       JsMockito.verify(mocks["backbone"].history.start)()
     )
+    suite("getCurrentRoute",()->
+
+      test("Returns route created with current fragment", ()->
+
+        ret = Router.getCurrentRoute()
+        chai.assert.equal(ret.builtWithPath, "CURRENT_ROUTE_FRAGMENT")
+      )
+
+    )
+    suite("getSubRoute", ()->
+      test("Has subroute object with route name - returns named route", ()->
+        JsMockito.when(mocks["UI/routing/Route"].func)(JsHamcrest.Matchers.string()).then((s)->
+          ret =
+            builtWithPath:s
+            on:JsMockito.mockFunction()
+            toString:JsMockito.mockFunction()
+            subRoutes:
+              MOCK_SUBROUTE_NAME:"MOCK_SUBROUTE_VALUE"
+          JsMockito.when(ret.toString)().then(()->
+            fromString:ret
+          )
+          ret
+        )
+        chai.assert.equal(Router.getSubRoute("MOCK_SUBROUTE_NAME"), "MOCK_SUBROUTE_VALUE")
+      )
+      test("Has subroute object but no route with specified name - returns undefined", ()->
+        JsMockito.when(mocks["UI/routing/Route"].func)(JsHamcrest.Matchers.string()).then((s)->
+          ret =
+            builtWithPath:s
+            on:JsMockito.mockFunction()
+            toString:JsMockito.mockFunction()
+            subRoutes:{}
+          JsMockito.when(ret.toString)().then(()->
+            fromString:ret
+          )
+          ret
+        )
+        chai.assert.isUndefined(Router.getSubRoute("MOCK_SUBROUTE_NAME"))
+      )
+      test("Has no subroute object - returns undefined", ()->
+        JsMockito.when(mocks["UI/routing/Route"].func)(JsHamcrest.Matchers.string()).then((s)->
+          ret =
+            builtWithPath:s
+            on:JsMockito.mockFunction()
+            toString:JsMockito.mockFunction()
+          JsMockito.when(ret.toString)().then(()->
+            fromString:ret
+          )
+          ret
+        )
+        chai.assert.isUndefined(Router.getSubRoute("MOCK_SUBROUTE_NAME"))
+      )
+    )
     suite("setSubRoute",()->
       setup(()->
         mockBackboneRouter.navigate = JsMockito.mockFunction()
-        JsMockito.when(mocks["backbone"].history.getFragment)().then(()->"CURRENT_ROUTE_FRAGMENT")
       )
       test("Creates route with current fragment", ()->
         Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT")
-        JsMockito.verify(mocks["UI/routing/Route"])("CURRENT_ROUTE_FRAGMENT")
+        JsMockito.verify(mocks["UI/routing/Route"].func)("CURRENT_ROUTE_FRAGMENT")
       )
       test("Calls toString on route", ()->
         r = null
@@ -94,7 +150,7 @@ define(["isolate!UI/routing/Router"], (Router)->
       )
       suite("Route has sub route object but no existing subRoute matching input name", ()->
         setup(()->
-          JsMockito.when(mocks["UI/routing/Route"])(JsHamcrest.Matchers.string()).then((s)->
+          JsMockito.when(mocks["UI/routing/Route"].func)(JsHamcrest.Matchers.string()).then((s)->
             ret =
               builtWithPath:s
               on:JsMockito.mockFunction()
@@ -131,7 +187,7 @@ define(["isolate!UI/routing/Router"], (Router)->
       )
       suite("Route has sub route object with subRoute matching input name", ()->
         setup(()->
-          JsMockito.when(mocks["UI/routing/Route"])(JsHamcrest.Matchers.string()).then((s)->
+          JsMockito.when(mocks["UI/routing/Route"].func)(JsHamcrest.Matchers.string()).then((s)->
             ret =
               builtWithPath:s
               on:JsMockito.mockFunction()

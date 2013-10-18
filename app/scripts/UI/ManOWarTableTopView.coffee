@@ -5,13 +5,12 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
       options.template = templateText
       options.rootSelector = "#gameRoot"
       super(options)
-      if (options.gameState)
-        @createPlayAreaView(options.gameState)
+      @createPlayAreaView()
       @createAdministrationView()
 
     render:()->
       super()
-      @subViews.get("playAreaView")?.render()
+      @subViews.get("playAreaView").render()
       @subViews.get("administrationView").render()
       $("#administrationDialogue").jqm(onHide:()=>
         @model?.set("administrationDialogueActive" , false)
@@ -22,7 +21,7 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
       )
 
     routeChanged:(route)->
-      @subViews.get("playAreaView")?.routeChanged(route)
+      @subViews.get("playAreaView").routeChanged(route)
       if route.subRoutes?.administrationDialogue?
         @model.set("administrationDialogueActive", true)
         @subViews.get("administrationView").routeChanged(route.subRoutes.administrationDialogue)

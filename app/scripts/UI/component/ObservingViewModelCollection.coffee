@@ -4,12 +4,23 @@ define(["underscore", "backbone"], (_, Backbone)->
 
     watch:(collections)->
       @watchedCollections ?= []
+      wrappedHandler = ()=>@onSourceUpdated()
       for collection in collections
         if !_.contains(@watchedCollections, collection)
-          collection.on("add", ()=>@onSourceUpdated())
-          collection.on("remove", ()=>@onSourceUpdated())
-          collection.on("reset", ()=>@onSourceUpdated())
+          collection.on("add", wrappedHandler)
+          collection.on("remove", wrappedHandler)
+          collection.on("reset", wrappedHandler)
           @watchedCollections.push(collection)
+      @unwatch=(emptyCollection)=>
+        for collection in @watchedCollections
+          collection.off("add", wrappedHandler)
+          collection.off("remove", wrappedHandler)
+          collection.off("reset", wrappedHandler)
+        @watchedCollections=[]
+        if emptyCollection then (@pop() while @length)
+
+    unwatch:()->
+
 
     onSourceUpdated:()=>
 
