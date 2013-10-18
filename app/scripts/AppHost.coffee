@@ -25,6 +25,7 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route",
 
     initialise:()->
       configureRivets()
+
       Router.on("navigate", (route)=>
         user = route?.parts?[0]
         gameIdentifier = route?.parts?[1]
@@ -36,11 +37,14 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route",
         if (!user? && !gameIdentifier?)
           AppState.trigger("userDataRequired")
         else if (!gameIdentifier? && !(route?.subRoutes?.administrationDialogue?))
-          Router.setSubRoute("administrationDialogue", "currentGames")
+          AppState.trigger("gameDataRequired")
         else
           @rootView.routeChanged(route)
 
       ,@)
+      AppState.on("gameDataRequired", ()=>
+        if !Router.getSubRoute("administrationDialogue")? then Router.setSubRoute("administrationDialogue", "default")
+      )
       try
         Router.activate()
       catch error

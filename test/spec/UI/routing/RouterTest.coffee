@@ -180,10 +180,28 @@ define(["isolate!UI/routing/Router"], (Router)->
             )
           ))
         )
+        test("Options specified without trigger option - are passed to globalRouter with trigger set to true", ()->
+          opt = opt1:"val1"
+          Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT", opt)
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.allOf(JsHamcrest.Matchers.hasMember("opt1","val1"),JsHamcrest.Matchers.hasMember("trigger",true)))
+        )
+        test("Options specified with trigger option - are passed to globalRouter with trigger set as options", ()->
+          opt =
+            opt1:"val1"
+            trigger:false
+          Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT", opt)
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.allOf(JsHamcrest.Matchers.hasMember("opt1","val1"),JsHamcrest.Matchers.hasMember("trigger",false)))
+        )
+        test("Options not specified - passes trigger true option to globalRouter", ()->
+
+          Router.setSubRoute("A_SUBROUTE", "A_PATH_FRAGMENT")
+          JsMockito.verify(mockBackboneRouter.navigate)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.hasMember("trigger",true))
+        )
         test("No route does nothing", ()->
           Router.setSubRoute("A_SUBROUTE")
           JsMockito.verify(mockBackboneRouter.navigate, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
         )
+
       )
       suite("Route has sub route object with subRoute matching input name", ()->
         setup(()->

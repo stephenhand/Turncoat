@@ -3,15 +3,12 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
     routes:
       "":"navigate"
       ":user":"navigate"
-      ":user/:gameIdentifier":"launch"
-      ":user/:gameIdentifier/:inner":"innerRoute"
-      ":user?:inner":"innerRouteNoUser"
   )
 
   Router =
     activate:()->
       Backbone.history.start()
-    setSubRoute:(name, route)->
+    setSubRoute:(name, route, options)->
       if !name then throw new Error("Sub route name required")
 
       current = @getCurrentRoute()
@@ -19,7 +16,7 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
       if (current.subRoutes && current.subRoutes[name]) || route
 
         if route then current.subRoutes[name] = new Route(route) else delete current.subRoutes[name]
-        globalRouter.navigate(current.toString())
+        globalRouter.navigate(current.toString(), _.extend(trigger:true, options))
 
 
     unsetSubRoute:@setSubRoute

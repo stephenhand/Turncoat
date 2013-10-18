@@ -2,19 +2,16 @@ advModel = null
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
 
+  Isolate.mapAsFactory("UI/routing/Router","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      setSubRoute:JsMockito.mockFunction()
+    )
+  )
   Isolate.mapAsFactory("UI/administration/AdministrationDialogueViewModel","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       advModel = {get:JsMockito.mockFunction()}
       ()->
         advModel
-
-
-    )
-  )
-  Isolate.mapAsFactory("UI/component//BaseView","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      ()->
-        render:JsMockito.mockFunction()
     )
   )
   Isolate.mapAsFactory("UI/administration/ReviewChallengesView","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
@@ -43,12 +40,12 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
         adv=new AdministrationDialogueView()
         adv.model = setActiveTab:JsMockito.mockFunction()
       )
-      test("ValidInputEvent_CallsModelSetActiveTabWithEventCurrentTargetAssociatedTabContentPaneId", ()->
+      test("Valid Input Event - Calls Router.SetSubRoute for AdministrationDialogiue with tab name", ()->
         event = {currentTarget:{id:"AN ID"}}
         adv.tabClicked(event)
         JsMockito.verify(mocks.jqueryObjects[event.currentTarget].parent)()
         JsMockito.verify(mocks.jqueryObjects["div.tab-content"][mocks.jqueryObjects.methodResults.parent].attr)("id")
-        JsMockito.verify(adv.model.setActiveTab)("id::VALUE")
+        JsMockito.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", "id::VALUE")
       )
       test("InvalidInputEvent_Throws", ()->
         chai.assert.throw(()->adv.tabClicked({}))
@@ -175,6 +172,36 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
             parts:["TAB2","ANOTHER_BIT"]
           )
           JsMockito.verify(adv.subViews.get("TAB2View").routeChanged)(JsHamcrest.Matchers.hasMember("parts",JsHamcrest.Matchers.equivalentArray(["ANOTHER_BIT"])))
+        )
+      )
+      suite("Route with defualt tab as first part", ()->
+        setup(()->
+          adv.model.getDefaultTab = JsMockito.mockFunction()
+          JsMockito.when(adv.model.getDefaultTab)().then(()->get:(key)->if key is "name" then "DEFAULT_TAB")
+        )
+        test("Calls model getDefaultTab to get tab view name", ()->
+          adv.routeChanged(
+            parts:["default"]
+          )
+          JsMockito.verify(adv.model.getDefaultTab)()
+        )
+        test("Reroutes to returned tab name with replace option specified", ()->
+          adv.routeChanged(
+            parts:["default"]
+            toString:()->@parts.toString()
+          )
+          JsMockito.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", JsHamcrest.Matchers.containsString("DEFAULT_TAB"),JsHamcrest.Matchers.hasMember("replace",true))
+        )
+        test("Preserves subsequent route sections", ()->
+          adv.routeChanged(
+            parts:["default","Other","Sections"]
+            toString:()->@parts.toString()
+          )
+          JsMockito.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", JsHamcrest.Matchers.allOf(
+            JsHamcrest.Matchers.containsString("DEFAULT_TAB"),
+            JsHamcrest.Matchers.containsString("Other"),
+            JsHamcrest.Matchers.containsString("Sections")
+          ),JsHamcrest.Matchers.hasMember("replace",true))
         )
       )
 

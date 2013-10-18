@@ -133,7 +133,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             JsHamcrest.Matchers.anything(),
             new JsHamcrest.SimpleMatcher(
               matches:(input)->
-                !input(new Backbone.Model({userId:"PLAYING"}))
+                !input(new Backbone.Model({userStatus:"PLAYING"}))
             )
           )
         )

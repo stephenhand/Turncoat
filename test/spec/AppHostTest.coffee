@@ -31,6 +31,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
       activate:()->
+      on:()->
     )
   )
   Isolate.mapAsFactory("lib/2D/PolygonTools","AppHost", (actual, modulePath, requestingModulePath)->
@@ -70,6 +71,9 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
         setup(()->
           mocks["UI/routing/Router"].on=JsMockito.mockFunction()
           mocks["UI/routing/Router"].setSubRoute=JsMockito.mockFunction()
+          mocks["UI/routing/Router"].getSubRoute=JsMockito.mockFunction()
+          mocks["AppState"].on = JsMockito.mockFunction()
+          mocks["AppState"].trigger = JsMockito.mockFunction()
         )
         test("configuresRivetsWithAdapter", ()->
           AppHost.initialise()
@@ -84,6 +88,34 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
           AppHost.initialise()
           JsMockito.verify(mocks["UI/routing/Router"].on)("navigate", JsHamcrest.Matchers.func())
 
+        )
+        test("Binds to AppState gameDataRequired event", ()->
+          AppHost.initialise()
+          JsMockito.verify(mocks["AppState"].on)("gameDataRequired", JsHamcrest.Matchers.func())
+
+        )
+        suite("gameDataRequired handler", ()->
+          gdrHandler = null
+          setup(()->
+            JsMockito.when(mocks["AppState"].on)("gameDataRequired",  JsHamcrest.Matchers.func()).then((name, h)->
+              gdrHandler = h
+            )
+            AppHost.initialise()
+          )
+          test("Router already has administration dialog subRoute - does nothing", ()->
+            JsMockito.when(mocks["UI/routing/Router"].getSubRoute)("administrationDialogue").then(()->
+              {}
+            )
+            gdrHandler()
+            JsMockito.verify(mocks["UI/routing/Router"].setSubRoute, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything())
+
+          )
+          test("Router has no administration dialog subRoute - sets administrationDialogue to default", ()->
+            JsMockito.when(mocks["UI/routing/Router"].getSubRoute)("administrationDialogue").then(()->)
+            gdrHandler()
+            JsMockito.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", "default")
+
+          )
         )
         suite("Router navigate handler", ()->
           handler = null
@@ -115,9 +147,9 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
               handler(parts:["MOCK_USER"])
               JsMockito.verify(mocks.AppState.loadUser)("MOCK_USER")
             )
-            test("No administrationDialog modal set opens dialog on router", ()->
+            test("Triggers gameDataRequired", ()->
               handler(parts:["MOCK_USER"])
-              JsMockito.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", "currentGames")
+              JsMockito.verify(mocks["AppState"].trigger)("gameDataRequired")
             )
             suite("No rootView set", ()->
               test("Calls render", ()->
@@ -137,25 +169,15 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
                 JsMockito.verify(mocks.AppState.activate)()
               )
             )
-            suite("administrationDialogue modal set", ()->
-              test("Doesnt set dialog on router", ()->
-                handler(
-                  parts:["MOCK_USER"]
-                  subRoutes:
-                    administrationDialogue:{}
-                )
-                JsMockito.verify(mocks["UI/routing/Router"].setSubRoute, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything())
-              )
+            test("Passes route down to rootView routeChanged", ()->
+              AppHost.rootView.routeChanged = JsMockito.mockFunction()
+              r =
+                parts:["MOCK_USER"]
+                subRoutes:
+                  administrationDialogue:{}
+              handler(r)
+              JsMockito.verify(AppHost.rootView.routeChanged)(r)
 
-              test("Passes route down to rootView routeChanged", ()->
-                AppHost.rootView.routeChanged = JsMockito.mockFunction()
-                r =
-                  parts:["MOCK_USER"]
-                  subRoutes:
-                    administrationDialogue:{}
-                handler(r)
-                JsMockito.verify(AppHost.rootView.routeChanged)(r)
-              )
             )
 
           )

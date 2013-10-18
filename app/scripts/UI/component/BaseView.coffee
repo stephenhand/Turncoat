@@ -6,10 +6,10 @@ define(["underscore", "backbone", "rivets", "jquery"], (_, Backbone, rivets, $)-
           @rootSelector = options.rootSelector
           @gameState = options.gameState
           @rootContext = (options?.context)
+          @subViews=new Backbone.Model()
       createModel:()->
         throw(new Error("createModel method required for BaseViews"))
 
-      subViews:new Backbone.Model()
 
       routeChanged:(route)->
         view.routeChanged(route) for name, view of @subViews.attributes when view instanceof BaseView

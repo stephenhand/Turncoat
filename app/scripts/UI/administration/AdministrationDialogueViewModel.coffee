@@ -1,4 +1,4 @@
-define(["underscore", "backbone"], (_, Backbone)->
+define(["underscore", "backbone", "AppState"], (_, Backbone, AppState)->
   AdministrationDialogueViewModel = Backbone.Model.extend(
     initialize: (options)->
       @set("tabs",new Backbone.Collection([
@@ -25,7 +25,12 @@ define(["underscore", "backbone"], (_, Backbone)->
       if (name? and @get("tabs").findWhere(name:name))
         tab.set("active",tab.get("name") is name) for tab in @get("tabs").models
 
-
+    getDefaultTab:()->
+      switch
+        when !AppState.get("currentUser")? or !AppState.get("games")? then @get("tabs").findWhere(name:"createGame")
+        when AppState.get("games").findWhere(userStatus:"PLAYING")? then @get("tabs").findWhere(name:"currentGames")
+        when AppState.get("games").length then @get("tabs").findWhere(name:"reviewChallenges")
+        else  @get("tabs").findWhere(name:"createGame")
   )
 )
 
