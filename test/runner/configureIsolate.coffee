@@ -28,7 +28,7 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
     jqm.jqmAddClose=JsMockito.mockFunction()
     jqm.on=JsMockito.mockFunction()
     jqm.first=JsMockito.mockFunction()
-    window.mockLibrary[requestingModulePath].jqueryObjects.methodResults ?= []
+    window.mockLibrary[requestingModulePath].jqueryObjects.methodResults ?= {}
 
     JsMockito.when(jqm.parent)().then(()->
       ret = createMock(actual, requestingModulePath)
@@ -46,15 +46,15 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
       ret
     )
     JsMockito.when(jqm.attr)(JsHamcrest.Matchers.anything()).then((attrName)->
-      window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.attr?=[]
+      window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.attr?={}
       window.mockLibrary[requestingModulePath].jqueryObjects.methodResults.attr[attrName] = attrName+"::VALUE"
       attrName+"::VALUE"
     )
 
     JsMockito.when(jqm.on)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything()).then(
       (eventName, cb)->
-        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks ?= []
-        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks.on ?= []
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks ?= {}
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks.on ?= {}
         window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks.on[eventName]= cb
         @
     )
@@ -62,8 +62,11 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
 
 
   Isolate.mapAsFactory("jquery", (actual, modulePath, requestingModulePath)->
-    window.mockLibrary[requestingModulePath]?=[]
+    window.mockLibrary[requestingModulePath]?= {}
     window.mockLibrary[requestingModulePath]["jqueryObjects"]={
+      reset:()->
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodResults = {}
+        window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks = {}
       getSelectorResult:(selector, context)->
         if selector is window then selector = "__WINDOW_SELECTOR_PLACEHOLDER"
         if context is window then context = "__WINDOW_CONTEXT_PLACEHOLDER"

@@ -16,7 +16,8 @@ require.config({
     templates : '../templates',
     data : '../data',
     setTimeout : 'lib/nativeShims/setTimeout',
-    setInterval : 'lib/nativeShims/setInterval'
+    setInterval : 'lib/nativeShims/setInterval',
+    SharedWorker : 'lib/nativeShims/SharedWorker'
   },
   shim:{
       'jquery':{
