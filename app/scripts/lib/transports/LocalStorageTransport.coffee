@@ -5,34 +5,40 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
 
   enqueueMessage = (recipient, gameId, payload)->
 
-  dequeueMessage = (transport, userId, gameId)->
-    id = userId
-    if gameId? then id+="::"+gameId
-    messageId = null
-    transport
-    Mutex.lock(
-      key:"LOCAL_TRANSPORT_MESSAGE_QUEUE::"+id
-      criticalSection:()->
-        json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+id)
-        queue = JSON.parse(json)
-        messageId = queue.shift()
-        window.localStorage.setItem(MESSAGE_QUEUE+"::"+id, JSON.stringify(queue))
-      success:()->
-        envelopeJSON = window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)
-        if (envelopeJSON)
-          envelope = JSON.parse(envelopeJSON)
-          switch envelope.type
-            when CHALLENGE_RECEIVED_MESSAGE_TYPE
-              transport.trigger("challengeReceived", envelope.payload)
 
-
-    )
 
 
   class LocalStorageTransport
-    constructor:(@userId, @gameId, @marshaller)->
-      @marshaller ?= Factory.buildStateMarshaller()
     start = null
+    dequeueMessage = null
+
+    constructor:(@userId, @gameId, @marshaller)->
+
+      @marshaller ?= Factory.buildStateMarshaller()
+      transport = @
+
+      dequeueMessage = ()->
+        id = transport.userId
+        if transport.gameId? then id+="::"+transport.gameId
+        messageId = null
+        Mutex.lock(
+          key:"LOCAL_TRANSPORT_MESSAGE_QUEUE::"+id
+          criticalSection:()->
+            json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+id)
+            queue = transport.marshaller.unmarshalState(json)
+            messageId = queue.shift()
+            window.localStorage.setItem(MESSAGE_QUEUE+"::"+id, transport.marshaller.marshalState(queue))
+          success:()->
+            envelopeJSON = window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)
+            if (envelopeJSON)
+              envelope = transport.marshaller.unmarshalModel(envelopeJSON)
+              switch envelope.type
+                when CHALLENGE_RECEIVED_MESSAGE_TYPE
+                  transport.trigger("challengeReceived", envelope.payload)
+
+
+        )
+
     startListening:()->
       handler = (event)=>
         keyParts = event.originalEvent.key.split("::")

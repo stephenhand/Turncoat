@@ -1,11 +1,20 @@
+fakeBuiltMarshaller = {}
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("lib/concurrency/Mutex", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       m=
-        lock:JsMockito.mockFunction()
+        lock:()->
 
       m
+    )
+  )
+  Isolate.mapAsFactory("lib/turncoat/Factory", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      f=
+        buildStateMarshaller:()->
+
+      f
     )
   )
 )
@@ -18,6 +27,8 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
   suite("LocalStorageTransportTest", ()->
     data=[]
     lst= null
+
+
     mockUserQueue = null
     mockGameQueue = null
     origGet = Storage.prototype.getItem
@@ -25,6 +36,24 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
     origRemove = Storage.prototype.removeItem
     origClear = Storage.prototype.clear
     setup(()->
+      fakeBuiltMarshaller =
+        unmarshalModel:JsMockito.mockFunction()
+        marshalModel:JsMockito.mockFunction()
+        unmarshalState:JsMockito.mockFunction()
+        marshalState:JsMockito.mockFunction()
+
+      JsMockito.when(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.anything()).then((obj)->
+        JSON.stringify(obj)
+      )
+      JsMockito.when(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.anything()).then((obj)->
+        JSON.stringify(obj)
+      )
+      JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then((str)->
+        JSON.parse(str)
+      )
+      JsMockito.when(fakeBuiltMarshaller.unmarshalState)(JsHamcrest.Matchers.anything()).then((str)->
+        JSON.parse(str)
+      )
       mockUserQueue = JSON.stringify([
         "MOCK_ID1",
         "MOCK_ID2",
@@ -43,7 +72,7 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
         type:CHALLENGE_RECEIVED_MESSAGE_TYPE
         payload:"MOCK_PAYLOAD"
       )
-
+      mocks["lib/concurrency/Mutex"].lock = JsMockito.mockFunction()
       JsMockito.when(mocks["lib/concurrency/Mutex"].lock)(JsHamcrest.Matchers.func()).then((f)->
         f()
       )
@@ -55,6 +84,10 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
         delete data[key]
       Storage.prototype.clear = ()->
         data=[]
+      mocks["lib/turncoat/Factory"].buildStateMarshaller = JsMockito.mockFunction()
+      JsMockito.when(mocks["lib/turncoat/Factory"].buildStateMarshaller)().then(()->
+        fakeBuiltMarshaller
+      )
       lst = new LocalStorageTransport("MOCK_USER")
       data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserQueue
       data[MESSAGE_QUEUE+"::MOCK_USER::MOCK_GAME"] = mockGameQueue
@@ -66,6 +99,26 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
       Storage.prototype.setItem = origSet
       Storage.prototype.removeItem = origRemove
       Storage.prototype.clear = origClear
+    )
+    suite("constructor",()->
+      defaultMarshaller = {}
+      setup(()->
+        mocks["lib/turncoat/Factory"].buildStateMarshaller = JsMockito.mockFunction()
+        JsMockito.when(mocks["lib/turncoat/Factory"].buildStateMarshaller)().then(()->
+          defaultMarshaller
+        )
+      )
+      test("No marshaller supplied - builds default marshaller", ()->
+        newLST = new LocalStorageTransport()
+        JsMockito.verify(mocks["lib/turncoat/Factory"].buildStateMarshaller)()
+        chai.assert.equal(newLST.marshaller, defaultMarshaller)
+      )
+      test("Marshaller supplied - uses provided marshaller", ()->
+        marshaller = {}
+        newLST = new LocalStorageTransport("","",marshaller)
+        JsMockito.verify(mocks["lib/turncoat/Factory"].buildStateMarshaller, JsMockito.Verifiers.never())()
+        chai.assert.equal(newLST.marshaller, marshaller)
+      )
     )
     suite("startListening", ()->
       setup(()->
@@ -93,7 +146,7 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
             data[MESSAGE_ITEM+"::MOCK_ID1"]=JSON.stringify(
               type:CHALLENGE_RECEIVED_MESSAGE_TYPE
               payload:
-                propa:"SOMETHING"
+                propA:"SOMETHING"
             )
           )
           test("Enters mutex, shifts item and saves it back", ()->
@@ -137,6 +190,74 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
               )
             )
           )
+          test("Uses marshaller marshalState / unmarshalState", ()->
+            lst.startListening()
+            JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
+              "storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(f)->
+                  f(
+                    originalEvent:
+                      key: MESSAGE_QUEUE+"::MOCK_USER"
+                  )
+                  try
+                    JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+                      JsHamcrest.Matchers.hasMember("criticalSection",
+                        new JsHamcrest.SimpleMatcher(
+                          matches:(mf)->
+                            try
+                              orig = data[MESSAGE_QUEUE+"::MOCK_USER"]
+                              mf()
+                              JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(orig)
+                              JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([
+                                "MOCK_ID2",
+                                "MOCK_ID3",
+                                "MOCK_ID4",
+                                "MOCK_ID5",
+                                "MOCK_ID6"
+                              ]))
+                              true
+                            catch e
+                              false
+
+                        )
+                      )
+                    )
+                    true
+                  catch e
+                    false
+              )
+            )
+          )
+          test("Uses marshaller unmarshalModel on located item", ()->
+            lst.startListening()
+            JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
+              "storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(f)->
+                  f(
+                    originalEvent:
+                      key: MESSAGE_QUEUE+"::MOCK_USER"
+                  )
+                  try
+                    JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+                      new JsHamcrest.SimpleMatcher(
+                        matches:(o)->
+                          try
+                            o.criticalSection()
+                            o.success()
+                            JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(data[MESSAGE_ITEM+"::MOCK_ID1"])
+                            true
+                          catch e
+                            false
+                      )
+                    )
+                    true
+                  catch e
+                    false
+              )
+            )
+          )
           test("Envelope has payload and 'Challenge Received' type - triggers 'Challenge Recieved' event from transport with payload", ()->
 
             lst.startListening()
@@ -150,20 +271,16 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
                   )
                   try
                     JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
-                        JsHamcrest.Matchers.hasMember("success",
-                          new JsHamcrest.SimpleMatcher(
-                            matches:(msf)->
-                              try
-                                msf()
-                                JsMockito.verify(lst.trigger)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
-                                true
-                                #if calls then true else false #.equivalentMap(JSON.parse(data[MESSAGE_ITEM+"::MOCK_ID1"]).payload))
-                              catch e
-                                false
-
-                          )
-                        )
-
+                      new JsHamcrest.SimpleMatcher(
+                        matches:(o)->
+                          try
+                            o.criticalSection()
+                            o.success()
+                            JsMockito.verify(lst.trigger)("challengeReceived",JsHamcrest.Matchers.hasMember("propA", "SOMETHING"))
+                            true
+                          catch e
+                            false
+                      )
                     )
                     true
                   catch e
