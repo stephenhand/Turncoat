@@ -68,6 +68,14 @@ define(["uuid"], (UUID)->
       true
 
   lockImpl = (key, callback, maxDuration, synchronous) ->
+    unhandledError = null
+    if key.key?
+      callback = key.criticalSection
+      maxDuration = key.maxDuration
+      success = key.success
+      error = key.error
+      key = key.key
+
     restart = ()->
       setTimeout (()->
         lockImpl key, callback, maxDuration
@@ -76,12 +84,17 @@ define(["uuid"], (UUID)->
     mutexAquired = ()->
       try
         callback()
+      catch e
+        unhandledError = e
       finally
         _mutexTransaction(key, ()->
           if localStorage[mutexKey] isnt mutexValue
             throw key + " was locked by a different process while I held the lock"
           localStorage.removeItem mutexKey
         )
+        if unhandledError?
+          if error? then error(unhandledError)
+        else if success then success()
 
     maxDuration = maxDuration or 5000
     mutexKey = key + "__MUTEX"

@@ -1,28 +1,45 @@
-define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex"], (_, Backbone, $, UUID, Mutex)->
-  MESSAGE_QUEUE = "message_queue"
+define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib/turncoat/Factory"], (_, Backbone, $, UUID, Mutex, Factory)->
+  MESSAGE_QUEUE = "message-queue"
+  MESSAGE_ITEM = "message-item"
+  CHALLENGE_RECEIVED_MESSAGE_TYPE = "challenge-received"
 
   enqueueMessage = (recipient, gameId, payload)->
 
-  dequeueMessage = (userId, gameId)->
+  dequeueMessage = (transport, userId, gameId)->
     id = userId
     if gameId? then id+="::"+gameId
-    Mutex.lock("LOCAL_TRANSPORT_MESSAGE_QUEUE"+id,()->
-      json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+id)
+    messageId = null
+    transport
+    Mutex.lock(
+      key:"LOCAL_TRANSPORT_MESSAGE_QUEUE::"+id
+      criticalSection:()->
+        json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+id)
+        queue = JSON.parse(json)
+        messageId = queue.shift()
+        window.localStorage.setItem(MESSAGE_QUEUE+"::"+id, JSON.stringify(queue))
+      success:()->
+        envelopeJSON = window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)
+        if (envelopeJSON)
+          envelope = JSON.parse(envelopeJSON)
+          switch envelope.type
+            when CHALLENGE_RECEIVED_MESSAGE_TYPE
+              transport.trigger("challengeReceived", envelope.payload)
 
 
     )
 
 
   class LocalStorageTransport
-    constructor:(@userId, @gameId)->
-
+    constructor:(@userId, @gameId, @marshaller)->
+      @marshaller ?= Factory.buildStateMarshaller()
+    start = null
     startListening:()->
       handler = (event)=>
         keyParts = event.originalEvent.key.split("::")
         switch keyParts[0]
           when MESSAGE_QUEUE
             if keyParts[1] is @userId and (@gameId is keyParts[2] or (!@gameId? and !keyParts[2]?))
-              dequeueMessage(@userId, @gameId)
+              dequeueMessage(@, @userId, @gameId)
       $(window).on("storage", handler)
       start = @startListening
       @startListening = ()->
