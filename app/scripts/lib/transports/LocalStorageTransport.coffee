@@ -9,11 +9,11 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
 
 
   class LocalStorageTransport
-    start = null
+    otherListeningToggle = null
     dequeueMessage = null
 
     constructor:(@userId, @gameId, @marshaller)->
-
+      remaining = 0
       @marshaller ?= Factory.buildStateMarshaller()
       transport = @
 
@@ -25,18 +25,24 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
           key:"LOCAL_TRANSPORT_MESSAGE_QUEUE::"+id
           criticalSection:()->
             json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+id)
-            queue = transport.marshaller.unmarshalState(json)
-            messageId = queue.shift()
-            window.localStorage.setItem(MESSAGE_QUEUE+"::"+id, transport.marshaller.marshalState(queue))
+            if json?
+              queue = transport.marshaller.unmarshalState(json)
+              messageId = queue.shift()
+              remaining = queue.length
+              window.localStorage.setItem(MESSAGE_QUEUE+"::"+id, transport.marshaller.marshalState(queue))
+              if messageId? and !window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)?
+                throw new Error("Message missing for queued identifier "+messageId)
           success:()->
-            envelopeJSON = window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)
-            if (envelopeJSON)
-              envelope = transport.marshaller.unmarshalModel(envelopeJSON)
-              switch envelope.type
-                when CHALLENGE_RECEIVED_MESSAGE_TYPE
-                  transport.trigger("challengeReceived", envelope.payload)
-
-
+            if (messageId?)
+              envelopeJSON = window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)
+              if (envelopeJSON)
+                envelope = transport.marshaller.unmarshalModel(envelopeJSON)
+                switch envelope.type
+                  when CHALLENGE_RECEIVED_MESSAGE_TYPE
+                    transport.trigger("challengeReceived", envelope.payload)
+              if remaining then dequeueMessage()
+          error:(e)->
+            if remaining then dequeueMessage()
         )
 
     startListening:()->
@@ -47,12 +53,12 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
             if keyParts[1] is @userId and (@gameId is keyParts[2] or (!@gameId? and !keyParts[2]?))
               dequeueMessage(@, @userId, @gameId)
       $(window).on("storage", handler)
-      start = @startListening
+      otherListeningToggle = @startListening
       @startListening = ()->
       @stopListening = ()->
         $(window).off("storage", handler)
         @stopListening = ()->
-        @startListening = start
+        @startListening = otherListeningToggle
 
 
     stopListening:()->

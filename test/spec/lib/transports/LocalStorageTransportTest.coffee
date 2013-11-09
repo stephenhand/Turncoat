@@ -28,7 +28,7 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
     data=[]
     lst= null
 
-
+    mockUserSingleItemQueue = null
     mockUserQueue = null
     mockGameQueue = null
     origGet = Storage.prototype.getItem
@@ -54,13 +54,13 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
       JsMockito.when(fakeBuiltMarshaller.unmarshalState)(JsHamcrest.Matchers.anything()).then((str)->
         JSON.parse(str)
       )
+      mockUserSingleItemQueue = JSON.stringify([
+        "MOCK_ID1"
+      ])
       mockUserQueue = JSON.stringify([
         "MOCK_ID1",
         "MOCK_ID2",
-        "MOCK_ID3",
-        "MOCK_ID4",
-        "MOCK_ID5",
-        "MOCK_ID6"
+        "MOCK_ID3"
       ])
       mockGameQueue = JSON.stringify([
         "MOCK_GAME_ID1",
@@ -89,7 +89,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
         fakeBuiltMarshaller
       )
       lst = new LocalStorageTransport("MOCK_USER")
-      data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserQueue
       data[MESSAGE_QUEUE+"::MOCK_USER::MOCK_GAME"] = mockGameQueue
 
     )
@@ -123,6 +122,7 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
     suite("startListening", ()->
       setup(()->
 
+        data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserSingleItemQueue
         lst.trigger = JsMockito.mockFunction()
         calls = 0
         JsMockito.when(lst.trigger)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(()->
@@ -166,15 +166,9 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
                           new JsHamcrest.SimpleMatcher(
                             matches:(mf)->
                               try
-                                chai.assert.equal(mockUserQueue, data[MESSAGE_QUEUE+"::MOCK_USER"])
+                                chai.assert.equal(mockUserSingleItemQueue, data[MESSAGE_QUEUE+"::MOCK_USER"])
                                 mf()
-                                chai.assert.equal(JSON.stringify([
-                                  "MOCK_ID2",
-                                  "MOCK_ID3",
-                                  "MOCK_ID4",
-                                  "MOCK_ID5",
-                                  "MOCK_ID6"
-                                ]), data[MESSAGE_QUEUE+"::MOCK_USER"])
+                                chai.assert.equal(JSON.stringify([]), data[MESSAGE_QUEUE+"::MOCK_USER"])
                                 true
                               catch e
                                 false
@@ -209,18 +203,107 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
                               orig = data[MESSAGE_QUEUE+"::MOCK_USER"]
                               mf()
                               JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(orig)
-                              JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([
-                                "MOCK_ID2",
-                                "MOCK_ID3",
-                                "MOCK_ID4",
-                                "MOCK_ID5",
-                                "MOCK_ID6"
-                              ]))
+                              JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([]))
                               true
                             catch e
                               false
 
                         )
+                      )
+                    )
+                    true
+                  catch e
+                    false
+              )
+            )
+          )
+          test("Absent queue - does nothing.", ()->
+            delete data[MESSAGE_QUEUE+"::MOCK_USER"]
+            lst.startListening()
+            JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
+              "storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(f)->
+                  f(
+                    originalEvent:
+                      key: MESSAGE_QUEUE+"::MOCK_USER"
+                  )
+                  try
+                    JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+                      new JsHamcrest.SimpleMatcher(
+                        matches:(o)->
+                          try
+                            o.criticalSection()
+                            JsMockito.verify(fakeBuiltMarshaller.unmarshalState, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+                            JsMockito.verify(fakeBuiltMarshaller.marshalState, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+                            o.success()
+                            JsMockito.verify(fakeBuiltMarshaller.unmarshalModel, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+                            true
+                          catch e
+                            false
+
+                      )
+                    )
+                    true
+                  catch e
+                    false
+              )
+            )
+          )
+          test("Empty queue - does nothing except load & save empty queue.", ()->
+            data[MESSAGE_QUEUE+"::MOCK_USER"] = JSON.stringify([])
+            lst.startListening()
+            JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
+              "storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(f)->
+                  f(
+                    originalEvent:
+                      key: MESSAGE_QUEUE+"::MOCK_USER"
+                  )
+                  try
+                    JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+                      new JsHamcrest.SimpleMatcher(
+                        matches:(o)->
+                          try
+                            o.criticalSection()
+                            JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(JSON.stringify([]))
+                            JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([]))
+                            o.success()
+                            JsMockito.verify(fakeBuiltMarshaller.unmarshalModel, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+                            true
+                          catch e
+                            false
+
+                      )
+
+                    )
+                    true
+                  catch e
+                    false
+              )
+            )
+          )
+          test("Message item identified in queue not found in storage - critical section throws", ()->
+            delete data[MESSAGE_ITEM+"::MOCK_ID1"]
+            lst.startListening()
+            JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
+              "storage",
+              new JsHamcrest.SimpleMatcher(
+                matches:(f)->
+                  f(
+                    originalEvent:
+                      key: MESSAGE_QUEUE+"::MOCK_USER"
+                  )
+                  try
+                    JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+                      new JsHamcrest.SimpleMatcher(
+                        matches:(o)->
+                          try
+                            o.criticalSection()
+                            false
+                          catch e
+                            true
                       )
                     )
                     true
@@ -285,6 +368,114 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
                     true
                   catch e
                     false
+              )
+            )
+          )
+
+          suite("Multiple items in queue", ()->
+            setup(()->
+              data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserQueue
+              data[MESSAGE_ITEM+"::MOCK_ID2"]=JSON.stringify(
+                type:CHALLENGE_RECEIVED_MESSAGE_TYPE
+                payload:
+                  propA:"SOMETHING1"
+              )
+              data[MESSAGE_ITEM+"::MOCK_ID3"]=JSON.stringify(
+                type:CHALLENGE_RECEIVED_MESSAGE_TYPE
+                payload:
+                  propA:"SOMETHING2"
+              )
+              JsMockito.when(mocks["lib/concurrency/Mutex"].lock)(JsHamcrest.Matchers.anything()).then((o)->
+                try
+                  o.criticalSection()
+                catch e
+                  o.error(e)
+                o.success()
+              )
+            )
+            test("Continues dequeue sequence for each message", ()->
+              lst.startListening()
+              JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
+                "storage",
+                new JsHamcrest.SimpleMatcher(
+                  matches:(f)->
+                    f(
+                      originalEvent:
+                        key: MESSAGE_QUEUE+"::MOCK_USER"
+                    )
+                    try
+                      JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.times(3))(JsHamcrest.Matchers.anything())
+
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(JSON.stringify([
+                        "MOCK_ID1",
+                        "MOCK_ID2",
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([
+                        "MOCK_ID2",
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(data[MESSAGE_ITEM+"::MOCK_ID1"])
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(JSON.stringify([
+                        "MOCK_ID2",
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(data[MESSAGE_ITEM+"::MOCK_ID2"])
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(JSON.stringify([
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([]))
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(data[MESSAGE_ITEM+"::MOCK_ID3"])
+                      true
+                    catch e
+                      false
+                )
+              )
+            )
+            test("Continues dequeue sequence if missing message is hit", ()->
+              delete data[MESSAGE_ITEM+"::MOCK_ID2"]
+              lst.startListening()
+              JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
+                "storage",
+                new JsHamcrest.SimpleMatcher(
+                  matches:(f)->
+                    f(
+                      originalEvent:
+                        key: MESSAGE_QUEUE+"::MOCK_USER"
+                    )
+                    try
+                      JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.times(3))(JsHamcrest.Matchers.anything())
+
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(JSON.stringify([
+                        "MOCK_ID1",
+                        "MOCK_ID2",
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([
+                        "MOCK_ID2",
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(data[MESSAGE_ITEM+"::MOCK_ID1"])
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(JSON.stringify([
+                        "MOCK_ID2",
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalModel, JsMockito.Verifiers.never())(data[MESSAGE_ITEM+"::MOCK_ID2"])
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(JSON.stringify([
+                        "MOCK_ID3"
+                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalState)(JsHamcrest.Matchers.equivalentArray([]))
+                      JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(data[MESSAGE_ITEM+"::MOCK_ID3"])
+                      true
+                    catch e
+                      false
+                )
               )
             )
           )
