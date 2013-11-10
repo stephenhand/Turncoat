@@ -3,16 +3,19 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
   MESSAGE_ITEM = "message-item"
   CHALLENGE_RECEIVED_MESSAGE_TYPE = "challenge-received"
 
+  transportEventDispatcher = {}
+  _.extend(transportEventDispatcher, Backbone.Events)
+
   enqueueMessage = (recipient, gameId, payload)->
 
 
 
 
   class LocalStorageTransport
-    otherListeningToggle = null
-    dequeueMessage = null
 
     constructor:(@userId, @gameId, @marshaller)->
+      otherListeningToggle = null
+      dequeueMessage = null
       remaining = 0
       @marshaller ?= Factory.buildStateMarshaller()
       transport = @
@@ -33,7 +36,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
               if messageId? and !window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)?
                 throw new Error("Message missing for queued identifier "+messageId)
           success:()->
-            if (messageId?)
+            if messageId?
               envelopeJSON = window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)
               if (envelopeJSON)
                 envelope = transport.marshaller.unmarshalModel(envelopeJSON)
@@ -42,26 +45,39 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
                     transport.trigger("challengeReceived", envelope.payload)
               if remaining then dequeueMessage()
           error:(e)->
-            if remaining then dequeueMessage()
+            if messageId? && remaining then dequeueMessage()
         )
 
-    startListening:()->
-      handler = (event)=>
-        keyParts = event.originalEvent.key.split("::")
-        switch keyParts[0]
-          when MESSAGE_QUEUE
-            if keyParts[1] is @userId and (@gameId is keyParts[2] or (!@gameId? and !keyParts[2]?))
-              dequeueMessage(@, @userId, @gameId)
-      $(window).on("storage", handler)
-      otherListeningToggle = @startListening
-      @startListening = ()->
-      @stopListening = ()->
-        $(window).off("storage", handler)
+      @startListening=()->
+        handler = (queueIdentity)=>
+          if queueIdentity.userId is @userId and (@gameId is queueIdentity.gameId or (!@gameId? and !queueIdentity.gameId?))
+            dequeueMessage()
+
+        storageHandler  = (event)->
+          keyParts = event.originalEvent.key.split("::")
+          switch keyParts[0]
+            when MESSAGE_QUEUE
+              handler(
+                userId:keyParts[1]
+                gameId:keyParts[2]
+              )
+
+        $(window).on("storage", storageHandler)
+        transportEventDispatcher.on("queueModified", handler)
+        otherListeningToggle = @startListening
+        @startListening = ()->
         @stopListening = ()->
-        @startListening = otherListeningToggle
+          $(window).off("storage", storageHandler)
+          transportEventDispatcher.off("queueModified", handler)
+          @stopListening = ()->
+          @startListening = otherListeningToggle
 
 
     stopListening:()->
+    startListening:()->
+
+    sendChallenge:()->
+
 
 
   LocalStorageTransport
