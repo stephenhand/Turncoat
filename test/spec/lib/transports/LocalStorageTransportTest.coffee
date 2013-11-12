@@ -33,7 +33,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     )
   )
 )
-define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)->
+define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStorageTransport, Backbone)->
   MESSAGE_QUEUE = "message-queue"
   MESSAGE_ITEM = "message-item"
   CHALLENGE_ISSUED_MESSAGE_TYPE = "challenge-issued"
@@ -50,13 +50,11 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
     origSet = Storage.prototype.setItem
     origRemove = Storage.prototype.removeItem
     origClear = Storage.prototype.clear
-    setup(()->
-      fakeBuiltMarshaller =
-        unmarshalModel:JsMockito.mockFunction()
-        marshalModel:JsMockito.mockFunction()
-        unmarshalState:JsMockito.mockFunction()
-        marshalState:JsMockito.mockFunction()
-
+    setupMarshaller = ()->
+      fakeBuiltMarshaller.unmarshalModel=JsMockito.mockFunction()
+      fakeBuiltMarshaller.marshalModel=JsMockito.mockFunction()
+      fakeBuiltMarshaller.unmarshalState=JsMockito.mockFunction()
+      fakeBuiltMarshaller.marshalState=JsMockito.mockFunction()
       JsMockito.when(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.anything()).then((obj)->
         JSON.stringify(obj)
       )
@@ -67,8 +65,12 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
         JSON.parse(str)
       )
       JsMockito.when(fakeBuiltMarshaller.unmarshalState)(JsHamcrest.Matchers.anything()).then((str)->
-        JSON.parse(str)
+        new Backbone.Model(JSON.parse(str))
       )
+    setup(()->
+      fakeBuiltMarshaller = {}
+      setupMarshaller()
+
       mockUserSingleItemQueue = JSON.stringify([
         "MOCK_ID1"
       ])
@@ -138,9 +140,86 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
         dispatcher.on = JsMockito.mockFunction()
         data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserSingleItemQueue
         lst.trigger = JsMockito.mockFunction()
-        calls = 0
-        JsMockito.when(lst.trigger)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(()->
-          calls++
+
+      )
+      test("Empty starting queue - does nothing except load & save empty queue.", ()->
+
+        mocks["lib/concurrency/Mutex"].lock = JsMockito.mockFunction()
+        data[MESSAGE_QUEUE+"::MOCK_USER"] = JSON.stringify([])
+        lst.startListening()
+        setupMarshaller()
+        JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+          new JsHamcrest.SimpleMatcher(
+            matches:(o)->
+              try
+                o.criticalSection()
+                JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([]))
+                JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+                o.success()
+                JsMockito.verify(fakeBuiltMarshaller.unmarshalState, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+                true
+              catch e
+                false
+
+          )
+        )
+      )
+      suite("Multiple items in queue", ()->
+        setup(()->
+          data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserQueue
+          data[MESSAGE_ITEM+"::MOCK_ID1"]=JSON.stringify(
+            type:CHALLENGE_ISSUED_MESSAGE_TYPE
+            payload:
+              propA:"SOMETHING"
+          )
+          data[MESSAGE_ITEM+"::MOCK_ID2"]=JSON.stringify(
+            type:CHALLENGE_ISSUED_MESSAGE_TYPE
+            payload:
+              propA:"SOMETHING1"
+          )
+          data[MESSAGE_ITEM+"::MOCK_ID3"]=JSON.stringify(
+            type:CHALLENGE_ISSUED_MESSAGE_TYPE
+            payload:
+              propA:"SOMETHING2"
+          )
+          mocks["lib/concurrency/Mutex"].lock = JsMockito.mockFunction()
+          JsMockito.when(mocks["lib/concurrency/Mutex"].lock)(JsHamcrest.Matchers.anything()).then((o)->
+            try
+              o.criticalSection()
+            catch e
+              o.error(e)
+            o.success()
+          )
+        )
+        test("Dequeue sequence for each message", ()->
+          items = [data[MESSAGE_ITEM+"::MOCK_ID1"],data[MESSAGE_ITEM+"::MOCK_ID2"],data[MESSAGE_ITEM+"::MOCK_ID3"]]
+          lst.startListening()
+          JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.times(3))(JsHamcrest.Matchers.anything())
+
+          JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
+            "MOCK_ID1",
+            "MOCK_ID2",
+            "MOCK_ID3"
+          ]))
+          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
+            "MOCK_ID2",
+            "MOCK_ID3"
+          ]))
+          JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[0])
+          JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
+            "MOCK_ID2",
+            "MOCK_ID3"
+          ]))
+          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
+            "MOCK_ID3"
+          ]))
+          JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[1])
+          JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
+            "MOCK_ID3"
+          ]))
+          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+          JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[2])
+
         )
       )
       test("Binds to dispatcher queueModified event", ()->
@@ -257,6 +336,7 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
           dispatcherHandler = JsMockito.mockFunction()
           JsMockito.when(dispatcher.on)("queueModified", JsHamcrest.Matchers.func()).then(dispatcherHandler)
           lst.startListening()
+          mocks["lib/concurrency/Mutex"].lock = JsMockito.mockFunction()
           JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
             "storage",
             new JsHamcrest.SimpleMatcher(
@@ -276,6 +356,16 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
         )
       )
       suite("dispatcher queueModified event handler", ()->
+        setup(()->
+          lst.startListening()
+          setupMarshaller()
+          data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserSingleItemQueue
+          lst.trigger = JsMockito.mockFunction()
+          mocks["lib/concurrency/Mutex"].lock = JsMockito.mockFunction()
+          JsMockito.when(mocks["lib/concurrency/Mutex"].lock)(JsHamcrest.Matchers.func()).then((f)->
+            f()
+          )
+        )
         suite("Matches transport's user queue name", ()->
           setup(()->
             data[MESSAGE_ITEM+"::MOCK_ID1"]=JSON.stringify(
@@ -285,7 +375,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
             )
           )
           test("Enters mutex, shifts item and saves it back", ()->
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -323,7 +412,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
             )
           )
           test("Uses marshaller marshalState / unmarshalState", ()->
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -358,7 +446,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
           )
           test("Absent queue - does nothing.", ()->
             delete data[MESSAGE_QUEUE+"::MOCK_USER"]
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -392,7 +479,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
           )
           test("Empty queue - does nothing except load & save empty queue.", ()->
             data[MESSAGE_QUEUE+"::MOCK_USER"] = JSON.stringify([])
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -427,7 +513,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
           )
           test("Message item identified in queue not found in storage - critical section throws", ()->
             delete data[MESSAGE_ITEM+"::MOCK_ID1"]
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -455,7 +540,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
             )
           )
           test("Uses marshaller unmarshalState on located item", ()->
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -487,7 +571,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
           )
           test("Envelope has payload and 'Challenge Received' type - triggers 'Challenge Recieved' event from transport with payload", ()->
 
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -517,7 +600,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
             )
           )
           test("Deletes stored payload.", ()->
-            lst.startListening()
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(
@@ -569,7 +651,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
               )
             )
             test("Continues dequeue sequence for each message", ()->
-              lst.startListening()
               JsMockito.verify(dispatcher.on)(
                 "queueModified",
                 new JsHamcrest.SimpleMatcher(
@@ -614,7 +695,6 @@ define(["isolate!lib/transports/LocalStorageTransport"], (LocalStorageTransport)
             )
             test("Continues dequeue sequence if missing message is hit", ()->
               delete data[MESSAGE_ITEM+"::MOCK_ID2"]
-              lst.startListening()
               JsMockito.verify(dispatcher.on)(
                 "queueModified",
                 new JsHamcrest.SimpleMatcher(

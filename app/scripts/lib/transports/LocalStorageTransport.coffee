@@ -35,9 +35,9 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
               if (envelopeJSON)
                 try
                   envelope = transport.marshaller.unmarshalState(envelopeJSON)
-                  switch envelope.type
+                  switch envelope.get("type")
                     when CHALLENGE_ISSUED_MESSAGE_TYPE
-                      transport.trigger("challengeReceived", envelope.payload)
+                      transport.trigger("challengeReceived", envelope.get("payload"))
                 finally
                   window.localStorage.removeItem(MESSAGE_ITEM+"::"+messageId)
               if remaining then dequeueMessage()
@@ -79,6 +79,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
           transportEventDispatcher.off("queueModified", handler)
           @stopListening = ()->
           @startListening = otherListeningToggle
+        dequeueMessage()
 
       @sendChallenge=(recipient, game)->
         if game?
