@@ -19,7 +19,8 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
         globalRouter.navigate(current.toString(), _.extend(trigger:true, options))
 
 
-    unsetSubRoute:@setSubRoute
+    unsetSubRoute:(name)->
+      @setSubRoute(name)
 
     getSubRoute:(name)->
       r = @getCurrentRoute()

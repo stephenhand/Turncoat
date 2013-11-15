@@ -208,7 +208,10 @@ margin-bottom:30px;
 .invited-only{
     display: none
 }
-.INVITED .invited-only{
+.not-invited-only{
+    display:none;
+}
+.CREATED .not-invited-only{
     display:inherit;
 }
 input[type=button]{
@@ -227,6 +230,14 @@ input[type=button]:active{
 }
 .button-row input[type=button]{
     font-size: 20px;
+}
+.challenge-response-marker input{
+
+    margin-top: 6px;
+    margin-left: -8px;
+    font-size: 15px;
+    padding-bottom: 0px;
+    text-align:center;
 }
 .selected-player-marker {
     transition: opacity .5s ease-out;

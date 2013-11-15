@@ -1,4 +1,4 @@
-define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 'UI/PlayAreaView', 'UI/administration/AdministrationDialogueView', 'UI/ManOWarTableTopViewModel', 'text!templates/ManOWarTableTop.html'],($, _, Backbone, modal, BaseView, PlayAreaView, AdministrationView, ManOWarTableTopViewModel, templateText)->
+define(['setTimeout','jquery', 'underscore', 'backbone', 'jqModal', "UI/routing/Router", 'UI/component/BaseView', 'UI/PlayAreaView', 'UI/administration/AdministrationDialogueView', 'UI/ManOWarTableTopViewModel', 'text!templates/ManOWarTableTop.html'],(setTimeout, $, _, Backbone, modal, Router, BaseView, PlayAreaView, AdministrationView, ManOWarTableTopViewModel, templateText)->
   class ManOWarTableTopView extends BaseView
     initialize: (options)->
       options?={}
@@ -11,9 +11,9 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
     render:()->
       super()
       @subViews.get("playAreaView").render()
-      @subViews.get("administrationView").render()
+      @subViews.get("administrationDialogue").render()
       $("#administrationDialogue").jqm(onHide:()=>
-        @model?.set("administrationDialogueActive" , false)
+        Router.unsetSubRoute("administrationDialogue")
         true
       )
       @model.on("change:administrationDialogueActive",(m, val)=>
@@ -24,7 +24,7 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
       @subViews.get("playAreaView").routeChanged(route)
       if route.subRoutes?.administrationDialogue?
         @model.set("administrationDialogueActive", true)
-        @subViews.get("administrationView").routeChanged(route.subRoutes.administrationDialogue)
+        @subViews.get("administrationDialogue").routeChanged(route.subRoutes.administrationDialogue)
       else
         @model.set("administrationDialogueActive", false)
 
@@ -40,7 +40,7 @@ define(['jquery', 'underscore', 'backbone', 'jqModal', 'UI/component/BaseView', 
       ))
 
     createAdministrationView:()->
-      @subViews.set("administrationView", new AdministrationView(
+      @subViews.set("administrationDialogue", new AdministrationView(
         $el:$("#administrationDialogue")
       ))
   ManOWarTableTopView

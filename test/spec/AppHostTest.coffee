@@ -147,16 +147,16 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
               handler(parts:["MOCK_USER"])
               JsMockito.verify(mocks.AppState.loadUser)("MOCK_USER")
             )
-            test("Triggers gameDataRequired", ()->
-              handler(parts:["MOCK_USER"])
-              JsMockito.verify(mocks["AppState"].trigger)("gameDataRequired")
-            )
             suite("No rootView set", ()->
               test("Calls render", ()->
                 r = AppHost.render
                 try
                   AppHost.rootView = undefined
                   AppHost.render = JsMockito.mockFunction()
+                  JsMockito.when(AppHost.render)().then(()->
+                    AppHost.rootView =
+                      routeChanged:()->
+                  )
                   handler(parts:["MOCK_USER"])
                   JsMockito.verify(AppHost.render)()
                 finally
