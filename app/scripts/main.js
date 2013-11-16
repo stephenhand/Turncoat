@@ -44,12 +44,14 @@ require.config({
 });
 require(['lib/turncoat/Factory',
          'lib/marshallers/JSONMarshaller',
-         'lib/persisters/LocalStoragePersister',
+    'lib/persisters/LocalStoragePersister',
+    'lib/transports/LocalStorageTransport',
          'text!data/config.txt'
-], function(Factory, jsonMarshaller, persister, configText){
+], function(Factory, jsonMarshaller, persister, transport, configText){
   config = JSON.parse(configText)
   Factory.setDefaultMarshaller(config.defaultMarshaller);
   Factory.setDefaultPersister(config.defaultPersister);
+   Factory.setDefaultTransport(config.defaultTransport)
 });
 require(['AppHost',
          'backbone',

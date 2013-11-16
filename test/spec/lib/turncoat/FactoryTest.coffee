@@ -176,6 +176,47 @@ define(["isolate!lib/turncoat/Factory"], (Factory)->
         chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
       )
     )
+    suite("registerTransport", ()->
+      test("Not registering makes default BuildTransport throw", ()->
+        chai.assert.throws(()->
+          Factory.buildTransport()
+        )
+      )
+      test("Not Registering makes keyed buildTransport throw", ()->
+        chai.assert.throws(()->
+          Factory.buildTransport("anything")
+        )
+      )
+
+      test("Registering and building transport behaves same as registering and building persister", ()->
+        #implement test
+        factoryRes = {}
+        testPersister=()->
+          factoryRes
+
+        testTransport=()->
+          factoryRes
+
+        Factory.registerPersister("testPersister",testPersister)
+        testP = Factory.buildPersister("testPersister")
+        Factory.registerTransport("testTransport",testTransport)
+        testT = Factory.buildTransport("testTransport")
+        chai.assert.equal(testP, testT)
+      )
+    )
+    suite("setDefaultTransport", ()->
+      test("Setting default transport uses default transport in parameterless buildTransport", ()->
+        #implement test
+        class testTransport
+          constructor:()->
+            @mockProperty="MOCK_VALUE"
+
+        Factory.registerTransport("testTransport",testTransport)
+        Factory.setDefaultTransport("testTransport")
+        testObj = Factory.buildTransport()
+        chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
+      )
+    )
   )
 
 

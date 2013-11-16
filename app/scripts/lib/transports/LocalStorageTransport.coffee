@@ -8,10 +8,16 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
 
   class LocalStorageTransport
 
-    constructor:(@userId, @gameId, @marshaller)->
+    constructor:(opt)->
+      if (opt?)
+        @userId = opt.userId
+        @gameId = opt.gameId
+        @marshaller = opt.marshaller
       otherListeningToggle = null
       remaining = 0
       @marshaller ?= Factory.buildStateMarshaller()
+
+      _.extend(@, Backbone.Events)
       transport = @
 
       dequeueMessage = ()->
@@ -97,6 +103,8 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
     startListening:()->
 
 
+
+  Factory.registerTransport("LocalStorageTransport",LocalStorageTransport)
 
   LocalStorageTransport
 )

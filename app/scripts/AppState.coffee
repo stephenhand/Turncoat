@@ -1,5 +1,6 @@
 define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat/Game","lib/turncoat/Factory", "text!data/testInitialState.txt"], (setInterval, UUID, moment, _, Backbone, Game, Factory, testInitialState)->
   persister = undefined
+  transport = undefined
   POLL_INTERVAL_MILLISECONDS=500
   
   AppState = Backbone.Model.extend(
@@ -23,6 +24,14 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
         if (data.userId is @get("currentUser").get("id"))
           @get("games").set(data.list.models)
       ,@)
+      if transport?
+        transport.stopListening()
+        @stopListening(transport)
+      transport = Factory.buildTransport(userId:id)
+      @listenTo(transport,"challengeReceived",(game)=>
+        persister.saveGameState(@get("currentUser").get("id"), game)
+      )
+      transport.startListening()
     loadGameTemplate:(id)->
       if (!id?) then throw new Error("loadGameTemplate requires an ID parameter")
       persister.loadGameTemplate(id)
@@ -49,6 +58,7 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
     persister ?= Factory.buildPersister()
   catch e
     persister = {}
+
 
   new AppState()
 )

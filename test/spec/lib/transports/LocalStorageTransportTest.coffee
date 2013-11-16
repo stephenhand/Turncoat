@@ -14,6 +14,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       f=
         buildStateMarshaller:()->
+        registerTransport:JsMockito.mockFunction()
 
       f
     )
@@ -102,7 +103,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       JsMockito.when(mocks["lib/turncoat/Factory"].buildStateMarshaller)().then(()->
         fakeBuiltMarshaller
       )
-      lst = new LocalStorageTransport("MOCK_USER")
+      lst = new LocalStorageTransport(userId:"MOCK_USER")
       data[MESSAGE_QUEUE+"::MOCK_USER::MOCK_GAME"] = mockGameQueue
 
     )
@@ -121,6 +122,14 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
           defaultMarshaller
         )
       )
+      test("Sets userId to userId of supplied options", ()->
+        newLST = new LocalStorageTransport(userId:"TEST_USER_ID")
+        chai.assert.equal(newLST.userId, "TEST_USER_ID")
+      )
+      test("Sets gameId to gameId of supplied options", ()->
+        newLST = new LocalStorageTransport(gameId:"TEST_GAME_ID")
+        chai.assert.equal(newLST.gameId, "TEST_GAME_ID")
+      )
       test("No marshaller supplied - builds default marshaller", ()->
         newLST = new LocalStorageTransport()
         JsMockito.verify(mocks["lib/turncoat/Factory"].buildStateMarshaller)()
@@ -128,7 +137,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       )
       test("Marshaller supplied - uses provided marshaller", ()->
         marshaller = {}
-        newLST = new LocalStorageTransport("","",marshaller)
+        newLST = new LocalStorageTransport(marshaller:marshaller)
         JsMockito.verify(mocks["lib/turncoat/Factory"].buildStateMarshaller, JsMockito.Verifiers.never())()
         chai.assert.equal(newLST.marshaller, marshaller)
       )
@@ -264,7 +273,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
           )
         )
         test("Matches queue identifier prefix - enters same mutex as dispatcher using userId from queue name", ()->
-          lst = new LocalStorageTransport("A_USER_ID")
+          lst = new LocalStorageTransport(userId:"A_USER_ID")
           lst.startListening()
           JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
             "storage",
@@ -299,7 +308,10 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
           )
         )
         test("Matches queue identifier prefix with game - enters same mutex as dispatcher using gameId and userId from queue name", ()->
-          lst = new LocalStorageTransport("A_USER_ID","A_GAME_ID")
+          lst = new LocalStorageTransport(
+            userId:"A_USER_ID"
+            gameId:"A_GAME_ID"
+          )
           lst.startListening()
           JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on)(
             "storage",

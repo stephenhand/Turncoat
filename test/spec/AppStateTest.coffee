@@ -32,7 +32,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("lib/turncoat/Factory","AppState", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      {
+
         buildPersister:()->
           p=
             loadUser:JsMockito.mockFunction()
@@ -64,7 +64,9 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
           )
           window.mockLibrary["AppState"]["persister"]=p
           p
-      }
+
+
+
     )
   )
 
@@ -73,7 +75,24 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 define(['isolate!AppState'], (AppState)->
 
   mocks = window.mockLibrary["AppState"]
+  currentUserTransport = undefined
   suite("AppState", ()->
+    origStopListening = AppState.stopListening
+    origListenTo = AppState.listenTo
+    setup(()->
+      AppState.stopListening = JsMockito.mockFunction()
+      AppState.listenTo = JsMockito.mockFunction()
+      mocks["lib/turncoat/Factory"].buildTransport=JsMockito.mockFunction()
+      JsMockito.when(mocks["lib/turncoat/Factory"].buildTransport)(JsHamcrest.Matchers.anything()).then((opt)->
+        currentUserTransport =
+          startListening:JsMockito.mockFunction()
+          stopListening:JsMockito.mockFunction()
+      )
+    )
+    teardown(()->
+      AppState.stopListening =origStopListening
+      AppState.listenTo = origListenTo
+    )
     suite("createGame", ()->
       test("setsState", ()->
         AppState.createGame()
@@ -83,8 +102,8 @@ define(['isolate!AppState'], (AppState)->
     )
     suite("loadUser", ()->
       setup(()->
-        window.mockLibrary["AppState"]["persister"].off=JsMockito.mockFunction()
-        window.mockLibrary["AppState"]["persister"].on=JsMockito.mockFunction()
+        mocks["persister"].off=JsMockito.mockFunction()
+        mocks["persister"].on=JsMockito.mockFunction()
       )
       test("idString_setsCurrentUserAsPersisterReturnInputVal", ()->
         AppState.loadUser("MOCK_USER")
@@ -107,10 +126,57 @@ define(['isolate!AppState'], (AppState)->
         AppState.loadUser("MOCK_USER")
         JsMockito.verify(mocks["persister"].off)("gameListUpdated",null,AppState)
       )
+      test("Creates default transport for user using buildTransport passing in userId",()->
+        AppState.loadUser("MOCK_USER")
+        JsMockito.verify(mocks["lib/turncoat/Factory"].buildTransport)(JsHamcrest.Matchers.hasMember("userId", "MOCK_USER"))
+      )
+      test("Transport starts listening",()->
+        AppState.loadUser("MOCK_USER")
+        JsMockito.verify(currentUserTransport.startListening)()
+      )
+      test("AppState binds to transport's 'challengeReceived' event",()->
+        AppState.loadUser("MOCK_USER")
+        JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", JsHamcrest.Matchers.func())
+      )
+      suite("Already has transport set", ()->
+        test("Stops listening on previous transport and starts on new one",()->
+          AppState.loadUser("MOCK_USER")
+          previousTransport = currentUserTransport
+          AppState.loadUser("MOCK_SECOND_USER")
+          JsMockito.verify(mocks["lib/turncoat/Factory"].buildTransport)(JsHamcrest.Matchers.hasMember("userId", "MOCK_SECOND_USER"))
+          JsMockito.verify(previousTransport.stopListening)()
+          JsMockito.verify(currentUserTransport.startListening)()
+        )
+        test("Stops listening to old transport",()->
+          AppState.loadUser("MOCK_USER")
+          previousTransport = currentUserTransport
+          AppState.loadUser("MOCK_SECOND_USER")
+          JsMockito.verify(AppState.stopListening)(previousTransport)
+        )
+      )
       test("appliesNewPersisterGameListUpdatedHandler", ()->
         AppState.loadUser("MOCK_USER")
         AppState.get("games").set=JsMockito.mockFunction()
         JsMockito.verify(mocks["persister"].on)("gameListUpdated",JsHamcrest.Matchers.anything(),AppState)
+      )
+      suite("challengeReceived handler", ()->
+        test("Saves challenge to persister", ()->
+
+          AppState.loadUser("MOCK_USER")
+          JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", new JsHamcrest.SimpleMatcher(
+            describeTo:(d)->
+              d.append("challengeReceived handler")
+            matches:(handler)->
+              try
+                game = {}
+                handler(game)
+                JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER",game)
+                true
+              catch e
+                false
+
+          ))
+        )
       )
       suite("gameListUpdatedHandler", ()->
         setup(()->
