@@ -4,7 +4,9 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("UI/administration/ReviewChallengesViewModel","UI/administration/ReviewChallengesView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ()->
-        mockModelInstance = selectChallenge:JsMockito.mockFunction()
+        mockModelInstance =
+          selectChallenge:JsMockito.mockFunction()
+          issueChallenge:JsMockito.mockFunction()
 
     )
   )
@@ -65,6 +67,39 @@ define(["isolate!UI/administration/ReviewChallengesView"], (ReviewChallengesView
         rcv.createModel()
         chai.assert.throws(()->
           rcv.challengeListItem_clicked()
+        )
+      )
+    )
+    suite("issueChallenge_clicked", ()->
+      test("Event target id present - calls models issueChallenge with event currentTarget id", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        rcv.issueChallenge_clicked(
+          currentTarget:
+            id:"MOCK_TARGET_ID"
+        )
+        JsMockito.verify(rcv.model.issueChallenge)("MOCK_TARGET_ID")
+      )
+      test("Event target Id undefined - calls model's issueChallenge with nothing", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        rcv.issueChallenge_clicked(
+          currentTarget:{}
+        )
+        JsMockito.verify(rcv.model.issueChallenge)(JsHamcrest.Matchers.nil())
+      )
+      test("Event target undefined - throws", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        chai.assert.throws(()->
+          rcv.issueChallenge_clicked({})
+        )
+      )
+      test("Event undefined - throws", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        chai.assert.throws(()->
+          rcv.issueChallenge_clicked()
         )
       )
     )

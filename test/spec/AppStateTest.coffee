@@ -1,5 +1,6 @@
 READY_STATE='READY'
 CREATED_STATE='CREATED'
+CHALLENGED_STATE='CHALLENGED'
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("setInterval","AppState", (actual, modulePath, requestingModulePath)->
@@ -72,7 +73,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 
 )
 
-define(['isolate!AppState'], (AppState)->
+define(['isolate!AppState', "backbone"], (AppState, Backbone)->
 
   mocks = window.mockLibrary["AppState"]
   currentUserTransport = undefined
@@ -87,6 +88,7 @@ define(['isolate!AppState'], (AppState)->
         currentUserTransport =
           startListening:JsMockito.mockFunction()
           stopListening:JsMockito.mockFunction()
+          sendChallenge:JsMockito.mockFunction()
       )
     )
     teardown(()->
@@ -168,9 +170,27 @@ define(['isolate!AppState'], (AppState)->
               d.append("challengeReceived handler")
             matches:(handler)->
               try
-                game = {}
+                game =
+                  logEvent:JsMockito.mockFunction()
                 handler(game)
                 JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER",game)
+                true
+              catch e
+                false
+
+          ))
+        )
+        test("Logs the challenge being received on the game", ()->
+          AppState.loadUser("MOCK_USER")
+          JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", new JsHamcrest.SimpleMatcher(
+            describeTo:(d)->
+              d.append("challengeReceived handler")
+            matches:(handler)->
+              try
+                game =
+                  logEvent:JsMockito.mockFunction()
+                handler(game)
+                JsMockito.verify(game.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
                 true
               catch e
                 false
@@ -503,6 +523,68 @@ define(['isolate!AppState'], (AppState)->
                 false
           ), JsHamcrest.Matchers.number())
         )
+      )
+    )
+    suite("issueChallenge", ()->
+      game = {}
+      setup(()->
+        game = new Backbone.Model(
+          players:new Backbone.Collection([
+            user:new Backbone.Model(
+              id:"CHALLENGED_USER"
+            )
+
+          ])
+        )
+        game.logEvent=JsMockito.mockFunction()
+        AppState.loadUser("MOCK_USER")
+      )
+      test("Current user not set - throws",()->
+        AppState.unset("currentUser")
+        chai.assert.throw(()->
+          AppState.issueChallenge("CHALLENGED_USER", {})
+        )
+      )
+      test("Challenged user not set - throws",()->
+        chai.assert.throw(()->
+          AppState.issueChallenge(undefined, {})
+        )
+      )
+      test("Game not set - throws",()->
+        chai.assert.throw(()->
+          AppState.issueChallenge("CHALLENGED_USER")
+        )
+      )
+      test("Challenged user not assigned to a player in game - throws",()->
+        chai.assert.throw(()->
+          AppState.issueChallenge("NOT_CHALLENGED_USER")
+        )
+      )
+      test("Valid input - calls transport sendChallenge with same user & game",()->
+
+        AppState.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(currentUserTransport.sendChallenge)("CHALLENGED_USER",game)
+      )
+      test("Valid input - sets challenged player status to challenged",()->
+        AppState.issueChallenge("CHALLENGED_USER", game)
+        chai.assert.equal(game.get("players").at(0).get("user").get("status"),CHALLENGED_STATE)
+      )
+      test("Valid input - calls transport sendChallenge with game after status set",()->
+        AppState.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(currentUserTransport.sendChallenge)("CHALLENGED_USER",new JsHamcrest.SimpleMatcher(
+          describeTo:(d)->
+            d.append("game")
+          matches:(g)->
+            g.get("players").at(0).get("user").get("status") is CHALLENGED_STATE
+        ))
+      )
+      test("Valid input - saves game",()->
+        AppState.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER",game)
+      )
+      test("Valid input - logs on game", ()->
+        AppState.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(game.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
       )
     )
   )

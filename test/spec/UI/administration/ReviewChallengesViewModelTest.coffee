@@ -38,6 +38,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
       mockGameList = new Backbone.Collection([])
       setup(()->
         mocks['AppState'].get = JsMockito.mockFunction()
+        mocks['AppState'].issueChallenge = JsMockito.mockFunction()
         mocks["UI/component/ObservableOrderCollection"].setOrderAttribute = JsMockito.mockFunction()
         JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
           (key)->
@@ -678,6 +679,26 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
           chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
         )
 
+      )
+      suite("issueChallenge", ()->
+        rcvm = null
+        setup(()->
+          rcvm = new ReviewChallengesViewModel()
+        )
+        test("Valid identifier and challenge selected - calls AppState issueChallenge with identifier and selected game", ()->
+          rcvm.set("selectedChallenge", "SOMETHING")
+          rcvm.issueChallenge("ANOTHER USER")
+          JsMockito.verify(mocks.AppState.issueChallenge)("ANOTHER USER", "SOMETHING")
+        )
+        test("Valid identifier and no challenge selected - calls AppState issueChallenge with no game", ()->
+          rcvm.unset("selectedChallenge")
+          rcvm.issueChallenge("ANOTHER USER")
+          JsMockito.verify(mocks.AppState.issueChallenge)("ANOTHER USER", JsHamcrest.Matchers.nil())
+        )
+        test("No identifier - throws", ()->
+          rcvm.set("selectedChallenge", "SOMETHING")
+          chai.assert.throw(()->rcvm.issueChallenge())
+        )
       )
     )
   )

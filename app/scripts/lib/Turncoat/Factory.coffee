@@ -38,6 +38,14 @@ define(["underscore"], (_)->
     setDefaultPersister:(persisterClassKey)->
       setDefaultFactory(@, "persister", persisterClassKey)
 
+    buildTransport:(key, opts)->
+      buildFactoryType(@, "transport", key, opts)
+
+    registerTransport:(key, transportClass)->
+      registerFactoryType(@, "transport", key, transportClass)
+
+    setDefaultTransport:(transportClassKey)->
+      setDefaultFactory(@, "transport", transportClassKey)
 
 
   Factory
