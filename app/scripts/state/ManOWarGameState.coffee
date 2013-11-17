@@ -5,9 +5,7 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
     )
   ManOWarGameState.toString=()->
       "ManOWarGameState"
-  StateRegistry.registerType("ManOWarGameState", (unvivified)->
-    GameStateModel.vivifier(unvivified, ManOWarGameState)
-  )
+  StateRegistry.registerType("ManOWarGameState",ManOWarGameState)
 
   ManOWarGameState
 )

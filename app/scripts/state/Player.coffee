@@ -5,9 +5,7 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
     "Player"
 
 
-  StateRegistry.registerType("Player", (unvivified)->
-    GameStateModel.vivifier(unvivified, Player)
-  )
+  StateRegistry.registerType("Player",  Player)
 
   Player
 )

@@ -30,7 +30,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
             json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+id)
             if json?
               queue = transport.marshaller.unmarshalModel(json)
-              messageId = queue.shift()
+              messageId = queue.shift()?.get("id")
               remaining = queue.length
               window.localStorage.setItem(MESSAGE_QUEUE+"::"+id, transport.marshaller.marshalModel(queue))
               if messageId? and !window.localStorage.getItem(MESSAGE_ITEM+"::"+messageId)?
@@ -57,7 +57,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
           criticalSection:()->
             json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+recipient) ? "[]"
             queue = transport.marshaller.unmarshalModel(json)
-            queue.push(id)
+            queue.push(id:id)
             window.localStorage.setItem(MESSAGE_QUEUE+"::"+recipient, transport.marshaller.marshalModel(queue))
           success:()->
         )
@@ -93,8 +93,10 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
           window.localStorage.setItem(
             MESSAGE_ITEM+"::"+messageId,
             @marshaller.marshalState(
-              type:CHALLENGE_ISSUED_MESSAGE_TYPE
-              payload:game
+              new Backbone.Model(
+                type:CHALLENGE_ISSUED_MESSAGE_TYPE
+                payload:game
+              )
             )
           )
           enqueueMessage(recipient, messageId)

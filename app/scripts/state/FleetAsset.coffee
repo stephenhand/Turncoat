@@ -5,9 +5,8 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
   FleetAsset.toString=()->
       "FleetAsset"
 
-  StateRegistry.registerType("FleetAsset", (unvivified)->
-    GameStateModel.vivifier(unvivified, FleetAsset)
-  )
+  StateRegistry.registerType("FleetAsset", FleetAsset)
+
 
   FleetAsset
 )

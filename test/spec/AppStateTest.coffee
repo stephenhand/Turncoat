@@ -81,6 +81,7 @@ define(['isolate!AppState', "backbone"], (AppState, Backbone)->
     origStopListening = AppState.stopListening
     origListenTo = AppState.listenTo
     setup(()->
+      AppState.unset("currentUser")
       AppState.stopListening = JsMockito.mockFunction()
       AppState.listenTo = JsMockito.mockFunction()
       mocks["lib/turncoat/Factory"].buildTransport=JsMockito.mockFunction()
@@ -125,7 +126,7 @@ define(['isolate!AppState', "backbone"], (AppState, Backbone)->
         chai.assert.equal(AppState.get("games"), "MOCK_GAME_LIST")
       )
       test("removesExistingPersisterGameListUpdatedHandler", ()->
-        AppState.loadUser("MOCK_USER")
+        AppState.loadUser("MOCK_USER2")
         JsMockito.verify(mocks["persister"].off)("gameListUpdated",null,AppState)
       )
       test("Creates default transport for user using buildTransport passing in userId",()->
@@ -160,6 +161,32 @@ define(['isolate!AppState', "backbone"], (AppState, Backbone)->
         AppState.loadUser("MOCK_USER")
         AppState.get("games").set=JsMockito.mockFunction()
         JsMockito.verify(mocks["persister"].on)("gameListUpdated",JsHamcrest.Matchers.anything(),AppState)
+      )
+      suite("Multiple loads of same user", ()->
+        test("Only starts transport listening once", ()->
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          JsMockito.verify(currentUserTransport.startListening)()
+        )
+        test("Binds to 'challengeReceived' event once",()->
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", JsHamcrest.Matchers.func())
+        )
+        test("Applies persister GameListUpdated handler once", ()->
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.loadUser("MOCK_USER")
+          AppState.get("games").set=JsMockito.mockFunction()
+          JsMockito.verify(mocks["persister"].on)("gameListUpdated",JsHamcrest.Matchers.anything(),AppState)
+        )
       )
       suite("challengeReceived handler", ()->
         test("Saves challenge to persister", ()->

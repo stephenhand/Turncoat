@@ -25,6 +25,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
         on:()->
           dispatcher = @
         off:()->
+      Model:actual.Model
     )
   )
   Isolate.mapAsFactory("uuid", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
@@ -63,7 +64,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
         JSON.stringify(obj)
       )
       JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then((str)->
-        JSON.parse(str)
+        new Backbone.Collection(JSON.parse(str))
       )
       JsMockito.when(fakeBuiltMarshaller.unmarshalState)(JsHamcrest.Matchers.anything()).then((str)->
         new Backbone.Model(JSON.parse(str))
@@ -73,15 +74,17 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       setupMarshaller()
 
       mockUserSingleItemQueue = JSON.stringify([
-        "MOCK_ID1"
+        id:"MOCK_ID1"
       ])
       mockUserQueue = JSON.stringify([
-        "MOCK_ID1",
-        "MOCK_ID2",
-        "MOCK_ID3"
+        id:"MOCK_ID1"
+      ,
+        id:"MOCK_ID2"
+      ,
+        id:"MOCK_ID3"
       ])
       mockGameQueue = JSON.stringify([
-        "MOCK_GAME_ID1"
+        id:"MOCK_GAME_ID1"
       ])
       mockInviteReceivedMessage = JSON.stringify(
         type:CHALLENGE_ISSUED_MESSAGE_TYPE
@@ -159,11 +162,12 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
         setupMarshaller()
         JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
           new JsHamcrest.SimpleMatcher(
+            describeTo:(d)->d.append("mutext options")
             matches:(o)->
               try
                 o.criticalSection()
                 JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([]))
-                JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+                JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",JsHamcrest.Matchers.equivalentArray([])))
                 o.success()
                 JsMockito.verify(fakeBuiltMarshaller.unmarshalState, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
                 true
@@ -206,27 +210,49 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
           JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.times(3))(JsHamcrest.Matchers.anything())
 
           JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-            "MOCK_ID1",
-            "MOCK_ID2",
-            "MOCK_ID3"
+            id:"MOCK_ID1"
+          ,
+            id:"MOCK_ID2"
+          ,
+            id:"MOCK_ID3"
           ]))
-          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
-            "MOCK_ID2",
-            "MOCK_ID3"
-          ]))
+          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",
+            JsHamcrest.Matchers.allOf(
+              JsHamcrest.Matchers.hasItems(
+                JsHamcrest.Matchers.hasMember("id","MOCK_ID2")
+              ,
+                JsHamcrest.Matchers.hasMember("id","MOCK_ID3")
+              )
+            ,
+              JsHamcrest.Matchers.hasSize(2)
+            )
+          ))
           JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[0])
           JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-            "MOCK_ID2",
-            "MOCK_ID3"
+            id:"MOCK_ID2"
+          ,
+            id:"MOCK_ID3"
           ]))
-          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
-            "MOCK_ID3"
-          ]))
+          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(
+            JsHamcrest.Matchers.hasMember("models",
+              JsHamcrest.Matchers.allOf(
+                JsHamcrest.Matchers.hasItems(
+                  JsHamcrest.Matchers.hasMember("id","MOCK_ID3")
+                )
+              ,
+                JsHamcrest.Matchers.hasSize(1)
+              )
+            )
+          )
           JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[1])
           JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-            "MOCK_ID3"
+            id:"MOCK_ID3"
           ]))
-          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+          JsMockito.verify(fakeBuiltMarshaller.marshalModel)(
+            JsHamcrest.Matchers.hasMember("models",
+              JsHamcrest.Matchers.empty()
+            )
+          )
           JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[2])
 
         )
@@ -442,7 +468,9 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
                               orig = data[MESSAGE_QUEUE+"::MOCK_USER"]
                               mf()
                               JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(orig)
-                              JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+                              JsMockito.verify(fakeBuiltMarshaller.marshalModel)(
+                                JsHamcrest.Matchers.hasMember("models",JsHamcrest.Matchers.equivalentArray([]))
+                              )
                               true
                             catch e
                               false
@@ -507,7 +535,9 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
                           try
                             o.criticalSection()
                             JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([]))
-                            JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+                            JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",
+                              JsHamcrest.Matchers.equivalentArray([]))
+                            )
                             o.success()
                             JsMockito.verify(fakeBuiltMarshaller.unmarshalState, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
                             true
@@ -677,27 +707,43 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
                       JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.times(3))(JsHamcrest.Matchers.anything())
 
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-                        "MOCK_ID1",
-                        "MOCK_ID2",
-                        "MOCK_ID3"
+                        id:"MOCK_ID1"
+                      ,
+                        id:"MOCK_ID2"
+                      ,
+                        id:"MOCK_ID3"
                       ]))
-                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
-                        "MOCK_ID2",
-                        "MOCK_ID3"
-                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",
+                        JsHamcrest.Matchers.allOf(
+                          JsHamcrest.Matchers.hasItems(
+                            JsHamcrest.Matchers.hasMember("id","MOCK_ID2")
+                          ,
+                            JsHamcrest.Matchers.hasMember("id","MOCK_ID3")
+                          )
+                        ,
+                          JsHamcrest.Matchers.hasSize(2)
+                        ))
+                      )
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[0])
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-                        "MOCK_ID2",
-                        "MOCK_ID3"
+                        id:"MOCK_ID2"
+                      ,
+                        id:"MOCK_ID3"
                       ]))
-                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
-                        "MOCK_ID3"
-                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",
+                        JsHamcrest.Matchers.allOf(
+                          JsHamcrest.Matchers.hasItem(
+                            JsHamcrest.Matchers.hasMember("id","MOCK_ID3")
+                          )
+                        ,
+                          JsHamcrest.Matchers.hasSize(1)
+                        )
+                      ))
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[1])
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-                        "MOCK_ID3"
+                        id:"MOCK_ID3"
                       ]))
-                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.empty())
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[2])
                       true
                     catch e
@@ -721,27 +767,45 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
                       JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.times(3))(JsHamcrest.Matchers.anything())
 
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-                        "MOCK_ID1",
-                        "MOCK_ID2",
-                        "MOCK_ID3"
+                        id:"MOCK_ID1"
+                      ,
+                        id:"MOCK_ID2"
+                      ,
+                        id:"MOCK_ID3"
                       ]))
-                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
-                        "MOCK_ID2",
-                        "MOCK_ID3"
-                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",
+                        JsHamcrest.Matchers.allOf(
+                          JsHamcrest.Matchers.hasItems(
+                            JsHamcrest.Matchers.hasMember("id","MOCK_ID2")
+                          ,
+                            JsHamcrest.Matchers.hasMember("id","MOCK_ID3")
+                          )
+                        ,
+                          JsHamcrest.Matchers.hasSize(2)
+                        ))
+                      )
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[0])
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-                        "MOCK_ID2",
-                        "MOCK_ID3"
+                        id:"MOCK_ID2"
+                      ,
+                        id:"MOCK_ID3"
                       ]))
-                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([
-                        "MOCK_ID3"
-                      ]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",
+                        JsHamcrest.Matchers.allOf(
+                          JsHamcrest.Matchers.hasItem(
+                            JsHamcrest.Matchers.hasMember("id","MOCK_ID3")
+                          )
+                        ,
+                          JsHamcrest.Matchers.hasSize(1)
+                        )
+                      ))
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalState, JsMockito.Verifiers.never())(items[1])
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalModel)(JSON.stringify([
-                        "MOCK_ID3"
+                        id:"MOCK_ID3"
                       ]))
-                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.equivalentArray([]))
+                      JsMockito.verify(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.hasMember("models",
+                        JsHamcrest.Matchers.empty()
+                      ))
                       JsMockito.verify(fakeBuiltMarshaller.unmarshalState)(items[2])
                       true
                     catch e
@@ -860,10 +924,13 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       suite("Multiple items already in queue", ()->
         setup(()->
           data[MESSAGE_QUEUE+"::MOCK_USER"] = JSON.stringify([
-            "MESSAGE1",
-            "MESSAGE2",
-            "MESSAGE3",
-            "MESSAGE4"
+            id:"MESSAGE1"
+          ,
+            id:"MESSAGE2"
+          ,
+            id:"MESSAGE3"
+          ,
+            id:"MESSAGE4"
           ])
         )
         test("Adds new item to the end of the queue in mutex", ()->
@@ -893,7 +960,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
             new JsHamcrest.SimpleMatcher(
               matches:(o)->
                 o.criticalSection()
-                JSON.parse(data[MESSAGE_QUEUE+"::MOCK_USER"])[4] is "MOCK_GENERATED_ID"
+                JSON.parse(data[MESSAGE_QUEUE+"::MOCK_USER"])[4].id is "MOCK_GENERATED_ID"
             )
           )
         )
@@ -903,10 +970,10 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
           )
           JsMockito.verify(fakeBuiltMarshaller.marshalState)(
             new JsHamcrest.SimpleMatcher(
-              descripbeTo:(d)->
+              describeTo:(d)->
                 d.append("marshaller call")
               matches:(e)->
-                e.payload? && e.type?
+                e.get("payload")? && e.get("type")?
             )
           )
         )

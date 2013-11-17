@@ -20,25 +20,26 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
       @get("game").loadState(testInitialState)
 
     loadUser:(id)->
-      @set("currentUser", persister.loadUser(id))
-      @set("gameTemplates", persister.loadGameTemplateList(null, id))
-      @set("gameTypes", persister.loadGameTypes())
-      @set("games",persister.loadGameList(id) ? new Backbone.Collection([]))
-      persister.off("gameListUpdated", null, @)
-      persister.on("gameListUpdated", (data)->
-        if (data.userId is @get("currentUser").get("id"))
-          @get("games").set(data.list.models)
-      ,@)
-      if transport?
-        transport.stopListening()
-        @stopListening(transport)
-      transport = Factory.buildTransport(userId:id)
-      @listenTo(transport,"challengeReceived",(game)=>
+      if (id isnt @get("currentUser")?.get("id"))
+        @set("currentUser", persister.loadUser(id))
+        @set("gameTemplates", persister.loadGameTemplateList(null, id))
+        @set("gameTypes", persister.loadGameTypes())
+        @set("games",persister.loadGameList(id) ? new Backbone.Collection([]))
+        persister.off("gameListUpdated", null, @)
+        persister.on("gameListUpdated", (data)->
+          if (data.userId is @get("currentUser").get("id"))
+            @get("games").set(data.list.models)
+        ,@)
+        if transport?
+          transport.stopListening()
+          @stopListening(transport)
+        transport = Factory.buildTransport(userId:id)
+        @listenTo(transport,"challengeReceived",(game)=>
 
-        game.logEvent(moment.utc(),"INVITERECEIVED::"+id,"Game created locally")
-        persister.saveGameState(@get("currentUser").get("id"), game)
-      )
-      transport.startListening()
+          game.logEvent(moment.utc(),"INVITERECEIVED::"+id,"Game created locally")
+          persister.saveGameState(@get("currentUser").get("id"), game)
+        )
+        transport.startListening()
 
     loadGameTemplate:(id)->
       if (!id?) then throw new Error("loadGameTemplate requires an ID parameter")
@@ -71,8 +72,8 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
       if !user? then throw new Error("Target user must be part of game to issue a challenge")
       user.set("status",CHALLENGED_STATE)
       transport.sendChallenge(userId, game)
-      persister.saveGameState(@get("currentUser").get("id"), game)
       game.logEvent(moment.utc(),"INVITESENT::"+userId, "Game created locally")
+      persister.saveGameState(@get("currentUser").get("id"), game)
   )
 
   #Singleton
