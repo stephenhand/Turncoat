@@ -1,6 +1,6 @@
 PLAYING_USERSTATUS = "PLAYING"
 
-define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
+define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModelItem", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, ObservingViewModelItem, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
   GetStatusText = (userStatus)->
     switch userStatus
       when "READY"
@@ -11,6 +11,7 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
   ReviewChallengesViewModel = Backbone.Model.extend(
     initialize:()->
       @set("challenges", new ObservingViewModelCollection())
+      @set("challengePlayerList", new ObservingViewModelCollection())
       _.extend(@get("challenges"), ObservableOrderCollection)
       @get("challenges").setOrderAttribute("ordinal")
       @get("challenges").comparator=(a, b)->
@@ -52,27 +53,35 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
         if !model.get("active") then @selectChallenge()
       )
       @on("change:selectedChallengeId", ()=>
+        @get("challengePlayerList").unwatch(true)
         if @get("selectedChallengeId")?
           @set("selectedChallenge",AppState.loadGame(@get("selectedChallengeId")))
           if @get("selectedChallenge")?
-            @set("challengePlayerList", new Backbone.Collection(
+            @get("challengePlayerList").watch([@get("selectedChallenge").get("players")])
+            rcvm = @
+            @get("challengePlayerList").onSourceUpdated=()->
+              @updateFromWatchedCollections(
+                (item, watched)->
+                  item.get("id")? and item.get("id") is watched.get("id")
+              ,
+                (input)->
+                  new ObservingViewModelItem(
+                    id:input.get("id")
+                    name:input.get("name")
+                    user:input.get("user")
+                    description:input.get("description")
+                  )
+              )
+              currentPlayer = rcvm.get("challengePlayerList")?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))
+              if currentPlayer?
+                currentPlayer.set("selectedForUser",true)
+                rcvm.set("selectedChallengeUserStatus", currentPlayer.get("user").get("status"))
+              else
+                rcvm.unset("selectedChallengeUserStatus")
 
-              for player in @get("selectedChallenge").get("players").models
-                new Backbone.Model(
-                  id:player.get("id")
-                  name:player.get("name")
-                  user:player.get("user")
-                  description:player.get("description")
-
-                )
-            ))
-          currentPlayer = @get("challengePlayerList")?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))
-          if currentPlayer?
-            currentPlayer.set("selectedForUser",true)
-            @set("selectedChallengeUserStatus", currentPlayer.get("user").get("status"))
+            @get("challengePlayerList").onSourceUpdated()
         else
           @unset("selectedChallenge")
-          @unset("challengePlayerList")
       )
 
     selectChallenge:(id)->
