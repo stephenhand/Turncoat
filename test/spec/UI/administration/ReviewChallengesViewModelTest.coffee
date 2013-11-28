@@ -557,7 +557,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             rcvm.set("selectedChallengeId", "AN IDENTIFIER")
             chai.assert.isUndefined(rcvm.get("selectedChallenge"))
           )
-          test("noIdentifier_unsetsSelectedChallenge", ()->
+          test("No identifier - unsets SelectedChallenge", ()->
             rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
             rcvm.set("selectedChallenge", "SOMETHING")
             rcvm.unset("selectedChallengeId")
@@ -573,10 +573,14 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             rcvm.unset("selectedChallengeId")
             JsMockito.verify(rcvm.get("challengePlayerList").unwatch)(true)
           )
-          test("validIdentifier - challengePlayerList watches player list for challenge", ()->
+          test("Valid identifier - challengePlayerList watches player list for challenge", ()->
             rcvm.set("selectedChallengeId", "AN IDENTIFIER")
             JsMockito.verify(rcvm.get("challengePlayerList").watch)(JsHamcrest.Matchers.equivalentArray([rcvm.get("selectedChallenge").get("players")]))
 
+          )
+          test("Valid identifier - Calls updateFromWatchedCollection", ()->
+            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+            JsMockito.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func())
           )
           test("No identifier - challengePlayerList doesn't watch anything", ()->
             rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
@@ -589,8 +593,31 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
               rcvm.set("selectedChallengeId", "AN IDENTIFIER")
             )
             test("Calls updateFromWatchedCollection", ()->
+              rcvm.get("challengePlayerList").updateFromWatchedCollections = JsMockito.mockFunction()
               rcvm.get("challengePlayerList").onSourceUpdated()
               JsMockito.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func())
+            )
+            test("Calls updateFromWatchedCollection with same handlers as when selectedChallengeId first changed", ()->
+              rcvm.unset("selectedChallengeId")
+              comparer = undefined
+              adder = undefined
+              JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)().then((c, a)->
+                comparer = c
+                adder = a
+              )
+              rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+              rcvm.get("challengePlayerList").updateFromWatchedCollections = JsMockito.mockFunction()
+              rcvm.get("challengePlayerList").onSourceUpdated()
+              JsMockito.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(
+                new JsHamcrest.SimpleMatcher(
+                  matches:(cc)->
+                    cc.toString() is comparer.toString()
+                ),
+                new JsHamcrest.SimpleMatcher(
+                  matches:(aa)->
+                    aa.toString() is adder.toString()
+                )
+              )
             )
             test("Contains player with user matching current user - sets selectedChallengeUserStatus to that user styatus", ()->
               rcvm.get("challengePlayerList").push(
