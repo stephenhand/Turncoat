@@ -24,22 +24,23 @@ define(["underscore", "backbone"], (_, Backbone)->
 
     onSourceUpdated:()=>
 
-    updateFromWatchedCollections:(comparer, adder, watchCollectionSelector)->
+    updateFromWatchedCollections:(comparer, adder, watchCollectionSelector, onremove)->
       processed = []
       for watchedCollection in @watchedCollections or []
         for watchedItem in watchedCollection.models when !watchCollectionSelector? or watchCollectionSelector(watchedItem)
           VM = @find((item)->
             comparer(item, watchedItem)
-            #watchedItem instanceof FleetAsset and item.get("modelId") is watchedItem.id
           )
-          if !VM? then @add(adder(watchedItem)) #new FleetAsset2DViewModel(model:fleetAsset))
+          if !VM? then @add(adder(watchedItem))
           processed.push(watchedItem)
 
-      #remove surplus ships
+      #remove surplus items
       counter = 0
       while counter < @length
         if (!_.find(processed, (processedItem)=>comparer(@at(counter),processedItem)))
-          @remove(@at(counter))
+          r = @at(counter)
+          @remove(r)
+          (onremove ? ()->)(r)
         else counter++
   )
   ObservingViewModelCollection

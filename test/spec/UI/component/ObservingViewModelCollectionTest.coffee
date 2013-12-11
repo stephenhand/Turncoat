@@ -103,7 +103,7 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
         JsMockito.verify(mockOnSourceUpdatedHandler3)()
       )
     )
-    suite("watch", ()->
+    suite("unwatch", ()->
       test("Unbinds all watched collections add events", ()->
         bvmc.watch([coll2,coll3,coll4])
         bvmc.unwatch()
@@ -387,82 +387,157 @@ define(['isolate!UI/component/ObservingViewModelCollection'], (ObservingViewMode
         JsMockito.verify(bvmc.add)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK3"))
         JsMockito.verify(bvmc.add)(JsHamcrest.Matchers.hasMember("match","realCollection_MOCK4"))
       )
-
-      test("removingRelevantItem_removesItem", ()->
-        bvmc = new ObservingViewModelCollection()
-        bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
-        bvmc.updateFromWatchedCollections(
-          (i,wi)->
-            i.get("match") is wi.get("matchVal")
-        ,
-        (wi)->
-          match:wi.get("matchVal")
-        ,
-        (wi)->
-          wi.get("irrelevant") isnt true
-        )
-        realCollectionFiveMixedItems.remove(realCollectionFiveMixedItems.at(1))
-        oadd=bvmc.add
-        oremove= bvmc.remove
-        bvmc.add=JsMockito.mockFunction()
-        JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
-          oadd.call(bvmc,i)
-        )
-        bvmc.remove=JsMockito.mockFunction()
-        JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
-          oremove.call(bvmc,i)
-        )
-        bvmc.updateFromWatchedCollections(
-          (i,wi)->
-            i.get("match") is wi.get("matchVal")
+      suite("No custom remover function set", ()->
+        bvmc = undefined
+        oadd = undefined
+        oremove = undefined
+        setup(()->
+          bvmc = new ObservingViewModelCollection()
+          bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
+          bvmc.updateFromWatchedCollections(
+            (i,wi)->
+              i.get("match") is wi.get("matchVal")
           ,
-          (wi)->
-            match:wi.get("matchVal")
+            (wi)->
+              match:wi.get("matchVal")
           ,
-          (wi)->
-            wi.get("irrelevant") isnt true
+            (wi)->
+              wi.get("irrelevant") isnt true
+          )
         )
-        JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
+        test("Removing relevant item removes item", ()->
+          realCollectionFiveMixedItems.remove(realCollectionFiveMixedItems.at(1))
+          oadd=bvmc.add
+          oremove= bvmc.remove
+          bvmc.add=JsMockito.mockFunction()
+          JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
+            oadd.call(bvmc,i)
+          )
+          bvmc.remove=JsMockito.mockFunction()
+          JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
+            oremove.call(bvmc,i)
+          )
+          bvmc.updateFromWatchedCollections(
+            (i,wi)->
+              i.get("match") is wi.get("matchVal")
+          ,
+            (wi)->
+              match:wi.get("matchVal")
+          ,
+            (wi)->
+              wi.get("irrelevant") isnt true
+          )
+          JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
 
-      )
-      test("clearingWatchedCollection_removesAllRelevantItems", ()->
-        bvmc = new ObservingViewModelCollection()
-        bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
-        bvmc.updateFromWatchedCollections(
-          (i,wi)->
-            i.get("match") is wi.get("matchVal")
-        ,
-        (wi)->
-          match:wi.get("matchVal")
-        ,
-        (wi)->
-          wi.get("irrelevant") isnt true
         )
-        realCollectionFiveMixedItems.reset()
-        oadd=bvmc.add
-        oremove= bvmc.remove
-        bvmc.add=JsMockito.mockFunction()
-        JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
-          oadd.call(bvmc,i)
-        )
-        bvmc.remove=JsMockito.mockFunction()
-        JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
-          oremove.call(bvmc,i)
-        )
-        bvmc.updateFromWatchedCollections(
-          (i,wi)->
-            i.get("match") is wi.get("matchVal")
-        ,
-        (wi)->
-          match:wi.get("matchVal")
-        ,
-        (wi)->
-          wi.get("irrelevant") isnt true
-        )
-        JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
-        JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK4")))
+        test("Clearing watched collection - removes all relevant items", ()->
+          realCollectionFiveMixedItems.reset()
+          oadd=bvmc.add
+          oremove= bvmc.remove
+          bvmc.add=JsMockito.mockFunction()
+          JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
+            oadd.call(bvmc,i)
+          )
+          bvmc.remove=JsMockito.mockFunction()
+          JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
+            oremove.call(bvmc,i)
+          )
+          bvmc.updateFromWatchedCollections(
+            (i,wi)->
+              i.get("match") is wi.get("matchVal")
+          ,
+            (wi)->
+              match:wi.get("matchVal")
+          ,
+            (wi)->
+              wi.get("irrelevant") isnt true
+          )
+          JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
+          JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK4")))
 
+        )
       )
+      suite("onremove event set", ()->
+        bvmc = undefined
+        oadd = undefined
+        oremove = undefined
+        onremove = undefined
+        setup(()->
+          onremove = JsMockito.mockFunction()
+          bvmc = new ObservingViewModelCollection()
+          bvmc.watch([realCollectionFiveMixedItems,realCollection,realCollectionThreeItems,realCollectionThreeIrrelevantItems])
+          bvmc.updateFromWatchedCollections(
+            (i,wi)->
+              i.get("match") is wi.get("matchVal")
+          ,
+            (wi)->
+              match:wi.get("matchVal")
+          ,
+            (wi)->
+              wi.get("irrelevant") isnt true
+          ,
+            onremove
+          )
+        )
+        test("Removing relevant item - removes from collection and calls onremove handler with item as parameter", ()->
+          realCollectionFiveMixedItems.remove(realCollectionFiveMixedItems.at(1))
+          oadd=bvmc.add
+          oremove= bvmc.remove
+          bvmc.add=JsMockito.mockFunction()
+          JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
+            oadd.call(bvmc,i)
+          )
+          bvmc.remove=JsMockito.mockFunction()
+          JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
+            oremove.call(bvmc,i)
+          )
+          bvmc.updateFromWatchedCollections(
+            (i,wi)->
+              i.get("match") is wi.get("matchVal")
+          ,
+            (wi)->
+              match:wi.get("matchVal")
+          ,
+            (wi)->
+              wi.get("irrelevant") isnt true
+          ,
+            onremove
+          )
+          JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
+          JsMockito.verify(onremove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
+        )
+        test("Clearing watched collection - calls remover function on all relevant items", ()->
+          realCollectionFiveMixedItems.reset()
+          oadd=bvmc.add
+          oremove= bvmc.remove
+          bvmc.add=JsMockito.mockFunction()
+          JsMockito.when(bvmc.add)(JsHamcrest.Matchers.anything()).then((i)->
+            oadd.call(bvmc,i)
+          )
+          bvmc.remove=JsMockito.mockFunction()
+          JsMockito.when(bvmc.remove)(JsHamcrest.Matchers.anything()).then((i)->
+            oremove.call(bvmc,i)
+          )
+          bvmc.updateFromWatchedCollections(
+            (i,wi)->
+              i.get("match") is wi.get("matchVal")
+          ,
+            (wi)->
+              match:wi.get("matchVal")
+          ,
+            (wi)->
+              wi.get("irrelevant") isnt true
+          ,
+            onremove
+          )
+          JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
+          JsMockito.verify(bvmc.remove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK4")))
+          JsMockito.verify(onremove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK2")))
+          JsMockito.verify(onremove)(JsHamcrest.Matchers.hasMember("attributes",JsHamcrest.Matchers.hasMember("match","realCollectionFiveMixedItems_MOCK4")))
+
+        )
+      )
+
     )
   )
 

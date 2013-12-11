@@ -18,13 +18,16 @@ define(["underscore", "backbone"], (_, Backbone)->
               context.onModelUpdated(modelAttributes.model, attribute)
             modelAttributes.model.on("change:"+attribute, handler)
             watchedModel.attributes[attribute] = handler
-    unwatch:()->
-      for modelAtt in @watchedModels
+    unwatch:(model)->
+      for modelAtt in @watchedModels when (!model? or model is modelAtt.model)
         if modelAtt.attributes
          for name, handler of modelAtt.attributes
            modelAtt.model.off("change:"+name, handler)
            delete modelAtt.attributes[name]
-      @watchedModels = []
+      if model?
+        @watchedModels = _.filter(@watchedModels, (item)->item.model isnt model)
+      else
+        @watchedModels = []
     onModelUpdated:(model, attribute)=>
   )
   ObservingViewModelItem

@@ -53,33 +53,88 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
         if !model.get("active") then @selectChallenge()
       )
       @on("change:selectedChallengeId", ()=>
-        @get("challengePlayerList").unwatch(true)
+        challengePlayers = @get("challengePlayerList")
+        challengePlayers.unwatch(true)
         if @get("selectedChallengeId")?
           @set("selectedChallenge",AppState.loadGame(@get("selectedChallengeId")))
           if @get("selectedChallenge")?
-            @get("challengePlayerList").watch([@get("selectedChallenge").get("players")])
+            challengePlayers.watch([@get("selectedChallenge").get("players")])
             rcvm = @
-            @get("challengePlayerList").onSourceUpdated=()->
+            challengePlayers.onSourceUpdated=()->
               @updateFromWatchedCollections(
                 (item, watched)->
                   item.get("id")? and item.get("id") is watched.get("id")
               ,
                 (input)->
-                  new ObservingViewModelItem(
+                  if input.get("user")? and !(input.get("user") instanceof Backbone.Model) then throw new Error("Invalid user")
+                  user = input.get("user") ? get:()->
+                  ovmi=new ObservingViewModelItem(
                     id:input.get("id")
                     name:input.get("name")
-                    user:input.get("user")
+                    user:new Backbone.Model(
+                      id:user.get("id")
+                      status:user.get("status")
+                    )
                     description:input.get("description")
                   )
+                  watchedUser = input.get("user")
+                  ovmi.watch([
+                      model:input
+                      attributes:[
+                        "name",
+                        "description"
+                      ]
+                    ,
+                      model:watchedUser
+                      attributes:[
+                        "status"
+                      ]
+                    ]
+                  ,
+                    (model, attribute)->
+                      if model is input
+                        if attribute is "user"
+                          ovmi.get("user").set(
+                            id:model.get("user").get("id")
+                            status:model.get("user").get("status")
+                          )
+                          ovmi.unwatch(watchedUser)
+                          watchedUser = model.get("user")
+                          ovmi.watch(
+                            [
+                              model:watchedUser
+                              attributes:[
+                                "status"
+                              ]
+                            ]
+                          ,
+                            ovmi.onModelUpdated
+                          )
+                        else
+                          ovmi.set(
+                            name:model.get("name")
+                            description:model.get("description")
+                          )
+                      else if input.get("user")? and model is input.get("user")
+                        ovmi.get("user").set(
+                          id:model.get("id")
+                          status:model.get("status")
+                        )
+                  )
+                  ovmi
+              ,
+                undefined
+              ,
+                (removed)->
+                  removed.unwatch()
               )
-              currentPlayer = rcvm.get("challengePlayerList")?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))
+              currentPlayer = challengePlayers?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))
               if currentPlayer?
                 currentPlayer.set("selectedForUser",true)
                 rcvm.set("selectedChallengeUserStatus", currentPlayer.get("user").get("status"))
               else
                 rcvm.unset("selectedChallengeUserStatus")
-
-            @get("challengePlayerList").onSourceUpdated()
+            challengePlayers.onSourceUpdated()
         else
           @unset("selectedChallenge")
       )

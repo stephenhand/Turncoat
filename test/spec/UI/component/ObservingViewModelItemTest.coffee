@@ -1,47 +1,52 @@
 define(['isolate!UI/component/ObservingViewModelItem','backbone'], (ObservingViewModelItem, Backbone)->
   suite("ObservingViewModelItem", ()->
-    mockWatchDataSingleAttribute = [
-      model:
-        on:JsMockito.mockFunction()
-        off:JsMockito.mockFunction()
-      attributes:["A"]
-    ]
-    mockWatchDataMultiAttribute = [
-      model:
-        on:JsMockito.mockFunction()
-        off:JsMockito.mockFunction()
-      attributes:["A","B","C"]
-    ]
-    mockWatchDataMultiModel = [
-      model:
-        on:JsMockito.mockFunction()
-        off:JsMockito.mockFunction()
-      attributes:["A","B","C"]
-    ,
-      model:
-        on:JsMockito.mockFunction()
-        off:JsMockito.mockFunction()
-      attributes:["D"]
-    ,
-      model:
-        on:JsMockito.mockFunction()
-        off:JsMockito.mockFunction()
-      attributes:["E","F"]
-    ]
-    mockWatchDataDupAttribute = [
-      model:
-        on:JsMockito.mockFunction()
-        off:JsMockito.mockFunction()
-      attributes:["A","A"]
+    mockWatchDataSingleAttribute = undefined
+    mockWatchDataMultiAttribute = undefined
+    mockWatchDataMultiModel = undefined
+    mockWatchDataDupAttribute = undefined
+    mockWatchDataRealEvent = undefined
+    setup(()->
+      mockWatchDataSingleAttribute = [
+        model:
+          on:JsMockito.mockFunction()
+          off:JsMockito.mockFunction()
+        attributes:["A"]
+      ]
+      mockWatchDataMultiAttribute = [
+        model:
+          on:JsMockito.mockFunction()
+          off:JsMockito.mockFunction()
+        attributes:["A","B","C"]
+      ]
+      mockWatchDataMultiModel = [
+        model:
+          on:JsMockito.mockFunction()
+          off:JsMockito.mockFunction()
+        attributes:["A","B","C"]
+      ,
+        model:
+          on:JsMockito.mockFunction()
+          off:JsMockito.mockFunction()
+        attributes:["D"]
+      ,
+        model:
+          on:JsMockito.mockFunction()
+          off:JsMockito.mockFunction()
+        attributes:["E","F"]
+      ]
+      mockWatchDataDupAttribute = [
+        model:
+          on:JsMockito.mockFunction()
+          off:JsMockito.mockFunction()
+        attributes:["A","A"]
 
-    ]
-    mockWatchDataRealEvent = [
-      model: _.extend({},Backbone.Events)
-      attributes:["A","A"]
+      ]
+      mockWatchDataRealEvent = [
+        model: _.extend({},Backbone.Events)
+        attributes:["A","A"]
 
-    ]
-
-
+      ]
+    )
     suite("watch", ()->
       test("bindsUpdateFromModelToSingleAttributeChangeOnCorrectModel", ()->
         bvmi = new ObservingViewModelItem()
@@ -93,90 +98,195 @@ define(['isolate!UI/component/ObservingViewModelItem','backbone'], (ObservingVie
 
         ovmi = new ObservingViewModelItem()
       )
-      suite("Watching single attribute on single model", ()->
-        handler = undefined
-        setup(()->
-          JsMockito.when(mockWatchDataSingleAttribute[0].model.on)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything()).then((e, h)->
-            handler = h
+      suite("No model specified", ()->
+        suite("Watching single attribute on single model", ()->
+          handler = undefined
+          setup(()->
+            JsMockito.when(mockWatchDataSingleAttribute[0].model.on)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything()).then((e, h)->
+              handler = h
+            )
+            ovmi.watch(mockWatchDataSingleAttribute)
           )
-          ovmi.watch(mockWatchDataSingleAttribute)
+          test("Removes 'change:xxx' event handlers from watched model that was bound on watch for attribute", ()->
+            ovmi.unwatch()
+            JsMockito.verify(mockWatchDataSingleAttribute[0].model.off)("change:A", handler)
+          )
+          test("Multiple calls - removes 'change:xxx' event handlers only once", ()->
+            ovmi.unwatch()
+            ovmi.unwatch()
+            ovmi.unwatch()
+            ovmi.unwatch()
+            ovmi.unwatch()
+            JsMockito.verify(mockWatchDataSingleAttribute[0].model.off)("change:A", handler)
+          )
         )
-        test("Removes 'change:xxx' event handlers from watched model that was bound on watch for attribute", ()->
+        test("Watching several attributes on single model - Removes 'change:xxx' event handlers from watched model that were bound on watch for all attributes", ()->
+          handler1 = undefined
+          handler2 = undefined
+          handler3 = undefined
+          JsMockito.when(mockWatchDataMultiAttribute[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler1 = h
+          )
+          JsMockito.when(mockWatchDataMultiAttribute[0].model.on)("change:B", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler2 = h
+          )
+          JsMockito.when(mockWatchDataMultiAttribute[0].model.on)("change:C", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler3 = h
+          )
+          ovmi.watch(mockWatchDataMultiAttribute)
           ovmi.unwatch()
-          JsMockito.verify(mockWatchDataSingleAttribute[0].model.off)("change:A", handler)
+          JsMockito.verify(mockWatchDataMultiAttribute[0].model.off)("change:A", handler1)
+          JsMockito.verify(mockWatchDataMultiAttribute[0].model.off)("change:B", handler2)
+          JsMockito.verify(mockWatchDataMultiAttribute[0].model.off)("change:C", handler3)
         )
-        test("Multiple calls - removes 'change:xxx' event handlers only once", ()->
+        test("Watching several attributes on several models model - Removes 'change:xxx' event handlers from all on all", ()->
+          handler1 = undefined
+          handler2 = undefined
+          handler3 = undefined
+          handler4 = undefined
+          handler5 = undefined
+          handler6 = undefined
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler1 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:B", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler2 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:C", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler3 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[1].model.on)("change:D", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler4 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:E", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler5 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:F", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler6 = h
+          )
+          ovmi.watch(mockWatchDataMultiModel)
           ovmi.unwatch()
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:A", handler1)
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:B", handler2)
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:C", handler3)
+          JsMockito.verify(mockWatchDataMultiModel[1].model.off)("change:D", handler4)
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:E", handler5)
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:F", handler6)
+        )
+        test("Does not attempt to repeatedly upbind when dups occur in original watch", ()->
+          handler1 = undefined
+          JsMockito.when(mockWatchDataDupAttribute[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler1 = h
+          )
+          ovmi.watch(mockWatchDataDupAttribute)
           ovmi.unwatch()
-          ovmi.unwatch()
-          ovmi.unwatch()
-          ovmi.unwatch()
-          JsMockito.verify(mockWatchDataSingleAttribute[0].model.off)("change:A", handler)
+          JsMockito.verify(mockWatchDataDupAttribute[0].model.off)("change:A", handler1)
         )
       )
-      test("Watching several attributes on single model - Removes 'change:xxx' event handlers from watched model that were bound on watch for all attributes", ()->
-        handler1 = undefined
-        handler2 = undefined
-        handler3 = undefined
-        JsMockito.when(mockWatchDataMultiAttribute[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler1 = h
+      suite("Model specified", ()->
+        test("Watching several attributes on several models model - Removes 'change:xxx' event handlers from all only on specified model", ()->
+          handler1 = undefined
+          handler2 = undefined
+          handler3 = undefined
+          handler4 = undefined
+          handler5 = undefined
+          handler6 = undefined
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler1 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:B", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler2 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:C", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler3 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[1].model.on)("change:D", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler4 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:E", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler5 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:F", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler6 = h
+          )
+          ovmi.watch(mockWatchDataMultiModel)
+          ovmi.unwatch(mockWatchDataMultiModel[2].model)
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
+          JsMockito.verify(mockWatchDataMultiModel[1].model.off, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:E", handler5)
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:F", handler6)
         )
-        JsMockito.when(mockWatchDataMultiAttribute[0].model.on)("change:B", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler2 = h
+        test("Model specified not being watched - unbinds nothing", ()->
+          handler1 = undefined
+          handler2 = undefined
+          handler3 = undefined
+          handler4 = undefined
+          handler5 = undefined
+          handler6 = undefined
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler1 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:B", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler2 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:C", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler3 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[1].model.on)("change:D", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler4 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:E", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler5 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:F", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler6 = h
+          )
+          ovmi.watch(mockWatchDataMultiModel)
+          ovmi.unwatch({})
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
+          JsMockito.verify(mockWatchDataMultiModel[1].model.off, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything())
         )
-        JsMockito.when(mockWatchDataMultiAttribute[0].model.on)("change:C", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler3 = h
-        )
-        ovmi.watch(mockWatchDataMultiAttribute)
-        ovmi.unwatch()
-        JsMockito.verify(mockWatchDataMultiAttribute[0].model.off)("change:A", handler1)
-        JsMockito.verify(mockWatchDataMultiAttribute[0].model.off)("change:B", handler2)
-        JsMockito.verify(mockWatchDataMultiAttribute[0].model.off)("change:C", handler3)
-      )
-      test("Watching several attributes on several models model - Removes 'change:xxx' event handlers from all on all", ()->
-        handler1 = undefined
-        handler2 = undefined
-        handler3 = undefined
-        handler4 = undefined
-        handler5 = undefined
-        handler6 = undefined
-        JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler1 = h
-        )
-        JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:B", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler2 = h
-        )
-        JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:C", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler3 = h
-        )
-        JsMockito.when(mockWatchDataMultiModel[1].model.on)("change:D", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler4 = h
-        )
-        JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:E", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler5 = h
-        )
-        JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:F", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler6 = h
-        )
-        ovmi.watch(mockWatchDataMultiModel)
-        ovmi.unwatch()
-        JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:A", handler1)
-        JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:B", handler2)
-        JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:C", handler3)
-        JsMockito.verify(mockWatchDataMultiModel[1].model.off)("change:D", handler4)
-        JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:E", handler5)
-        JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:F", handler6)
-      )
-      test("Does not attempt to repeatedly upbind when dups occur in original watch", ()->
-        handler1 = undefined
-        JsMockito.when(mockWatchDataDupAttribute[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
-          handler1 = h
-        )
-        ovmi.watch(mockWatchDataDupAttribute)
-        ovmi.unwatch()
-        JsMockito.verify(mockWatchDataDupAttribute[0].model.off)("change:A", handler1)
-      )
 
+        test("Unwatching specific model then unwatching all - only attempts to unbindremainder on full unwatch", ()->
+          handler1 = undefined
+          handler2 = undefined
+          handler3 = undefined
+          handler4 = undefined
+          handler5 = undefined
+          handler6 = undefined
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:A", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler1 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:B", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler2 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[0].model.on)("change:C", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler3 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[1].model.on)("change:D", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler4 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:E", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler5 = h
+          )
+          JsMockito.when(mockWatchDataMultiModel[2].model.on)("change:F", JsHamcrest.Matchers.anything()).then((e, h)->
+            handler6 = h
+          )
+          ovmi.watch(mockWatchDataMultiModel)
+
+          ovmi.unwatch(mockWatchDataMultiModel[2].model)
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:E", handler5)
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:F", handler6)
+          ovmi.unwatch()
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:A", handler1)
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:B", handler2)
+          JsMockito.verify(mockWatchDataMultiModel[0].model.off)("change:C", handler3)
+          JsMockito.verify(mockWatchDataMultiModel[1].model.off)("change:D", handler4)
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:E", handler5)
+          JsMockito.verify(mockWatchDataMultiModel[2].model.off)("change:F", handler6)
+        )
+      )
     )
   )
 

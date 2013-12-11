@@ -32,12 +32,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("UI/component/ObservingViewModelItem","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      mockBaseViewModelCollection = (data)->
-        mockConstructedBVMI = new Backbone.Model(data)
-        mockConstructedBVMI.watch = JsMockito.mockFunction()
-        mockConstructedBVMI.unwatch = JsMockito.mockFunction()
-        mockConstructedBVMI
-      mockBaseViewModelCollection
+      mockObservingViewModelItem = (data)->
+        mockObservingViewModelItem.ovmiConstructor(data)
+      mockObservingViewModelItem.ovmiConstructor =  (data)->
+      mockObservingViewModelItem.set = (func)->
+        mockObservingViewModelItem.ovmiConstructor = func
+      mockObservingViewModelItem
     )
   )
 )
@@ -45,6 +45,14 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallengesViewModel)->
   mocks = window.mockLibrary['UI/administration/ReviewChallengesViewModel']
   suite("ReviewChallengesViewModel", ()->
+    setup(()->
+      mocks["UI/component/ObservingViewModelItem"].set((data)->
+        mockConstructedOVMI = new Backbone.Model(data)
+        mockConstructedOVMI.watch = JsMockito.mockFunction()
+        mockConstructedOVMI.unwatch = JsMockito.mockFunction()
+        mockConstructedOVMI
+      )
+    )
     suite("initialize", ()->
       mockGameList = new Backbone.Collection([])
       setup(()->
@@ -529,6 +537,8 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                   user:new Backbone.Model(
                     id:"MOCK_USER"
                     status:"MOCK_USER_STATUS"
+                    watch:JsMockito.mockFunction()
+                    unwatch:JsMockito.mockFunction()
                   )
                 ,
                   id:"NOT_SELECTED_PLAYER"
@@ -536,6 +546,8 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                   user:new Backbone.Model(
                     id:"OTHER_USER"
                     status:"OTHER_USER_STATUS"
+                    watch:JsMockito.mockFunction()
+                    unwatch:JsMockito.mockFunction()
                   )
                 ])
               )
@@ -582,7 +594,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             rcvm.set("selectedChallengeId", "AN IDENTIFIER")
             JsMockito.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func())
           )
-          test("No identifier - challengePlayerList doesn't watch anything", ()->
+          test("No identifier - mockWatchDataDupAttribute doesn't watch anything", ()->
             rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
             rcvm.set("selectedChallenge", "SOMETHING")
             rcvm.unset("selectedChallengeId")
@@ -619,7 +631,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                 )
               )
             )
-            test("Contains player with user matching current user - sets selectedChallengeUserStatus to that user styatus", ()->
+            test("Contains player with user matching current user - sets selectedChallengeUserStatus to that user status", ()->
               rcvm.get("challengePlayerList").push(
                 id:"SELECTED_PLAYER"
                 name:"SELECTED_PLAYER_NAME"
@@ -708,7 +720,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
             suite("updateFromWatchedCollection comparer", ()->
               comparer = undefined;
               setup(()->
-                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func()).then((c, a)->
+                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func(), JsHamcrest.Matchers.nil(), JsHamcrest.Matchers.func()).then((c, a)->
                   comparer = c
                 )
                 rcvm.get("challengePlayerList").onSourceUpdated()
@@ -727,25 +739,267 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
               )
             )
             suite("updateFromWatchedCollection adder", ()->
-              adder = undefined;
+              adder = undefined
+              addedSourceUser = undefined
+              addedSource = undefined
               setup(()->
-                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func()).then((c, a)->
+                addedSourceUser = new Backbone.Model(
+                  id:"ADDED USER ID"
+                  status:"ADDED USER STATUS"
+                )
+                addedSource = new Backbone.Model(
+                  id:"ADDED ID"
+                  name:"ADDED NAME"
+                  user: addedSourceUser
+                  description:"ADDED DESCRIPTION"
+                )
+                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func(), JsHamcrest.Matchers.nil(), JsHamcrest.Matchers.func()).then((c, a)->
                   adder = a
                 )
                 rcvm.get("challengePlayerList").onSourceUpdated()
               )
-              test("Copies id, name, user and description from input model", ()->
+              test("Copies id, name, user status, user id and description from input model", ()->
                 added = adder(new Backbone.Model(
                   id:"ADDED ID"
                   name:"ADDED NAME"
-                  user:"ADDED USER"
+                  user:new Backbone.Model(
+                    id:"ADDED USER"
+                    status:"SOME STATUS"
+                  )
                   description:"ADDED DESCRIPTION"
                 ))
                 chai.assert.equal(added.get("id"),"ADDED ID")
                 chai.assert.equal(added.get("name"),"ADDED NAME")
-                chai.assert.equal(added.get("user"),"ADDED USER")
+                chai.assert.equal(added.get("user").get("id"),"ADDED USER")
+                chai.assert.equal(added.get("user").get("status"),"SOME STATUS")
                 chai.assert.equal(added.get("description"),"ADDED DESCRIPTION")
               )
+              test("Ignores additional attributes on player or user", ()->
+                added = adder(new Backbone.Model(
+                  id:"ADDED ID"
+                  name:"ADDED NAME"
+                  prop1:"SOMETHING"
+                  user:new Backbone.Model(
+                    id:"ADDED USER"
+                    status:"SOME STATUS"
+                    prop1:"SOMETHING"
+                  )
+                  description:"ADDED DESCRIPTION"
+                ))
+                chai.assert.isUndefined(added.get("prop1"))
+                chai.assert.isUndefined(added.get("user").get("prop1"))
+              )
+              test("User supplied not valid BB Model - throws", ()->
+                chai.assert.throw(()->
+                  adder(
+                    new Backbone.Model(
+                      id:"ADDED ID"
+                      name:"ADDED NAME"
+                      user:"ADDED USER"
+                      description:"ADDED DESCRIPTION"
+                    )
+                  )
+                )
+              )
+              test("Watches added item's name and description, user's status attributes", ()->
+                added = adder(addedSource)
+                JsMockito.verify(added.watch)(
+                  JsHamcrest.Matchers.hasItems(
+                      JsHamcrest.Matchers.allOf(
+                        JsHamcrest.Matchers.hasMember("model", addedSource)
+                      ,
+                        JsHamcrest.Matchers.hasMember(
+                          "attributes"
+                        ,
+                          JsHamcrest.Matchers.equivalentArray([
+                            "name",
+                            "description"
+                          ])
+                        )
+                      )
+                    ,
+                    JsHamcrest.Matchers.allOf(
+                      JsHamcrest.Matchers.hasMember("model", addedSourceUser)
+                    ,
+                      JsHamcrest.Matchers.hasMember(
+                        "attributes"
+                      ,
+                        JsHamcrest.Matchers.equivalentArray([
+                          "status"
+                        ])
+                      )
+                    )
+                  ),
+                  JsHamcrest.Matchers.func()
+                )
+              )
+              suite("OnModelUpdated for watched items", ()->
+                added = undefined
+                modelUpdated = undefined
+                setup(()->
+                  mocks["UI/component/ObservingViewModelItem"].set(
+                    (data)->
+                      ret = new Backbone.Model(data)
+                      ret.watch=JsMockito.mockFunction()
+                      ret.unwatch=JsMockito.mockFunction()
+                      JsMockito.when(ret.watch)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.func()).then((d, h)->
+                        modelUpdated=h
+                        ret.onModelUpdated = h
+                      )
+                      ret
+                  )
+                  added = adder(addedSource)
+                )
+                suite("Player attributes other than user modified", ()->
+                  test("Sets name & description attributes on item", ()->
+                    addedSource.set(
+                      name:"NEW NAME"
+                      description: "NEW DESCRIPTION"
+                    )
+                    modelUpdated(addedSource)
+                    chai.assert.equal(added.get("name"), "NEW NAME")
+                    chai.assert.equal(added.get("description"), "NEW DESCRIPTION")
+
+                  )
+                  test("Leaves other player attributes unmodified", ()->
+                    addedSource.set(
+                      id:"NEW ID"
+                      name:"NEW NAME"
+                      description: "NEW DESCRIPTION"
+                    )
+                    modelUpdated(addedSource)
+                    chai.assert.equal(added.get("id"), "ADDED ID")
+
+                  )
+                )
+                suite("User attributes modified", ()->
+                  test("Sets id & status attributes provided from user on user", ()->
+                    addedSourceUser.set(
+                      status:"NEW STATUS"
+                      id:"A"
+                    )
+                    modelUpdated(addedSourceUser)
+                    chai.assert.equal(added.get("user").get("status"), "NEW STATUS")
+                    chai.assert.equal(added.get("user").get("id"), "A")
+
+                  )
+                  test("Unsets these attributes if not present on new model", ()->
+                    addedSourceUser.set(
+                      id:"A"
+                    )
+                    addedSourceUser.unset("status")
+                    modelUpdated(addedSourceUser)
+                    chai.assert.isUndefined(added.get("user").get("status"))
+                    chai.assert.equal(added.get("user").get("id"), "A")
+
+                  )
+                  test("Leaves other existing attributes on user unmodified", ()->
+                    added.get("user").set("propA", "A")
+                    addedSourceUser.set(
+                      status:"NEW STATUS"
+                      id:"A"
+                    )
+                    modelUpdated(addedSourceUser)
+                    chai.assert.equal(added.get("user").get("propA"), "A")
+
+                  )
+                )
+                suite("User attribute on player modified", ()->
+                  newUser = null
+                  setup(()->
+                    newUser = new Backbone.Model(
+                      status:"REPLACED STATUS"
+                      id:"REPLACED ID"
+                    )
+                  )
+                  test("Updates id & status to those of new user model on watched player", ()->
+                    addedSource.set(
+                      user:new Backbone.Model(
+                        status:"REPLACED STATUS"
+                        id:"REPLACED ID"
+                      )
+                    )
+                    modelUpdated(addedSource,"user")
+                    chai.assert.equal(added.get("user").get("id"), "REPLACED ID")
+                    chai.assert.equal(added.get("user").get("status"), "REPLACED STATUS")
+
+                  )
+                  test("Unwatches old user and watchews new one", ()->
+
+                    addedSource.set("user",newUser)
+                    modelUpdated(addedSource,"user")
+                    JsMockito.verify(added.unwatch)(addedSourceUser)
+                    JsMockito.verify(added.watch)(
+                      JsHamcrest.Matchers.hasItem(
+                        JsHamcrest.Matchers.allOf(
+                          JsHamcrest.Matchers.hasMember("model", newUser)
+                        ,
+                          JsHamcrest.Matchers.hasMember(
+                            "attributes"
+                          ,
+                            JsHamcrest.Matchers.equivalentArray([
+                              "status"
+                            ])
+                          )
+                        )
+                      )
+                    ,
+                      modelUpdated
+                    )
+
+                  )
+                  test("Subsequent user sets - unbind previous user and bind new one", ()->
+                    newerUser = new Backbone.Model()
+                    addedSource.set(
+                      user:newUser
+                    )
+                    modelUpdated(addedSource,"user")
+                    addedSource.set(
+                      user:newerUser
+                    )
+                    modelUpdated(addedSource,"user")
+                    JsMockito.verify(added.unwatch)(newUser)
+                    JsMockito.verify(added.watch)(
+                      JsHamcrest.Matchers.hasItem(
+                        JsHamcrest.Matchers.allOf(
+                          JsHamcrest.Matchers.hasMember("model", newerUser)
+                        ,
+                          JsHamcrest.Matchers.hasMember(
+                            "attributes"
+                          ,
+                            JsHamcrest.Matchers.equivalentArray([
+                              "status"
+                            ])
+                          )
+                        )
+                      )
+                    ,
+                      modelUpdated
+                    )
+
+
+                  )
+                )
+              )
+            )
+            suite("updateFromWatchedCollection - onremove", ()->
+              removed = undefined
+              remover = undefined
+              setup(()->
+                removed = new Backbone.Model()
+                removed.watch=JsMockito.mockFunction()
+                removed.unwatch=JsMockito.mockFunction()
+                rcvm.get("challengePlayerList").updateFromWatchedCollections = JsMockito.mockFunction()
+                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func(), JsHamcrest.Matchers.nil(), JsHamcrest.Matchers.func()).then((c, a, f, r)->
+                  remover = r
+                )
+                rcvm.get("challengePlayerList").onSourceUpdated()
+              )
+              test("Unwatches removed item", ()->
+                remover(removed)
+                JsMockito.verify(removed.unwatch)()
+              )
+
             )
           )
         )
