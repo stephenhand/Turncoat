@@ -58,6 +58,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
       setup(()->
         mocks['AppState'].get = JsMockito.mockFunction()
         mocks['AppState'].issueChallenge = JsMockito.mockFunction()
+        mocks['AppState'].acceptChallenge = JsMockito.mockFunction()
         mocks["UI/component/ObservableOrderCollection"].setOrderAttribute = JsMockito.mockFunction()
         JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
           (key)->
@@ -1082,6 +1083,22 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         test("No identifier - throws", ()->
           rcvm.set("selectedChallenge", "SOMETHING")
           chai.assert.throw(()->rcvm.issueChallenge())
+        )
+      )
+      suite("acceptChallenge", ()->
+        rcvm = null
+        setup(()->
+          rcvm = new ReviewChallengesViewModel()
+        )
+        test("Valid identifier and challenge selected - calls AppState issueChallenge with identifier and selected game", ()->
+          rcvm.set("selectedChallenge", "SOMETHING")
+          rcvm.acceptChallenge()
+          JsMockito.verify(mocks.AppState.acceptChallenge)("SOMETHING")
+        )
+        test("Valid identifier and no challenge selected - calls AppState issueChallenge with no game", ()->
+          rcvm.unset("selectedChallenge")
+          rcvm.acceptChallenge()
+          JsMockito.verify(mocks.AppState.acceptChallenge)(JsHamcrest.Matchers.nil())
         )
       )
     )

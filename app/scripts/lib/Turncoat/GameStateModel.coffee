@@ -25,7 +25,7 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
 
     toString:()->
       if (!GameStateModel.marshaller?)
-        throw new Error("State Marshaller not state, set a default state marshaller before constructing GSMs youi plan to marshal.")
+        throw new Error("State Marshaller not set, set a default state marshaller before constructing GSMs you plan to marshal.")
       GameStateModel.marshaller.marshalState(@)
 
     searchChildren:(checker, deep)->

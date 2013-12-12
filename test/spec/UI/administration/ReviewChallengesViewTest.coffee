@@ -7,6 +7,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
         mockModelInstance =
           selectChallenge:JsMockito.mockFunction()
           issueChallenge:JsMockito.mockFunction()
+          acceptChallenge:JsMockito.mockFunction()
 
     )
   )
@@ -102,6 +103,16 @@ define(["isolate!UI/administration/ReviewChallengesView"], (ReviewChallengesView
           rcv.issueChallenge_clicked()
         )
       )
+    )
+    suite("acceptChallenge_clicked", ()->
+      test("Calls model's acceptChallenge with nothing", ()->
+        rcv = new ReviewChallengesView()
+        rcv.createModel()
+        rcv.acceptChallenge_clicked(
+        )
+        JsMockito.verify(rcv.model.acceptChallenge)()
+      )
+
     )
   )
 

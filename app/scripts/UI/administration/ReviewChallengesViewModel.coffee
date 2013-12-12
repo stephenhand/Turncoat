@@ -151,6 +151,9 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
     issueChallenge:(id)->
       if (!id?) then throw new Error("Cannot send challenge, user identifier missing.")
       AppState.issueChallenge(id, @get("selectedChallenge"))
+
+    acceptChallenge:()->
+      AppState.acceptChallenge(@get("selectedChallenge"))
   )
 
 

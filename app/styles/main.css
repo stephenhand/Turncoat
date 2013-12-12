@@ -205,13 +205,16 @@ margin-bottom:30px;
     margin-top:30px;
     float:right
 }
-.invited-only{
+.challenged-only{
     display: none
 }
-.not-invited-only{
+.CHALLENGED .challenged-only{
+       display: inherit
+}
+.not-challenged-only{
     display:none;
 }
-.CREATED .not-invited-only{
+.CREATED .not-challenged-only{
     display:inherit;
 }
 input[type=button]{

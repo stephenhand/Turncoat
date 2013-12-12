@@ -13,12 +13,16 @@ define(['underscore', 'backbone', 'UI/component/BaseView', 'UI/administration/Re
     events:
       'click .left-panel .list-item':'challengeListItem_clicked'
       'click .issue-challenge':'issueChallenge_clicked'
+      'click #accept-challenge':'acceptChallenge_clicked'
 
     challengeListItem_clicked:(event)->
       @model.selectChallenge(event.currentTarget.id)
 
     issueChallenge_clicked:(event)->
       @model.issueChallenge(event.currentTarget.id)
+
+    acceptChallenge_clicked:()->
+      @model.acceptChallenge()
 
   ReviewChallengesView
 )
