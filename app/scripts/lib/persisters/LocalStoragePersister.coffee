@@ -1,4 +1,4 @@
-define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factory", "lib/turncoat/GameStateModel", "text!data/manOWarGameTemplates.txt", "text!data/config.txt"], (UUID, _, $, Backbone, moment, Factory, GameStateModel, templatesListText, configText)->
+define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factory", "lib/turncoat/GameStateModel", "lib/turncoat/User", "text!data/manOWarGameTemplates.txt", "text!data/config.txt"], (UUID, _, $, Backbone, moment, Factory, GameStateModel, User, templatesListText, configText)->
   CURRENT_GAMES = "current-games"
 
   class LocalStoragePersister
@@ -25,7 +25,7 @@ define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factor
 
     loadUser:(id)->
       if !id? then throw new Error("Must specify a player id.")
-      return new Backbone.Model(id:id)
+      return new User(id:id)
 
     loadGameTemplateList:(type, user)->
       new Backbone.Collection(

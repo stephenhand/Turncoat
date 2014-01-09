@@ -1,4 +1,5 @@
 fakeBuiltMarshaller = {}
+userConstructor = null
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("lib/turncoat/Factory", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
@@ -17,9 +18,13 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       fromString:JsMockito.mockFunction()
     )
   )
-  Isolate.mapAsFactory("lib/turncoat/GameStateModel", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/User", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      fromString:JsMockito.mockFunction()
+      Backbone.Model.extend(
+        initialize:()->
+          @originalData = @attributes
+      )
+
     )
   )
   Isolate.mapAsFactory("uuid", "lib/persisters/LocalStoragePersister", (actual, modulePath, requestingModulePath)->
@@ -73,7 +78,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"], (LocalStoragePersister, underscore, Backbone)->
   mocks = window.mockLibrary["lib/persisters/LocalStoragePersister"]
 
-  suite("LocalStorage", ()->
+  suite("LocalStorage Persister", ()->
     class MOCK_GAMETYPE
 
     mockGame1 = JSON.stringify(
@@ -256,20 +261,24 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
       )
     )
     suite("loadUser", ()->
-      test("echosProvidedStringIdInModel", ()->
+      test("Creates User Instance", ()->
+        lps = new LocalStoragePersister()
+        chai.assert.equal(lps.loadUser("MOCK_ID").originalData.id, "MOCK_ID")
+      )
+      test("Echos Provided String Id In Model", ()->
         lps = new LocalStoragePersister()
         chai.assert.equal(lps.loadUser("MOCK_ID").get("id"),"MOCK_ID")
       )
-      test("echosProvidedObjectIdInModel", ()->
+      test("Echos Provided Object Id In Model", ()->
         lps = new LocalStoragePersister()
         val={}
         chai.assert.equal(lps.loadUser(val).get("id"),val)
       )
-      test("throwsIfUndefined", ()->
+      test("Throws If Undefined", ()->
         lps = new LocalStoragePersister()
         chai.assert.throws(()->lps.loadUser())
       )
-      test("throwsIfNull", ()->
+      test("Throws If Null", ()->
         lps = new LocalStoragePersister()
         chai.assert.throws(()->lps.loadUser(null))
       )
@@ -373,7 +382,7 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
           lps.loadGameTemplate("MOCK_TEMPLATE_MISSINGID")
         )
       )
-      test("undefinedId_throws",()->
+      test("Undefined Id - throws",()->
         lps = new LocalStoragePersister()
         chai.assert.throws(()->
           lps.loadGameTemplate()

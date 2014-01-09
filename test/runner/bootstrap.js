@@ -93,6 +93,7 @@ require(['spec/AppHostTest',
     'spec/lib/turncoat/GameStateModelTest',
     'spec/lib/turncoat/LogEntryTest',
     'spec/lib/turncoat/GameHeaderTest',
+    'spec/lib/turncoat/UserTest',
     'spec/lib/marshallers/JSONMarshallerTest',
     'spec/lib/persisters/LocalStoragePersisterTest',
     'spec/lib/transports/LocalStorageTransportTest'], function(){
