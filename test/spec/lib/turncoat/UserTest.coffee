@@ -55,63 +55,132 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
       )
     )
     suite("issueChallenge", ()->
-      suite("issueChallenge", ()->
-        game = {}
-        challenger = null
-        setup(()->
-          game = new Backbone.Model(
+      game = {}
+      challenger = null
+      setup(()->
+        game = new Backbone.Model(
+          players:new Backbone.Collection([
+            user:new Backbone.Model(
+              id:"CHALLENGED_USER"
+            )
+
+          ])
+        )
+        game.logEvent=JsMockito.mockFunction()
+        challenger = new User(id:"MOCK_USER")
+      )
+      test("Challenged user not set - throws",()->
+        chai.assert.throw(()->
+          challenger.issueChallenge(undefined, {})
+        )
+      )
+      test("Game not set - throws",()->
+        chai.assert.throw(()->
+          challenger.issueChallenge("CHALLENGED_USER")
+        )
+      )
+      test("Challenged user not assigned to a player in game - throws",()->
+        chai.assert.throw(()->
+          challenger.issueChallenge("NOT_CHALLENGED_USER")
+        )
+      )
+      test("Valid input - calls transport sendChallenge with same user & game",()->
+        challenger.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(transport.sendChallenge)("CHALLENGED_USER",game)
+      )
+      test("Valid input - sets challenged player status to challenged",()->
+        challenger.issueChallenge("CHALLENGED_USER", game)
+        chai.assert.equal(game.get("players").at(0).get("user").get("status"),Constants.CHALLENGED_STATE)
+      )
+      test("Valid input - calls transport sendChallenge with game after status set",()->
+        challenger.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(transport.sendChallenge)("CHALLENGED_USER",new JsHamcrest.SimpleMatcher(
+          describeTo:(d)->
+            d.append("game")
+          matches:(g)->
+            g.get("players").at(0).get("user").get("status") is Constants.CHALLENGED_STATE
+        ))
+      )
+      test("Valid input - saves game",()->
+        challenger.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(persister.saveGameState)("MOCK_USER",game)
+      )
+      test("Valid input - logs on game", ()->
+        challenger.issueChallenge("CHALLENGED_USER", game)
+        JsMockito.verify(game.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
+      )
+    )
+    suite("acceptChallenge", ()->
+      game = {}
+      challenger = null
+      setup(()->
+        game = new Backbone.Model(
+          players:new Backbone.Collection([
+            user:new Backbone.Model(
+              id:"MOCK_USER"
+            )
+          ,
+            user:new Backbone.Model(
+              id:"OTHER_CHALLENGED_USER"
+            )
+          ,
+            user:new Backbone.Model(
+              id:"OTHER_OTHER_CHALLENGED_USER"
+            )
+
+          ])
+        )
+        game.logEvent=JsMockito.mockFunction()
+        challenger = new User(id:"MOCK_USER")
+      )
+      test("Game not set - throws",()->
+        chai.assert.throw(()->
+          challenger.acceptChallenge()
+        )
+      )
+      test("User not assigned to a player in game - throws",()->
+        chai.assert.throw(()->
+          challenger.acceptChallenge(new Backbone.Model(
             players:new Backbone.Collection([
               user:new Backbone.Model(
-                id:"CHALLENGED_USER"
+                id:"NOT CHALLENGED_USER"
               )
 
             ])
-          )
-          game.logEvent=JsMockito.mockFunction()
-          challenger = new User(id:"MOCK_USER")
-        )
-        test("Challenged user not set - throws",()->
-          chai.assert.throw(()->
-            challenger.issueChallenge(undefined, {})
-          )
-        )
-        test("Game not set - throws",()->
-          chai.assert.throw(()->
-            challenger.issueChallenge("CHALLENGED_USER")
-          )
-        )
-        test("Challenged user not assigned to a player in game - throws",()->
-          chai.assert.throw(()->
-            challenger.issueChallenge("NOT_CHALLENGED_USER")
-          )
-        )
-        test("Valid input - calls transport sendChallenge with same user & game",()->
-          challenger.issueChallenge("CHALLENGED_USER", game)
-          JsMockito.verify(transport.sendChallenge)("CHALLENGED_USER",game)
-        )
-        test("Valid input - sets challenged player status to challenged",()->
-          challenger.issueChallenge("CHALLENGED_USER", game)
-          chai.assert.equal(game.get("players").at(0).get("user").get("status"),Constants.CHALLENGED_STATE)
-        )
-        test("Valid input - calls transport sendChallenge with game after status set",()->
-          challenger.issueChallenge("CHALLENGED_USER", game)
-          JsMockito.verify(transport.sendChallenge)("CHALLENGED_USER",new JsHamcrest.SimpleMatcher(
-            describeTo:(d)->
-              d.append("game")
-            matches:(g)->
-              g.get("players").at(0).get("user").get("status") is Constants.CHALLENGED_STATE
           ))
         )
-        test("Valid input - saves game",()->
-          challenger.issueChallenge("CHALLENGED_USER", game)
-          JsMockito.verify(persister.saveGameState)("MOCK_USER",game)
+      )
+
+      test("Valid input, user currently has no status - changes user status to 'READY'",()->
+        challenger.acceptChallenge(game)
+        a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
+      )
+      suite("User currently has other status", ()->
+        setup(()->
+          game.get("players").at(0).get("user").set("status", "SOMETHING ELSE")
+
         )
-        test("Valid input - logs on game", ()->
-          challenger.issueChallenge("CHALLENGED_USER", game)
+        test("Changes user status to 'READY'",()->
+          challenger.acceptChallenge(game)
+          a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
+        )
+        test("Logs event with current time",()->
+          challenger.acceptChallenge(game)
           JsMockito.verify(game.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
         )
       )
+      suite("User currently has 'ready' status", ()->
+        setup(()->
+          game.get("players").at(0).get("user").set("status", Constants.READY_STATE)
+        )
+        test("Leave user status to 'READY'",()->
+          challenger.acceptChallenge(game)
+          a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
+        )
+      )
+
     )
+
   )
 
 
