@@ -70,31 +70,31 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
         challenger = new User(id:"MOCK_USER")
       )
       test("Challenged user not set - throws",()->
-        chai.assert.throw(()->
+        a.throw(()->
           challenger.issueChallenge(undefined, {})
         )
       )
       test("Game not set - throws",()->
-        chai.assert.throw(()->
+        a.throw(()->
           challenger.issueChallenge("CHALLENGED_USER")
         )
       )
       test("Challenged user not assigned to a player in game - throws",()->
-        chai.assert.throw(()->
+        a.throw(()->
           challenger.issueChallenge("NOT_CHALLENGED_USER")
         )
       )
       test("Valid input - calls transport sendChallenge with same user & game",()->
         challenger.issueChallenge("CHALLENGED_USER", game)
-        JsMockito.verify(transport.sendChallenge)("CHALLENGED_USER",game)
+        jm.verify(transport.sendChallenge)("CHALLENGED_USER",game)
       )
       test("Valid input - sets challenged player status to challenged",()->
         challenger.issueChallenge("CHALLENGED_USER", game)
-        chai.assert.equal(game.get("players").at(0).get("user").get("status"),Constants.CHALLENGED_STATE)
+        a.equal(game.get("players").at(0).get("user").get("status"),Constants.CHALLENGED_STATE)
       )
       test("Valid input - calls transport sendChallenge with game after status set",()->
         challenger.issueChallenge("CHALLENGED_USER", game)
-        JsMockito.verify(transport.sendChallenge)("CHALLENGED_USER",new JsHamcrest.SimpleMatcher(
+        jm.verify(transport.sendChallenge)("CHALLENGED_USER",new JsHamcrest.SimpleMatcher(
           describeTo:(d)->
             d.append("game")
           matches:(g)->
@@ -103,11 +103,11 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
       )
       test("Valid input - saves game",()->
         challenger.issueChallenge("CHALLENGED_USER", game)
-        JsMockito.verify(persister.saveGameState)("MOCK_USER",game)
+        jm.verify(persister.saveGameState)("MOCK_USER",game)
       )
-      test("Valid input - logs on game", ()->
+      test("Valid input - logs event with challenged user and challenging user", ()->
         challenger.issueChallenge("CHALLENGED_USER", game)
-        JsMockito.verify(game.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
+        jm.verify(game.logEvent)("MOCK_MOMENT_UTC",m.allOf(m.containsString("MOCK_USER"),m.containsString("CHALLENGED_USER")),m.string())
       )
     )
     suite("acceptChallenge", ()->
@@ -134,12 +134,12 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
         challenger = new User(id:"MOCK_USER")
       )
       test("Game not set - throws",()->
-        chai.assert.throw(()->
+        a.throw(()->
           challenger.acceptChallenge()
         )
       )
       test("User not assigned to a player in game - throws",()->
-        chai.assert.throw(()->
+        a.throw(()->
           challenger.acceptChallenge(new Backbone.Model(
             players:new Backbone.Collection([
               user:new Backbone.Model(
@@ -164,9 +164,9 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
           challenger.acceptChallenge(game)
           a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
         )
-        test("Logs event with current time",()->
+        test("Logs event with current time, 'ready' status and user id",()->
           challenger.acceptChallenge(game)
-          JsMockito.verify(game.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
+          jm.verify(game.logEvent)("MOCK_MOMENT_UTC", m.allOf(m.containsString("MOCK_USER"),m.containsString(Constants.READY_STATE)),m.string())
         )
       )
       suite("User currently has 'ready' status", ()->

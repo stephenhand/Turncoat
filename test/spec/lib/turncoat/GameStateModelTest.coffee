@@ -10,6 +10,14 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ret
     )
   )
+  Isolate.mapAsFactory("uuid","lib/turncoat/GameStateModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ret=()->
+        @func()
+      ret.func = ()->
+        "MOCK_UUID::"+actual()
+    )
+  )
 )
 
 define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (GameStateModel, Backbone, LogEntry, GameHeader)->
@@ -659,68 +667,68 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
             name:"MOCK_EVENT_TYPE"
             details:"MOCK_DETAILS"
             timestamp:{moment:"MOCK_TIME"}
+            counter:2
           ,
             name:"MOCK_EVENT_TYPE_2"
             details:"MOCK_DETAILS_2"
             timestamp:{moment:"MOCK_TIME_2"}
+            counter:1
           ,
             name:"MOCK_EVENT_TYPE_2"
             details:"MOCK_DETAILS_3"
             timestamp:{moment:"MOCK_TIME_3"}
+            counter:0
           ])
         )
         chai.assert.isUndefined(gsm.getLatestEvent("MOCK_EVENT_TYPE_3"))
       )
     )
     suite("logEvent", ()->
-      test("gameStateModelWithEventLog_AddsNewEventToStart", ()->
-        gsm = new GameStateModel(
-          _eventLog:new Backbone.Collection([
-            name:"MOCK_EVENT_TYPE"
-            details:"MOCK_DETAILS"
-            timestamp:{moment:"MOCK_TIME"}
-          ])
+      suite("Event log is valid Backbone Collection", ()->
+        gsm = null
+        setup(()->
+          gsm = new GameStateModel(
+            _eventLog:new Backbone.Collection([
+              name:"MOCK_EVENT_TYPE"
+              details:"MOCK_DETAILS"
+              timestamp:{moment:"MOCK_TIME"}
+            ])
+          )
         )
-        GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
-        chai.assert.equal(gsm.get("_eventLog").length, 2)
-        chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
-        chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
-        chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
-      )
-      test("gameStateModelWithEventLog_AddsNewEventAsLogEntryToTop", ()->
-        gsm = new GameStateModel(
-          _eventLog:new Backbone.Collection([
-            name:"MOCK_EVENT_TYPE"
-            details:"MOCK_DETAILS"
-            timestamp:{moment:"MOCK_TIME"}
-          ])
+        test("Adds new event to start", ()->
+          GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+          chai.assert.equal(gsm.get("_eventLog").length, 2)
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
         )
-        GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
-        chai.assert.equal(gsm.get("_eventLog").length, 2)
-        chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
-        chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
-        chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
-      )
-      test("gameStateModelWithEventLog_PreservesExistingEvents", ()->
-        gsm = new GameStateModel(
-          _eventLog:new Backbone.Collection([
-            name:"MOCK_EVENT_TYPE"
-            details:"MOCK_DETAILS"
-            timestamp:{moment:"MOCK_TIME"}
-          ])
+        test("Uses uuid to generate id", ()->
+          GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+          chai.assert.match(gsm.get("_eventLog").at(0).get("id"), /^MOCK_UUID::.+$/)
+
         )
-        GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
-        chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_EVENT_TYPE")
+        test("Adds new event as LogEntry to top", ()->
+          GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+          chai.assert.equal(gsm.get("_eventLog").length, 2)
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
+        )
+        test("gameStateModelWithEventLog_PreservesExistingEvents", ()->
+          GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
+          chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_EVENT_TYPE")
+        )
       )
-      test("gameStateModelWithoutEventLog_CreatesNewLog", ()->
+      suite("No existing event log - Creates new log", ()->
         gsm = new GameStateModel()
         GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
         chai.assert.equal(gsm.get("_eventLog").length, 1)
         chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
         chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
         chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
+
       )
-      test("gameStateModelEventLogNotBBCollection_Throws", ()->
+      test("Invalid event log - Throws", ()->
         gsm = new GameStateModel(
           _eventLog:{}
         )
@@ -728,6 +736,8 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
           GameStateModel.logEvent(gsm,"CURRENT_TIME","MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
         )
       )
+
+
     )
     suite("vivifier", ()->
 

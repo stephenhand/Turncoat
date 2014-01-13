@@ -24,7 +24,7 @@ define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turnc
         )?.get("user")
         if !user? then throw new Error("Current user has not been challenged to play this game.")
         user.set("status",Constants.READY_STATE)
-        game.logEvent(moment.utc(),Constants.LogEvents.USERSTATUSCHANGED+"::"+@get("id")+"::"+Constants.READY_STATE, "Invite sent")
+        game.logEvent(moment.utc(),Constants.LogEvents.USERSTATUSCHANGED+"::"+@get("id")+"::"+Constants.READY_STATE, "Response updated")
 
     issueChallenge:(userId, game)->
 
