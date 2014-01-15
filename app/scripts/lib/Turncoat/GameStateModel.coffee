@@ -77,7 +77,7 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
     GameStateModel.marshaller ?= Factory.buildStateMarshaller()
     GameStateModel.marshaller.unmarshalState(state)
 
-  GameStateModel.logEvent = (gsm, moment, eventName, eventDetails)->
+  GameStateModel.logEvent = (gsm, moment, eventName, eventData)->
     counter = 0
     if !gsm.get("_eventLog")?
       gsm.set("_eventLog", new Backbone.Collection([]))
@@ -89,7 +89,7 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
         id:UUID()
         timestamp:moment
         name:eventName
-        details:eventDetails
+        data:eventData
       )
     )
     gsm.get("_eventLog").at(0)

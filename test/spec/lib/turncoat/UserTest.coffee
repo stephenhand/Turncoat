@@ -113,8 +113,9 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
     suite("acceptChallenge", ()->
       game = {}
       challenger = null
+      event = {}
       setup(()->
-        transport.broadcastUserStatus = jm.mockFunction()
+        transport.broadcastEvent = jm.mockFunction()
         game = new Backbone.Model(
           players:new Backbone.Collection([
             user:new Backbone.Model(
@@ -133,11 +134,7 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
         )
         game.logEvent=JsMockito.mockFunction()
         jm.when(game.logEvent)(m.anything(),m.anything(),m.anything()).then((a,b,c)->
-          new Backbone.Model(
-            id:"LOG_ID"
-            timestamp:"LOG_TIMESTAMP"
-            counter:"LOG_COUNTER"
-          )
+          event
         )
         challenger = new User(id:"MOCK_USER")
       )
@@ -170,37 +167,17 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
           challenger.acceptChallenge(game)
           a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
         )
-        test("Logs event with current time, 'ready' status and user id",()->
+        test("Logs event with current time and 'ready' status and user id in data.",()->
           challenger.acceptChallenge(game)
-          jm.verify(game.logEvent)("MOCK_MOMENT_UTC", m.allOf(m.containsString("MOCK_USER"),m.containsString(Constants.READY_STATE)),m.string())
+          jm.verify(game.logEvent)("MOCK_MOMENT_UTC", m.string(), m.hasMember("attributes", m.allOf(m.hasMember("userid","MOCK_USER"),m.hasMember("status", Constants.READY_STATE))))
         )
-        test("Broadcasts 'ready' status update via transport", ()->
+        test("Broadcasts logged event via transport", ()->
           challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastUserStatus)(m.anything(), m.hasMember("status", Constants.READY_STATE))
-        )
-        test("Broadcasts with this user's id", ()->
-          challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastUserStatus)(m.anything(), m.hasMember("userid", "MOCK_USER"))
-        )
-        test("Broadcasts with verifier", ()->
-          challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastUserStatus)(m.anything(), m.hasMember("verifier"))
-        )
-        test("Broadcasts with verifier with id returned from logEvent", ()->
-          challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastUserStatus)(m.anything(), m.hasMember("verifier", m.hasMember("id","LOG_ID")))
-        )
-        test("Broadcasts with verifier with timestamp returned from logEvent", ()->
-          challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastUserStatus)(m.anything(), m.hasMember("verifier", m.hasMember("timestamp","LOG_TIMESTAMP")))
-        )
-        test("Broadcasts with verifier with counter returned from logEvent", ()->
-          challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastUserStatus)(m.anything(), m.hasMember("verifier", m.hasMember("counter","LOG_COUNTER")))
+          jm.verify(transport.broadcastEvent)(m.anything(), event)
         )
         test("Broadcasts with all users except the current one as recipients", ()->
           challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastUserStatus)(m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
+          jm.verify(transport.broadcastEvent)(m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
         )
         test("Current user is only user - doesn't broadcast.", ()->
           g = new Backbone.Model(
@@ -212,7 +189,7 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
           )
           g.logEvent=()->
           challenger.acceptChallenge(g)
-          jm.verify(transport.broadcastUserStatus, v.never())(m.anything(), m.anything())
+          jm.verify(transport.broadcastEvent, v.never())(m.anything(), m.anything())
         )
       )
       suite("User currently has 'ready' status", ()->

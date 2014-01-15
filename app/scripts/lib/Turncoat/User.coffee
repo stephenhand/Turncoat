@@ -24,18 +24,16 @@ define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turnc
         )?.get("user")
         if !user? then throw new Error("Current user has not been challenged to play this game.")
         user.set("status",Constants.READY_STATE)
-        event = game.logEvent(moment.utc(),Constants.LogEvents.USERSTATUSCHANGED+"::"+@get("id")+"::"+Constants.READY_STATE, "Response updated")
+        event = game.logEvent(moment.utc(),Constants.LogEvents.USERSTATUSCHANGED,
+          new Backbone.Model(
+            userid:@get("id")
+            status:Constants.READY_STATE
+          )
+        )
         recipients = (player.get("user").get("id") for player in game.get("players").models when player.get("user").get("id") isnt @get("id"))
 
         if (recipients.length)
-          transport.broadcastUserStatus(recipients,
-            userid:@get("id")
-            status:Constants.READY_STATE
-            verifier:
-              timestamp:event.get("timestamp")
-              id:event.get("id")
-              counter:event.get("counter")
-          )
+          transport.broadcastEvent(recipients,event)
 
 
     issueChallenge:(userId, game)->

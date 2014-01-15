@@ -30,8 +30,11 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("uuid", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      ()->
+      ret=()->
+        ret.func()
+      ret.func = ()->
         "MOCK_GENERATED_ID"
+      ret
     )
   )
 )
@@ -39,6 +42,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
   MESSAGE_QUEUE = "message-queue"
   MESSAGE_ITEM = "message-item"
   CHALLENGE_ISSUED_MESSAGE_TYPE = "challenge-issued"
+  EVENT_MESSAGE_TYPE = "event"
   mocks = window.mockLibrary["lib/transports/LocalStorageTransport"]
 
   suite("LocalStorageTransportTest", ()->
@@ -641,6 +645,41 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
               )
             )
           )
+          test("Envelope has payload and 'Event' type - triggers 'Event Recieved' event from transport with payload", ()->
+
+            data[MESSAGE_ITEM+"::MOCK_ID1"]=JSON.stringify(
+              type:EVENT_MESSAGE_TYPE
+              payload:
+                propA:"SOMETHING"
+            )
+            JsMockito.verify(dispatcher.on)(
+              "queueModified",
+              new JsHamcrest.SimpleMatcher(
+                describeTo:(d)->
+                  d.append("valid queueModified handler.")
+                matches:(f)->
+                  f(
+                    userId:"MOCK_USER"
+                  )
+                  try
+                    JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+                      new JsHamcrest.SimpleMatcher(
+                        matches:(o)->
+                          try
+                            o.criticalSection()
+                            o.success()
+                            JsMockito.verify(lst.trigger)("eventReceived",JsHamcrest.Matchers.hasMember("propA", "SOMETHING"))
+                            true
+                          catch e
+                            false
+                      )
+                    )
+                    true
+                  catch e
+                    false
+              )
+            )
+          )
           test("Deletes stored payload.", ()->
             JsMockito.verify(dispatcher.on)(
               "queueModified",
@@ -946,7 +985,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
             )
           )
         )
-        test("Generates ID and saves data so local storage location based on it before entering critical section", ()->
+        test("Generates ID and saves data to local storage location based on it before entering critical section", ()->
           lst.sendChallenge("MOCK_USER",
             propA:"SOMETHING"
           )
@@ -997,17 +1036,15 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
         )
       )
     )
-    suite("broadcastUserStatus", ()->
+    suite("broadcastEvent", ()->
       messagedata = null
       recipients = null
+      counter = 0
       setup(()->
-        messagedata =
-          userid:"MOCK_ID"
-          status:"MOCK_STATUS"
-          verifier:
-            timestamp:"MOCK_VERIFYTIMESTAMP"
-            id:"MOCK_VERIFYID"
-            counter:"MOCK_VERIFYCOUNTER"
+        counter = 0
+        mocks["uuid"].func = ()->
+          "MOCK_GENERATED_ID_"+(counter++)
+        messagedata = "SOME DATA"
         recipients = [
           "RECIPIENT_1",
           "RECIPIENT_2",
@@ -1015,17 +1052,84 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
         ]
       )
       teardown(()->
-        delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"]
+        delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"]
+        delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"]
+        delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_2"]
       )
       test("Recipients not defined - does nothing", ()->
-        lst.sendChallenge(null, messagedata)
-        chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"])
+        lst.broadcastEvent(null, messagedata)
+        chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
         JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
       )
       test("Data not defined - does nothing", ()->
-        lst.sendChallenge("MOCK_USER")
-        chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"])
+        lst.broadcastEvent("MOCK_USER")
+        chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
         JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+      )
+      suite("Single recipient", ()->
+        test("Creates single message item containing messagedata", ()->
+          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+          chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
+          chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"])
+        )
+        test("Message item type is event", ()->
+          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"]).type, EVENT_MESSAGE_TYPE)
+        )
+        test("Message item payload is supplied event data", ()->
+          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"]).payload, "SOME DATA")
+        )
+        test("Queues message with id for recipient", ()->
+          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+          JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+            new JsHamcrest.SimpleMatcher(
+              describeTo:(d)->
+                d.append("mutex lock")
+              matches:(o)->
+                o.criticalSection()
+                JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"]).length is 1
+                JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"])[0].id is "MOCK_GENERATED_ID_0"
+            )
+
+          )
+        )
+      )
+      suite("Multiple recipients", ()->
+        test("Creates message item per recipient with same content", ()->
+          lst.broadcastEvent(recipients, messagedata)
+          chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
+          chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"])
+          chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_2"])
+          chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_3"])
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"]).type, EVENT_MESSAGE_TYPE)
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"]).type, EVENT_MESSAGE_TYPE)
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_2"]).type, EVENT_MESSAGE_TYPE)
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"]).payload, "SOME DATA")
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"]).payload, "SOME DATA")
+          chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_2"]).payload, "SOME DATA")
+        )
+        test("Queues messages with id for each recipient", ()->
+          lst.broadcastEvent(recipients, messagedata)
+          i = 0
+          JsMockito.verify(mocks["lib/concurrency/Mutex"].lock,JsMockito.Verifiers.times(3))(
+            new JsHamcrest.SimpleMatcher(
+              describeTo:(d)->
+                d.append("mutex lock")
+              matches:(o)->
+                o.criticalSection()
+                i++
+                switch i
+                  when 1
+                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"])[0].id is "MOCK_GENERATED_ID_0"
+                  when 2
+                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_2"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_2"])[0].id is "MOCK_GENERATED_ID_1"
+                  when 3
+                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3"])[0].id is "MOCK_GENERATED_ID_2"
+            )
+
+          )
+        )
       )
 
     )

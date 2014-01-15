@@ -700,7 +700,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
           chai.assert.equal(gsm.get("_eventLog").length, 2)
           chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
           chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
-          chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("data"), "MOCK_NEW_DETAILS")
         )
         test("Uses uuid to generate id", ()->
           GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
@@ -712,7 +712,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
           chai.assert.equal(gsm.get("_eventLog").length, 2)
           chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
           chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
-          chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
+          chai.assert.equal(gsm.get("_eventLog").at(0).get("data"), "MOCK_NEW_DETAILS")
         )
         test("gameStateModelWithEventLog_PreservesExistingEvents", ()->
           GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
@@ -728,7 +728,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
         chai.assert.equal(gsm.get("_eventLog").length, 1)
         chai.assert.equal(gsm.get("_eventLog").at(0).get("timestamp").moment, "CURRENT_TIME")
         chai.assert.equal(gsm.get("_eventLog").at(0).get("name"), "MOCK_NEW_EVENT")
-        chai.assert.equal(gsm.get("_eventLog").at(0).get("details"), "MOCK_NEW_DETAILS")
+        chai.assert.equal(gsm.get("_eventLog").at(0).get("data"), "MOCK_NEW_DETAILS")
 
       )
       test("Invalid event log - Throws", ()->

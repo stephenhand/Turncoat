@@ -2,7 +2,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
   MESSAGE_QUEUE = "message-queue"
   MESSAGE_ITEM = "message-item"
   CHALLENGE_ISSUED_MESSAGE_TYPE = "challenge-issued"
-  USER_STATUS_UPDATE_MESSAGE_TYPE = "user-status-update"
+  EVENT_MESSAGE_TYPE = "event"
 
   transportEventDispatcher = {}
   _.extend(transportEventDispatcher, Backbone.Events)
@@ -45,6 +45,8 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
                   switch envelope.get("type")
                     when CHALLENGE_ISSUED_MESSAGE_TYPE
                       transport.trigger("challengeReceived", envelope.get("payload"))
+                    when EVENT_MESSAGE_TYPE
+                      transport.trigger("eventReceived", envelope.get("payload"))
                 finally
                   window.localStorage.removeItem(MESSAGE_ITEM+"::"+messageId)
               if remaining then dequeueMessage()
@@ -102,9 +104,21 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
           )
           enqueueMessage(recipient, messageId)
 
-      @broadcastUserStatus=(recipients, data)->
-        if data
-          {}
+      @broadcastEvent=(recipients, data)->
+        if data? and recipients?
+          for recipient in recipients
+            messageId = UUID()
+            window.localStorage.setItem(
+              MESSAGE_ITEM+"::"+messageId,
+              @marshaller.marshalState(
+                new Backbone.Model(
+                  type:EVENT_MESSAGE_TYPE
+                  payload:data
+                )
+              )
+            )
+            enqueueMessage(recipient, messageId)
+
 
 
 
