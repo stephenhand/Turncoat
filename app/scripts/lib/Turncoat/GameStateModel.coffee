@@ -23,6 +23,8 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
       if !@id?
         @id=UUID()
 
+
+
     toString:()->
       if (!GameStateModel.marshaller?)
         throw new Error("State Marshaller not set, set a default state marshaller before constructing GSMs you plan to marshal.")
@@ -76,14 +78,21 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
     GameStateModel.marshaller.unmarshalState(state)
 
   GameStateModel.logEvent = (gsm, moment, eventName, eventDetails)->
-    if !gsm.get("_eventLog")? then gsm.set("_eventLog", new Backbone.Collection([]))
+    counter = 0
+    if !gsm.get("_eventLog")?
+      gsm.set("_eventLog", new Backbone.Collection([]))
+    else
+      if gsm.get("_eventLog").length
+        counter = gsm.get("_eventLog")
     gsm.get("_eventLog").unshift(
       new LogEntry(
+        id:UUID()
         timestamp:moment
         name:eventName
         details:eventDetails
       )
     )
+    gsm.get("_eventLog").at(0)
 
   GameStateModel.vivifier = (unvivified, constructor)->
     vivified = new constructor()

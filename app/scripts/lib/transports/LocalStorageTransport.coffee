@@ -2,6 +2,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
   MESSAGE_QUEUE = "message-queue"
   MESSAGE_ITEM = "message-item"
   CHALLENGE_ISSUED_MESSAGE_TYPE = "challenge-issued"
+  USER_STATUS_UPDATE_MESSAGE_TYPE = "user-status-update"
 
   transportEventDispatcher = {}
   _.extend(transportEventDispatcher, Backbone.Events)
@@ -100,6 +101,12 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
             )
           )
           enqueueMessage(recipient, messageId)
+
+      @broadcastUserStatus=(recipients, data)->
+        if data
+          {}
+
+
 
     stopListening:()->
     startListening:()->

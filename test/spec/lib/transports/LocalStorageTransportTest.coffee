@@ -997,6 +997,38 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
         )
       )
     )
+    suite("broadcastUserStatus", ()->
+      messagedata = null
+      recipients = null
+      setup(()->
+        messagedata =
+          userid:"MOCK_ID"
+          status:"MOCK_STATUS"
+          verifier:
+            timestamp:"MOCK_VERIFYTIMESTAMP"
+            id:"MOCK_VERIFYID"
+            counter:"MOCK_VERIFYCOUNTER"
+        recipients = [
+          "RECIPIENT_1",
+          "RECIPIENT_2",
+          "RECIPIENT_3",
+        ]
+      )
+      teardown(()->
+        delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"]
+      )
+      test("Recipients not defined - does nothing", ()->
+        lst.sendChallenge(null, messagedata)
+        chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"])
+        JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+      )
+      test("Data not defined - does nothing", ()->
+        lst.sendChallenge("MOCK_USER")
+        chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"])
+        JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+      )
+
+    )
   )
 
 

@@ -718,6 +718,9 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
           GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS")
           chai.assert.equal(gsm.get("_eventLog").at(1).get("name"), "MOCK_EVENT_TYPE")
         )
+        test("Returns log event", ()->
+          chai.assert.equal(GameStateModel.logEvent(gsm,{moment:"CURRENT_TIME"},"MOCK_NEW_EVENT","MOCK_NEW_DETAILS"), gsm.get("_eventLog").at(0))
+        )
       )
       suite("No existing event log - Creates new log", ()->
         gsm = new GameStateModel()
