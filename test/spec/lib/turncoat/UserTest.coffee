@@ -27,15 +27,26 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
     persister = null
     setup(()->
       persister =
-        saveGameState:JsMockito.mockFunction()
+        on:jm.mockFunction()
+        off:jm.mockFunction()
+        saveGameState:jm.mockFunction()
+        loadGameTemplateList:jm.mockFunction()
+        loadGameTypes:jm.mockFunction()
+        loadGameTemplate:jm.mockFunction()
+        loadGameList:jm.mockFunction()
+        loadGameState:jm.mockFunction()
       transport =
-        sendChallenge: JsMockito.mockFunction()
-      mocks["lib/turncoat/Factory"].buildTransport=JsMockito.mockFunction()
-      JsMockito.when(mocks["lib/turncoat/Factory"].buildTransport)(JsHamcrest.Matchers.anything()).then((opts)->
+        sendChallenge: jm.mockFunction()
+        startListening:jm.mockFunction()
+        stopListening:jm.mockFunction()
+        on:jm.mockFunction()
+        off:jm.mockFunction()
+      mocks["lib/turncoat/Factory"].buildTransport=jm.mockFunction()
+      jm.when(mocks["lib/turncoat/Factory"].buildTransport)(m.anything()).then((opts)->
         transport
       )
-      mocks["lib/turncoat/Factory"].buildPersister=JsMockito.mockFunction()
-      JsMockito.when(mocks["lib/turncoat/Factory"].buildPersister)().then(()->
+      mocks["lib/turncoat/Factory"].buildPersister=jm.mockFunction()
+      jm.when(mocks["lib/turncoat/Factory"].buildPersister)().then(()->
         persister
       )
     )
@@ -202,6 +213,176 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
         )
       )
 
+    )
+    suite("activate", ()->
+      user = null
+      setup(()->
+        user = new User(id:"MOCK_USER")
+      )
+      test("Calls transport's 'startListening'", ()->
+        user.activate()
+        jm.verify(transport.startListening)()
+      )
+      test("Sets game templates using User ID and null Type", ()->
+        list = {}
+        jm.when(persister.loadGameTemplateList)(m.anything(), m.anything()).then(
+          (a, b)->
+            list
+        )
+        user.activate()
+        jm.verify(persister.loadGameTemplateList)(null, "MOCK_USER")
+        chai.assert.equal(user.get("gameTemplates"), list)
+      )
+      test("Sets Games", ()->
+        list = {}
+        jm.when(persister.loadGameList)(m.anything()).then(
+          (a)->
+            list
+        )
+        user.activate()
+        jm.verify(persister.loadGameList)("MOCK_USER")
+        chai.assert.equal(user.get("games"), list)
+      )
+      test("Listens to transport's ''challengeReceived' handler", ()->
+        user.listenTo = jm.mockFunction()
+        user.activate()
+        jm.verify(user.listenTo)(transport, "challengeReceived", m.func())
+      )
+      test("Applies persister GameListUpdated Handler", ()->
+        user.activate()
+        user.get("games").set=jm.mockFunction()
+        jm.verify(persister.on)("gameListUpdated",m.anything(),user)
+      )
+      test("Multiple calls calls 'startListening' once.", ()->
+        user.activate()
+        user.activate()
+        user.activate()
+        user.activate()
+        jm.verify(transport.startListening, v.once())()
+      )
+      suite("challengeReceived handler", ()->
+        test("Saves challenge to persister", ()->
+          user.listenTo = jm.mockFunction()
+          user.activate()
+          jm.verify(user.listenTo)(transport, "challengeReceived", new JsHamcrest.SimpleMatcher(
+            describeTo:(d)->
+              d.append("challengeReceived handler")
+            matches:(handler)->
+              try
+                game =
+                  logEvent:JsMockito.mockFunction()
+                handler(game)
+                jm.verify(persister.saveGameState)("MOCK_USER",game)
+                true
+              catch e
+                false
+
+          ))
+        )
+      )
+      suite("gameListUpdated Handler", ()->
+        setup(()->
+          jm.when(persister.loadGameList)("MOCK_USER").then(()->
+            new Backbone.Collection()
+          )
+        )
+        test("Current User - Updates Games", ()->
+          user.activate()
+          jm.verify(persister.on)("gameListUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(input)->
+                user.get("games").set=JsMockito.mockFunction()
+                newVal=
+                  userId:"MOCK_USER"
+                  list:new Backbone.Collection([])
+                input.call(user, newVal)
+                try
+                  jm.verify(user.get("games").set)(newVal.list.models)
+                  true
+                catch e
+                  false
+            )
+          ,user)
+        )
+        test("Other User - Does nothing", ()->
+          user.activate()
+          JsMockito.verify(persister.on)("gameListUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(input)->
+                user.get("games").set=jm.mockFunction()
+                newVal=
+                  userId:"OTHER_USER"
+                  list:new Backbone.Collection([])
+                input.call(user, newVal)
+                try
+                  jm.verify(user.get("games").set, v.never())(m.anything())
+                  true
+                catch e
+                  false
+            )
+          ,user)
+        )
+      )
+      suite("deactivate", ()->
+        test("Calls transport's 'stopListening'", ()->
+          user.activate()
+          user.deactivate()
+          jm.verify(transport.stopListening)()
+        )
+        test("Removes persister's GameListUpdated Handler", ()->
+          user.activate()
+          user.deactivate()
+          JsMockito.verify(persister.off)("gameListUpdated",null,user)
+        )
+        test("Stops listening to transport", ()->
+          user.listenTo = jm.mockFunction()
+          user.stopListening = jm.mockFunction()
+          user.activate()
+          user.deactivate()
+          jm.verify(user.stopListening)(transport)
+        )
+        test("Multiple calls calls 'stopListening' once.", ()->
+          user.activate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          jm.verify(transport.stopListening)()
+        )
+        test("Called before activate - does nothing.", ()->
+          user.deactivate()
+          jm.verify(transport.stopListening, v.never())()
+        )
+        test("Multiple calls 'stopListening' once.", ()->
+          user.activate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          user.deactivate()
+          jm.verify(transport.stopListening)()
+        )
+      )
+      test("Activate / Deactivate toggle", ()->
+        user.activate()
+        user.deactivate()
+        user.deactivate()
+        user.activate()
+        user.activate()
+        user.activate()
+        user.deactivate()
+        user.deactivate()
+        user.activate()
+        user.deactivate()
+        user.activate()
+        user.deactivate()
+        jm.verify(transport.startListening, v.times(4))()
+        jm.verify(transport.stopListening, v.times(4))()
+
+      )
     )
 
   )

@@ -616,7 +616,6 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
             )
           )
           test("Envelope has payload and 'Challenge Received' type - triggers 'Challenge Recieved' event from transport with payload", ()->
-
             JsMockito.verify(dispatcher.on)(
               "queueModified",
               new JsHamcrest.SimpleMatcher(

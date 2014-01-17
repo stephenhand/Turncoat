@@ -31,6 +31,16 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
         "MOCK_MOMENT_UTC"
     )
   )
+  Isolate.mapAsFactory("lib/turncoat/User", "AppState", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ret = (data)->
+        usr = new Backbone.Model(data)
+        usr.activate = JsMockito.mockFunction()
+        usr.deactivate = JsMockito.mockFunction()
+        usr
+      ret
+    )
+  )
   Isolate.mapAsFactory("lib/turncoat/Factory","AppState", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
 
@@ -48,6 +58,8 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
           JsMockito.when(p.loadUser)(JsHamcrest.Matchers.anything()).then((a)->
             acceptChallenge:JsMockito.mockFunction()
             issueChallenge:JsMockito.mockFunction()
+            activate:JsMockito.mockFunction()
+            deactivate:JsMockito.mockFunction()
             input:a
             get:(key)->
               if key is "id" then a else null
@@ -110,164 +122,34 @@ define(['isolate!AppState', "backbone", "lib/turncoat/Constants"], (AppState, Ba
         mocks["persister"].off=JsMockito.mockFunction()
         mocks["persister"].on=JsMockito.mockFunction()
       )
-      test("idString_setsCurrentUserAsPersisterReturnInputVal", ()->
+      test("Id is string - Sets current user as Input Val", ()->
         AppState.loadUser("MOCK_USER")
         chai.assert.equal(AppState.get("currentUser").input, "MOCK_USER")
       )
-      test("idString_setsGameTemplatesUsingUserAndNullType", ()->
+      test("Activates new user",()->
         AppState.loadUser("MOCK_USER")
-        chai.assert.equal(AppState.get("gameTemplates").user, "MOCK_USER")
-        chai.assert.equal(AppState.get("gameTemplates").type, null)
+        JsMockito.verify(AppState.get("currentUser").activate)()
       )
-      test("idString_setsGameTypes", ()->
-        AppState.loadUser("MOCK_USER")
-        chai.assert.equal(AppState.get("gameTypes"), "MOCK_GAME_TYPES")
-      )
-      test("idString_setsGames", ()->
-        AppState.loadUser("MOCK_USER")
-        chai.assert.equal(AppState.get("games"), "MOCK_GAME_LIST")
-      )
-      test("removesExistingPersisterGameListUpdatedHandler", ()->
-        AppState.loadUser("MOCK_USER2")
-        JsMockito.verify(mocks["persister"].off)("gameListUpdated",null,AppState)
-      )
-      test("Creates default transport for user using buildTransport passing in userId",()->
-        AppState.loadUser("MOCK_USER")
-        JsMockito.verify(mocks["lib/turncoat/Factory"].buildTransport)(JsHamcrest.Matchers.hasMember("userId", "MOCK_USER"))
-      )
-      test("Transport starts listening",()->
-        AppState.loadUser("MOCK_USER")
-        JsMockito.verify(currentUserTransport.startListening)()
-      )
-      test("AppState binds to transport's 'challengeReceived' event",()->
-        AppState.loadUser("MOCK_USER")
-        JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", JsHamcrest.Matchers.func())
-      )
-      suite("Already has transport set", ()->
-        test("Stops listening on previous transport and starts on new one",()->
+      suite("Already has current user", ()->
+        test("Deactivates current user",()->
           AppState.loadUser("MOCK_USER")
-          previousTransport = currentUserTransport
+          previousUser = AppState.get("currentUser")
           AppState.loadUser("MOCK_SECOND_USER")
-          JsMockito.verify(mocks["lib/turncoat/Factory"].buildTransport)(JsHamcrest.Matchers.hasMember("userId", "MOCK_SECOND_USER"))
-          JsMockito.verify(previousTransport.stopListening)()
-          JsMockito.verify(currentUserTransport.startListening)()
+          JsMockito.verify(previousUser.deactivate)()
         )
-        test("Stops listening to old transport",()->
+        test("Activates new user",()->
           AppState.loadUser("MOCK_USER")
-          previousTransport = currentUserTransport
           AppState.loadUser("MOCK_SECOND_USER")
-          JsMockito.verify(AppState.stopListening)(previousTransport)
+          JsMockito.verify(AppState.get("currentUser").activate)()
         )
-      )
-      test("appliesNewPersisterGameListUpdatedHandler", ()->
-        AppState.loadUser("MOCK_USER")
-        AppState.get("games").set=JsMockito.mockFunction()
-        JsMockito.verify(mocks["persister"].on)("gameListUpdated",JsHamcrest.Matchers.anything(),AppState)
       )
       suite("Multiple loads of same user", ()->
-        test("Only starts transport listening once", ()->
+        test("Only activates user once", ()->
           AppState.loadUser("MOCK_USER")
           AppState.loadUser("MOCK_USER")
           AppState.loadUser("MOCK_USER")
           AppState.loadUser("MOCK_USER")
-          JsMockito.verify(currentUserTransport.startListening)()
-        )
-        test("Binds to 'challengeReceived' event once",()->
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", JsHamcrest.Matchers.func())
-        )
-        test("Applies persister GameListUpdated handler once", ()->
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          AppState.loadUser("MOCK_USER")
-          AppState.get("games").set=JsMockito.mockFunction()
-          JsMockito.verify(mocks["persister"].on)("gameListUpdated",JsHamcrest.Matchers.anything(),AppState)
-        )
-      )
-      suite("challengeReceived handler", ()->
-        test("Saves challenge to persister", ()->
-
-          AppState.loadUser("MOCK_USER")
-          JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", new JsHamcrest.SimpleMatcher(
-            describeTo:(d)->
-              d.append("challengeReceived handler")
-            matches:(handler)->
-              try
-                game =
-                  logEvent:JsMockito.mockFunction()
-                handler(game)
-                JsMockito.verify(mocks["persister"].saveGameState)("MOCK_USER",game)
-                true
-              catch e
-                false
-
-          ))
-        )
-        test("Logs the challenge being received on the game", ()->
-          AppState.loadUser("MOCK_USER")
-          JsMockito.verify(AppState.listenTo)(currentUserTransport, "challengeReceived", new JsHamcrest.SimpleMatcher(
-            describeTo:(d)->
-              d.append("challengeReceived handler")
-            matches:(handler)->
-              try
-                game =
-                  logEvent:JsMockito.mockFunction()
-                handler(game)
-                JsMockito.verify(game.logEvent)("MOCK_MOMENT_UTC",JsHamcrest.Matchers.string(),JsHamcrest.Matchers.string())
-                true
-              catch e
-                false
-
-          ))
-        )
-      )
-      suite("gameListUpdatedHandler", ()->
-        setup(()->
-          JsMockito.when(mocks["persister"].loadGameList)("MOCK_USER").then(()->
-            new Backbone.Collection()
-          )
-        )
-        test("currentUser_updatesGames", ()->
-          AppState.loadUser("MOCK_USER")
-          JsMockito.verify(mocks["persister"].on)("gameListUpdated",
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                AppState.get("games").set=JsMockito.mockFunction()
-                newVal=
-                  userId:"MOCK_USER"
-                  list:new Backbone.Collection([])
-                input.call(AppState, newVal)
-                try
-                  JsMockito.verify(AppState.get("games").set)(newVal.list.models)
-                  true
-                catch e
-                  false
-            )
-          ,AppState)
-        )
-        test("otherUser_doesNothing", ()->
-          AppState.loadUser("MOCK_USER")
-          JsMockito.verify(mocks["persister"].on)("gameListUpdated",
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                AppState.get("games").set=JsMockito.mockFunction()
-                newVal=
-                  userId:"OTHER_USER"
-                  list:new Backbone.Collection([])
-                input.call(AppState, newVal)
-                try
-                  JsMockito.verify(AppState.get("games").set, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
-                  true
-                catch e
-                  false
-            )
-          ,AppState)
+          JsMockito.verify(AppState.get("currentUser").activate)()
         )
       )
     )
@@ -460,6 +342,11 @@ define(['isolate!AppState', "backbone", "lib/turncoat/Constants"], (AppState, Ba
       setup(()->
         mocks["setInterval"].func = JsMockito.mockFunction()
         AppState.trigger = JsMockito.mockFunction()
+      )
+
+      test("Sets Game Types", ()->
+        AppState.activate()
+        chai.assert.equal(AppState.get("gameTypes"), "MOCK_GAME_TYPES")
       )
       test("setsPollingInterval", ()->
         AppState.activate()

@@ -27,9 +27,9 @@ define(["underscore", "backbone", "AppState"], (_, Backbone, AppState)->
 
     getDefaultTab:()->
       switch
-        when !AppState.get("currentUser")? or !AppState.get("games")? then @get("tabs").findWhere(name:"createGame")
-        when AppState.get("games").findWhere(userStatus:"PLAYING")? then @get("tabs").findWhere(name:"currentGames")
-        when AppState.get("games").length then @get("tabs").findWhere(name:"reviewChallenges")
+        when !AppState.get("currentUser")? or !AppState.get("currentUser").get("games")? then @get("tabs").findWhere(name:"createGame")
+        when AppState.get("currentUser").get("games").findWhere(userStatus:"PLAYING")? then @get("tabs").findWhere(name:"currentGames")
+        when AppState.get("currentUser").get("games").length then @get("tabs").findWhere(name:"reviewChallenges")
         else  @get("tabs").findWhere(name:"createGame")
   )
 )

@@ -26,14 +26,6 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
           )
       get:(key)->
         switch key
-          when "gameTemplates"
-            [
-              id:"MOCK_TEMPLATE1"
-              label:"A Mock Template"
-            ,
-              id:"MOCK_TEMPLATE2"
-              label:"Another Mock Template"
-            ]
           when "gameTypes"
             new Backbone.Collection(
               [
@@ -45,7 +37,16 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
               ]
             )
           when "currentUser"
-            new Backbone.Model(id:"MOCK_CURRENT_USER")
+            new Backbone.Model(
+              id:"MOCK_CURRENT_USER"
+              gameTemplates:[
+                id:"MOCK_TEMPLATE1"
+                label:"A Mock Template"
+              ,
+                id:"MOCK_TEMPLATE2"
+                label:"Another Mock Template"
+              ]
+            )
           else
             null
     )

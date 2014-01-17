@@ -3,7 +3,7 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
   CreateGameViewModel = Backbone.Model.extend(
     initialize:()->
       @gameTypes=new BackboneViewModelCollection( )
-      @gameTypes.watch([AppState.get("gameTemplates")])
+      @gameTypes.watch([AppState.get("currentUser").get("gameTemplates")])
 
       @gameTypes.onSourceUpdated=()=>
         @gameTypes.updateFromWatchedCollections(

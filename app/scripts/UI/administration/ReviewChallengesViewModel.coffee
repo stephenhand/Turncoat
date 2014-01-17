@@ -23,7 +23,7 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
           when a.get("created").unix() < b.get("created").unix() then 1
           else 0
 
-      @get("challenges").watch([AppState.get("games")])
+      @get("challenges").watch([AppState.get("currentUser").get("games")])
 
       @get("challenges").onSourceUpdated=()->
         @updateFromWatchedCollections(

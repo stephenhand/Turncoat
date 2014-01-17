@@ -11,6 +11,7 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
           else if (!@get("game")?)
             @trigger("gameDataRequired")
         ,POLL_INTERVAL_MILLISECONDS)
+      @set("gameTypes", persister.loadGameTypes())
 
     createGame:()->
       @set("game",new Game())
@@ -18,25 +19,9 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
 
     loadUser:(id)->
       if (id isnt @get("currentUser")?.get("id"))
+        @get("currentUser")?.deactivate()
         @set("currentUser", persister.loadUser(id))
-        @set("gameTemplates", persister.loadGameTemplateList(null, id))
-        @set("gameTypes", persister.loadGameTypes())
-        @set("games",persister.loadGameList(id) ? new Backbone.Collection([]))
-        persister.off("gameListUpdated", null, @)
-        persister.on("gameListUpdated", (data)->
-          if (data.userId is @get("currentUser").get("id"))
-            @get("games").set(data.list.models)
-        ,@)
-        if transport?
-          transport.stopListening()
-          @stopListening(transport)
-        transport = Factory.buildTransport(userId:id)
-        @listenTo(transport,"challengeReceived",(game)=>
-
-          game.logEvent(moment.utc(),"INVITERECEIVED::"+id,"Game created locally")
-          persister.saveGameState(@get("currentUser").get("id"), game)
-        )
-        transport.startListening()
+        @get("currentUser").activate()
 
     loadGameTemplate:(id)->
       if (!id?) then throw new Error("loadGameTemplate requires an ID parameter")

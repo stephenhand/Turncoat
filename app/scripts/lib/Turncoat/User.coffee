@@ -16,6 +16,8 @@ define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turnc
         transport.sendChallenge(userId, game)
         game.logEvent(moment.utc(),Constants.LogEvents.CHALLENGEISSUED+"::"+@get("id")+"::"+userId, "Challenge Issued")
         persister.saveGameState(@get("id"), game)
+
+
       @acceptChallenge = (game)->
         if !game? then throw new Error("Game must be specified to issue a challenge")
         user = game.get("players").find(
@@ -35,10 +37,37 @@ define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turnc
         if (recipients.length)
           transport.broadcastEvent(recipients,event)
 
+      toggled = null
+      @activate = ()->
+        @set("gameTemplates", persister.loadGameTemplateList(null, @get("id")))
+        @set("games",persister.loadGameList(@get("id")) ? new Backbone.Collection([]))
+        persister.on("gameListUpdated", (data)->
+          if (data.userId is @get("id"))
+            @get("games").set(data.list.models)
+        ,@)
+        transport.startListening()
+        @listenTo(transport,"challengeReceived",(game)=>
+          persister.saveGameState(@get("id"), game)
+        )
+
+        @deactivate = ()->
+          persister.off("gameListUpdated", null, @)
+          transport.stopListening()
+          @stopListening(transport)
+          @activate = toggled
+          toggled = @deactivate
+          @deactivate = ()->
+
+        toggled = @activate
+        @activate = ()->
+
 
     issueChallenge:(userId, game)->
 
     acceptChallenge:(game)->
+
+    activate:()->
+    deactivate:()->
 
   )
 

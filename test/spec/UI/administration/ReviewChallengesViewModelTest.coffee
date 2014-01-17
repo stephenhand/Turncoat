@@ -63,8 +63,10 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
           (key)->
             switch key
-              when "games" then mockGameList
-              when "currentUser" then new Backbone.Model(id:"MOCK_USER")
+              when "currentUser" then new Backbone.Model(
+                id:"MOCK_USER"
+                games:mockGameList
+              )
               else undefined
         )
       )
