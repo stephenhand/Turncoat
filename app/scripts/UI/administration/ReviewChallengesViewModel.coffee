@@ -24,7 +24,10 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
           else 0
 
       @get("challenges").watch([AppState.get("currentUser").get("games")])
-
+      @listenTo(AppState, "change::currentUser", ()->
+        @get("challenges").unwatch()
+        @get("challenges").watch([AppState.get("currentUser").get("games")])
+      ,@)
       @get("challenges").onSourceUpdated=()->
         @updateFromWatchedCollections(
           (item, watched)->

@@ -56,6 +56,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
     suite("initialize", ()->
       mockGameList = new Backbone.Collection([])
       setup(()->
+        mocks['AppState'].on = JsMockito.mockFunction()
         mocks['AppState'].get = JsMockito.mockFunction()
         mocks['AppState'].issueChallenge = JsMockito.mockFunction()
         mocks['AppState'].acceptChallenge = JsMockito.mockFunction()
@@ -63,10 +64,11 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
           (key)->
             switch key
-              when "currentUser" then new Backbone.Model(
-                id:"MOCK_USER"
-                games:mockGameList
-              )
+              when "currentUser"
+                new Backbone.Model(
+                  id:"MOCK_USER"
+                  games:mockGameList
+                )
               else undefined
         )
       )
@@ -86,9 +88,35 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
         rcvm = new ReviewChallengesViewModel()
         JsMockito.verify(rcvm.get("challenges").setOrderAttribute)(JsHamcrest.Matchers.string())
       )
-      test("challengesWatchesAppStateGames", ()->
+      test("Challenges watches current user's games", ()->
         rcvm = new ReviewChallengesViewModel()
         JsMockito.verify(rcvm.get("challenges").watch)(JsHamcrest.Matchers.hasItem(mockGameList))
+      )
+      test("Listens to AppState for changes in current user",()->
+        new ReviewChallengesViewModel()
+        JsMockito.verify(mocks['AppState'].on)("change::currentUser", JsHamcrest.Matchers.func())
+      )
+      suite("AppState current user changed event handler", ()->
+        handler = null
+        currentUser = null
+        rcvm = null
+        setup(()->
+          JsMockito.when(mocks['AppState'].on)("change::currentUser", JsHamcrest.Matchers.func()).then(
+            (n, h)->
+              handler = h
+          )
+          rcvm = new ReviewChallengesViewModel()
+          rcvm.get("challenges").watch = JsMockito.mockFunction()
+
+        )
+        test("Challenges unwatches everything", ()->
+          handler.call(rcvm)
+          JsMockito.verify(rcvm.get("challenges").unwatch)()
+        )
+        test("Challenges watches current user's games", ()->
+          handler.call(rcvm)
+          JsMockito.verify(rcvm.get("challenges").watch)(JsHamcrest.Matchers.hasItem(mockGameList))
+        )
       )
       test("setsChallengesOnSourceUpdated", ()->
         rcvm = new ReviewChallengesViewModel()
