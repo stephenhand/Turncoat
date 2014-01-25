@@ -1,6 +1,5 @@
 define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat/Constants", "lib/turncoat/Game","lib/turncoat/Factory", "text!data/testInitialState.txt"], (setInterval, UUID, moment, _, Backbone, Constants, Game, Factory, testInitialState)->
   persister = undefined
-  transport = undefined
   POLL_INTERVAL_MILLISECONDS=500
   
   AppState = Backbone.Model.extend(
@@ -14,8 +13,7 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
       @set("gameTypes", persister.loadGameTypes())
 
     createGame:()->
-      @set("game",new Game())
-      @get("game").loadState(testInitialState)
+      @set("game",Game.fromString(testInitialState))
 
     loadUser:(id)->
       if (id isnt @get("currentUser")?.get("id"))

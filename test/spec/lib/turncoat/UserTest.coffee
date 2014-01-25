@@ -70,19 +70,18 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
       challenger = null
       setup(()->
         game = new Backbone.Model(
-          players:new Backbone.Collection([
-            user:new Backbone.Model(
-              id:"CHALLENGED_USER"
-            )
-
+          users:new Backbone.Collection([
+            id:"CHALLENGED_USER"
+          ,
+            id:"MOCK_USER"
           ])
         )
-        game.logEvent=JsMockito.mockFunction()
+        game.updateUserStatus=JsMockito.mockFunction()
         challenger = new User(id:"MOCK_USER")
       )
       test("Challenged user not set - throws",()->
         a.throw(()->
-          challenger.issueChallenge(undefined, {})
+          challenger.issueChallenge(undefined,game)
         )
       )
       test("Game not set - throws",()->
@@ -92,33 +91,32 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
       )
       test("Challenged user not assigned to a player in game - throws",()->
         a.throw(()->
-          challenger.issueChallenge("NOT_CHALLENGED_USER")
+          challenger.issueChallenge("NOT_CHALLENGED_USER",game)
         )
       )
-      test("Valid input - calls transport sendChallenge with same user & game",()->
-        challenger.issueChallenge("CHALLENGED_USER", game)
-        jm.verify(transport.sendChallenge)("CHALLENGED_USER",game)
+      test("Challenginfg user not assigned to a player in game - throws",()->
+        a.throw(()->
+          challenger.set("id","OTHER_USER")
+          challenger.issueChallenge("NOT_CHALLENGED_USER",game)
+        )
       )
-      test("Valid input - sets challenged player status to challenged",()->
-        challenger.issueChallenge("CHALLENGED_USER", game)
-        a.equal(game.get("players").at(0).get("user").get("status"),Constants.CHALLENGED_STATE)
-      )
-      test("Valid input - calls transport sendChallenge with game after status set",()->
-        challenger.issueChallenge("CHALLENGED_USER", game)
-        jm.verify(transport.sendChallenge)("CHALLENGED_USER",new JsHamcrest.SimpleMatcher(
-          describeTo:(d)->
-            d.append("game")
-          matches:(g)->
-            g.get("players").at(0).get("user").get("status") is Constants.CHALLENGED_STATE
-        ))
-      )
-      test("Valid input - saves game",()->
-        challenger.issueChallenge("CHALLENGED_USER", game)
-        jm.verify(persister.saveGameState)("MOCK_USER",game)
-      )
-      test("Valid input - logs event with challenged user and challenging user", ()->
-        challenger.issueChallenge("CHALLENGED_USER", game)
-        jm.verify(game.logEvent)("MOCK_MOMENT_UTC",m.allOf(m.containsString("MOCK_USER"),m.containsString("CHALLENGED_USER")),m.string())
+      suite("Valid input", ()->
+        test("Calls transport sendChallenge with same user & game",()->
+          challenger.issueChallenge("CHALLENGED_USER", game)
+          jm.verify(transport.sendChallenge)("CHALLENGED_USER",game)
+        )
+        test("Calls updateUserStatus on game to set challenged player status to 'challenged'",()->
+          challenger.issueChallenge("CHALLENGED_USER", game)
+          jm.verify(game.updateUserStatus)("CHALLENGED_USER",Constants.CHALLENGED_STATE)
+        )
+        test("Calls transport sendChallenge after status set",()->
+          transport.sendChallenge = ()->
+          jm.when(game.updateUserStatus)("CHALLENGED_USER",Constants.CHALLENGED_STATE).then(()->
+            transport.sendChallenge = jm.mockFunction()
+          )
+          challenger.issueChallenge("CHALLENGED_USER", game)
+          jm.verify(transport.sendChallenge)("CHALLENGED_USER",game)
+        )
       )
     )
     suite("acceptChallenge", ()->
@@ -128,25 +126,17 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
       setup(()->
         transport.broadcastEvent = jm.mockFunction()
         game = new Backbone.Model(
-          players:new Backbone.Collection([
-            user:new Backbone.Model(
-              id:"MOCK_USER"
-            )
+          users:new Backbone.Collection([
+            id:"MOCK_USER"
           ,
-            user:new Backbone.Model(
-              id:"OTHER_CHALLENGED_USER"
-            )
+            id:"OTHER_CHALLENGED_USER"
           ,
-            user:new Backbone.Model(
-              id:"OTHER_OTHER_CHALLENGED_USER"
-            )
+            id:"OTHER_OTHER_CHALLENGED_USER"
+
 
           ])
         )
-        game.logEvent=JsMockito.mockFunction()
-        jm.when(game.logEvent)(m.anything(),m.anything(),m.anything()).then((a,b,c)->
-          event
-        )
+        game.updateUserStatus=JsMockito.mockFunction()
         challenger = new User(id:"MOCK_USER")
       )
       test("Game not set - throws",()->
@@ -157,60 +147,17 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
       test("User not assigned to a player in game - throws",()->
         a.throw(()->
           challenger.acceptChallenge(new Backbone.Model(
-            players:new Backbone.Collection([
-              user:new Backbone.Model(
-                id:"NOT CHALLENGED_USER"
-              )
+            users:new Backbone.Collection([
+              id:"NOT CHALLENGED_USER"
             ])
           ))
         )
       )
 
-      test("Valid input, user currently has no status - changes user status to 'READY'",()->
+      test("Valid input - Calls game's updateUserStatus",()->
         challenger.acceptChallenge(game)
-        a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
-      )
-      suite("User currently has other status", ()->
-        setup(()->
-          game.get("players").at(0).get("user").set("status", "SOMETHING ELSE")
-        )
-        test("Changes user status to 'READY'",()->
-          challenger.acceptChallenge(game)
-          a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
-        )
-        test("Logs event with current time and 'ready' status and user id in data.",()->
-          challenger.acceptChallenge(game)
-          jm.verify(game.logEvent)("MOCK_MOMENT_UTC", m.string(), m.hasMember("attributes", m.allOf(m.hasMember("userid","MOCK_USER"),m.hasMember("status", Constants.READY_STATE))))
-        )
-        test("Broadcasts logged event via transport", ()->
-          challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastEvent)(m.anything(), event)
-        )
-        test("Broadcasts with all users except the current one as recipients", ()->
-          challenger.acceptChallenge(game)
-          jm.verify(transport.broadcastEvent)(m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
-        )
-        test("Current user is only user - doesn't broadcast.", ()->
-          g = new Backbone.Model(
-            players:new Backbone.Collection([
-              user:new Backbone.Model(
-                id:"MOCK_USER"
-              )
-            ])
-          )
-          g.logEvent=()->
-          challenger.acceptChallenge(g)
-          jm.verify(transport.broadcastEvent, v.never())(m.anything(), m.anything())
-        )
-      )
-      suite("User currently has 'ready' status", ()->
-        setup(()->
-          game.get("players").at(0).get("user").set("status", Constants.READY_STATE)
-        )
-        test("Leave user status to 'READY'",()->
-          challenger.acceptChallenge(game)
-          a.equal(game.get("players").at(0).get("user").get("status"), Constants.READY_STATE)
-        )
+        jm.verify(game.updateUserStatus)("MOCK_USER", Constants.READY_STATE)
+        a.equal(game.get("users").at(0).get("status"))
       )
 
     )

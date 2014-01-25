@@ -7,35 +7,22 @@ define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turnc
       @issueChallenge = (userId, game)->
         if !userId? then throw new Error("Target user must be specified to issue a challenge")
         if !game? then throw new Error("Game must be specified to issue a challenge")
-        user = game.get("players").find(
-          (p)->
-            p.get("user").get("id") is userId
-        )?.get("user")
+        user = game.get("users").get(@)
+        if !user? then throw new Error("Sending user must be part of game to issue a challenge")
+        user = game.get("users").get(userId)
         if !user? then throw new Error("Target user must be part of game to issue a challenge")
-        user.set("status",Constants.CHALLENGED_STATE)
+        game.updateUserStatus(userId, Constants.CHALLENGED_STATE)
         transport.sendChallenge(userId, game)
-        game.logEvent(moment.utc(),Constants.LogEvents.CHALLENGEISSUED+"::"+@get("id")+"::"+userId, "Challenge Issued")
-        persister.saveGameState(@get("id"), game)
-
 
       @acceptChallenge = (game)->
         if !game? then throw new Error("Game must be specified to issue a challenge")
-        user = game.get("players").find(
-          (p)=>
-            p.get("user").get("id") is @get("id")
-        )?.get("user")
-        if !user? then throw new Error("Current user has not been challenged to play this game.")
-        user.set("status",Constants.READY_STATE)
-        event = game.logEvent(moment.utc(),Constants.LogEvents.USERSTATUSCHANGED,
-          new Backbone.Model(
-            userid:@get("id")
-            status:Constants.READY_STATE
-          )
+        user = game.get("users").findWhere(
+          id:@get("id")
         )
-        recipients = (player.get("user").get("id") for player in game.get("players").models when player.get("user").get("id") isnt @get("id"))
+        if !user? then throw new Error("Current user has not been challenged to play this game.")
+        game.updateUserStatus(@get("id"), Constants.READY_STATE)
 
-        if (recipients.length)
-          transport.broadcastEvent(recipients,event)
+
 
       toggled = null
       @activate = ()->

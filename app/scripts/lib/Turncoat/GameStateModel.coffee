@@ -1,4 +1,4 @@
-define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, Backbone, Factory, LogEntry, GameHeader)->
+define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, moment, Backbone, Factory, LogEntry, GameHeader)->
 
   recurseChildren = (item, processor, deep, earlyOut)->
     deep ?= true
@@ -22,7 +22,6 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
       GameStateModel.marshaller ?= Factory.buildStateMarshaller()
       if !@id?
         @id=UUID()
-
 
 
     toString:()->
@@ -55,8 +54,27 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
       if (chain.length) then chain.push(root) else chain = null
       chain
 
-    logEvent:(moment, eventName, eventDetails)->
-      GameStateModel.logEvent(@, moment, eventName, eventDetails)
+    generateEvent:(eventName, eventData)->
+      validation = new Backbone.Model(
+        counter:0
+      )
+      previousTimestamp = null
+      previousId = null
+      if @get("_eventLog")? && !@get("_eventLog").isEmpty()
+        l = @get("_eventLog").at(0)
+        validation.set("counter", @get("_eventLog").length)
+        validation.set("previousTimestamp", l.get("timestamp"))
+        validation.set("previousId", l.get("id"))
+      new LogEntry(
+        id:UUID()
+        timestamp:moment.utc()
+        name:eventName
+        data:eventData
+        validation:validation
+      )
+
+    logEvent:(event)->
+      GameStateModel.logEvent(@, event)
 
     getLatestEvent:(name)->
       if @get("_eventLog")?
@@ -77,22 +95,10 @@ define(["underscore", "uuid", "backbone", "lib/turncoat/Factory", "lib/turncoat/
     GameStateModel.marshaller ?= Factory.buildStateMarshaller()
     GameStateModel.marshaller.unmarshalState(state)
 
-  GameStateModel.logEvent = (gsm, moment, eventName, eventData)->
-    counter = 0
+  GameStateModel.logEvent = (gsm, event)->
     if !gsm.get("_eventLog")?
       gsm.set("_eventLog", new Backbone.Collection([]))
-    else
-      if gsm.get("_eventLog").length
-        counter = gsm.get("_eventLog")
-    gsm.get("_eventLog").unshift(
-      new LogEntry(
-        id:UUID()
-        timestamp:moment
-        name:eventName
-        data:eventData
-      )
-    )
-    gsm.get("_eventLog").at(0)
+    gsm.get("_eventLog").unshift(event)
 
   GameStateModel.vivifier = (unvivified, constructor)->
     vivified = new constructor()

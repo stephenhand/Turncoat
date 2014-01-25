@@ -12,11 +12,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("lib/turncoat/Game","AppState", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      mockConstructedGame =
-        loadState:(state)->
-      mockGame = ()->
-        mockConstructedGame
-      mockGame
+      fromString:JsMockito.mockFunction()
     )
   )
   Isolate.mapAsFactory("uuid", "AppState", (actual, modulePath, requestingModulePath)->
@@ -41,47 +37,58 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ret
     )
   )
+  Isolate.mapAsFactory("lib/turncoat/User", "AppState", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ret = (data)->
+        usr = new Backbone.Model(data)
+        usr.activate = JsMockito.mockFunction()
+        usr.deactivate = JsMockito.mockFunction()
+        usr
+      ret
+    )
+  )
   Isolate.mapAsFactory("lib/turncoat/Factory","AppState", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-
-        buildPersister:()->
-          p=
-            loadUser:JsMockito.mockFunction()
-            loadGameTemplateList:JsMockito.mockFunction()
-            loadGameTypes:JsMockito.mockFunction()
-            loadGameTemplate:JsMockito.mockFunction()
-            loadGameList:JsMockito.mockFunction()
-            loadGameState:JsMockito.mockFunction()
-            saveGameState:JsMockito.mockFunction()
-            on:JsMockito.mockFunction()
-            off:JsMockito.mockFunction()
-          JsMockito.when(p.loadUser)(JsHamcrest.Matchers.anything()).then((a)->
-            acceptChallenge:JsMockito.mockFunction()
-            issueChallenge:JsMockito.mockFunction()
-            activate:JsMockito.mockFunction()
-            deactivate:JsMockito.mockFunction()
-            input:a
-            get:(key)->
-              if key is "id" then a else null
-          )
-          JsMockito.when(p.loadGameTemplateList)(JsHamcrest.Matchers.anything()).then((t,a)->
-            type:t
-            user:a
-          )
-          JsMockito.when(p.loadGameTypes)().then(()->
-            "MOCK_GAME_TYPES"
-          )
-          JsMockito.when(p.loadGameList)("MOCK_USER").then(()->
-            "MOCK_GAME_LIST"
-          )
-          JsMockito.when(p.loadGameTemplate)(JsHamcrest.Matchers.anything()).then((a)->
-            a
-          )
-          window.mockLibrary["AppState"]["persister"]=p
-          p
-
-
-
+      buildPersister:()->
+        p=
+          loadUser:JsMockito.mockFunction()
+          loadGameTemplateList:JsMockito.mockFunction()
+          loadGameTypes:JsMockito.mockFunction()
+          loadGameTemplate:JsMockito.mockFunction()
+          loadGameList:JsMockito.mockFunction()
+          loadGameState:JsMockito.mockFunction()
+          saveGameState:JsMockito.mockFunction()
+          on:JsMockito.mockFunction()
+          off:JsMockito.mockFunction()
+        JsMockito.when(p.loadUser)(JsHamcrest.Matchers.anything()).then((a)->
+          acceptChallenge:JsMockito.mockFunction()
+          issueChallenge:JsMockito.mockFunction()
+          activate:JsMockito.mockFunction()
+          deactivate:JsMockito.mockFunction()
+          input:a
+          get:(key)->
+            if key is "id" then a else null
+        )
+        JsMockito.when(p.loadGameTemplateList)(JsHamcrest.Matchers.anything()).then((t,a)->
+          type:t
+          user:a
+        )
+        JsMockito.when(p.loadGameTypes)().then(()->
+          "MOCK_GAME_TYPES"
+        )
+        JsMockito.when(p.loadGameList)("MOCK_USER").then(()->
+          "MOCK_GAME_LIST"
+        )
+        JsMockito.when(p.loadGameTemplate)(JsHamcrest.Matchers.anything()).then((a)->
+          a
+        )
+        window.mockLibrary["AppState"]["persister"]=p
+        p
+    )
+  )
+  Isolate.mapAsFactory("text!data/testInitialState.txt","AppState", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      "TEST_INITIAL_STATE"
     )
   )
 
@@ -111,9 +118,13 @@ define(['isolate!AppState', "backbone", "lib/turncoat/Constants"], (AppState, Ba
       AppState.listenTo = origListenTo
     )
     suite("createGame", ()->
-      test("setsState", ()->
+      test("Sets game to game built from testInitialState", ()->
+        JsMockito.when(mocks["lib/turncoat/Game"].fromString)(JsHamcrest.Matchers.anything()).then(
+          (str)->
+            str
+        )
         AppState.createGame()
-        chai.assert.equal(AppState.get("game"), mocks["lib/turncoat/Game"]())
+        chai.assert.equal(AppState.get("game"), "TEST_INITIAL_STATE")
       )
 
     )
