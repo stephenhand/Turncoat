@@ -12,8 +12,13 @@ define(["underscore", "backbone", "lib/turncoat/Constants", 'lib/turncoat/GameSt
         transport.startListening()
         @listenTo(transport, "eventReceived",
           (event)->
-
-            #user.set("status",Constants.READY_STATE)
+            @logEvent(event)
+            switch event.get("name")
+              when Constants.LogEvents.USERSTATUSCHANGED
+                if (@get("users")? && event.get("data") && event.get("data").get("status")?)
+                  user = @get("users").get(event.get("data").get("userId"))
+                  if (user?)
+                    user.set("status",event.get("data").get("status"))
         ,@)
 
         @deactivate = ()->

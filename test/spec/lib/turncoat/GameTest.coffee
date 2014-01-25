@@ -110,6 +110,72 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         jm.verify(transport.startListening, v.once())()
       )
       suite("eventReceived handler", ()->
+        handler = null
+        event = null
+        setup(()->
+          game.listenTo = jm.mockFunction()
+          jm.when(game.listenTo)(transport, "eventReceived", m.func()).then((t, e, f)=>
+            handler = f
+          )
+          game.activate()
+          game.logEvent = jm.mockFunction()
+          event = new Backbone.Model()
+        )
+        test("Logs event", ()->
+          handler.call(game,event)
+          jm.verify(game.logEvent)(event)
+        )
+        test("Event not Backbone Model - throws", ()->
+          a.throw(()->handler({}))
+        )
+        suite("Event is USERSTATUSCHANGED", ()->
+          setup(()->
+            game.set("users", new Backbone.Collection([
+              id:"MOCK USER"
+            ,
+              id:"NOT MOCK USER"
+            ]))
+            event.set("name", Constants.LogEvents.USERSTATUSCHANGED)
+            event.set("data", new Backbone.Model(
+              userId:"MOCK USER"
+              status:"MOCK STATUS"
+            ))
+          )
+          test("Data missing - does nothing", ()->
+            event.unset("data")
+            handler.call(game,event)
+            a.isUndefined(game.get("users").get("MOCK USER").get("status"))
+            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+          )
+          test("User Id missing - does nothing", ()->
+            event.get("data").unset("userId")
+            handler.call(game,event)
+            a.isUndefined(game.get("users").get("MOCK USER").get("status"))
+            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+          )
+          test("Status missing - does nothing", ()->
+            game.get("users").get("MOCK USER").set("status", "EXISTING STATUS")
+            event.get("data").unset("status")
+            handler.call(game,event)
+            a.equal(game.get("users").get("MOCK USER").get("status"), "EXISTING STATUS")
+            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+          )
+          test("User Id is not in game user list - does nothing", ()->
+            event.get("data").set("userId", "MISSING USER")
+            handler.call(game,event)
+            a.isUndefined(game.get("users").get("MOCK USER").get("status"))
+            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+          )
+          test("Game has no user collection - does nothing", ()->
+            game.unset("users")
+            handler.call(game,event)
+            a.isUndefined(game.get("users"))
+          )
+          test("Specified user exists and status set - sets status", ()->
+            handler.call(game,event)
+            a.equal(game.get("users").get("MOCK USER").get("status"),"MOCK STATUS")
+          )
+        )
       )
       suite("deactivate", ()->
         test("Calls transport's 'stopListening'", ()->
