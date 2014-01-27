@@ -60,11 +60,12 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
     selectUsersPlayer:(id)->
       for player in @selectedGameType.get("playerList").models
         if player.get("id") is id
-          player.set("selectedForUser",true)
-          player.set("user",AppState.get("currentUser"))
+          player.set("selectedForUser", true)
+          player.set("user", AppState.get("currentUser"))
         else
           if player.get("selectedForUser") is true then player.unset("user")
           player.unset("selectedForUser")
+
     validate:()->
       userIds=[]
       for player in @selectedGameType.get("playerList").models
@@ -73,7 +74,13 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
       true
 
     createGame:()->
-      @selectedGameType.get("template").get("players").findWhere(id:listPlayer.get("id"))?.set("user",listPlayer.get("user")) for listPlayer in @selectedGameType.get("playerList").models
+      @selectedGameType.get("template").set("users", new Backbone.Collection(
+          for listPlayer in @selectedGameType.get("playerList").models when listPlayer.get("user")?
+            user = listPlayer.get("user")
+            user.set("playerId",listPlayer.get("id"))
+            user
+        )
+      )
       AppState.createGameFromTemplate(@selectedGameType.get("template"))
 
   )
