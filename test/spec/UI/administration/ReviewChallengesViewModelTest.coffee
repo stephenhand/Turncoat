@@ -1155,6 +1155,26 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                 JsMockito.verify(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model",rcvm.get("selectedChallenge").get("users").at(1))))
                 JsMockito.verify(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model",rcvm.get("selectedChallenge").get("users").last())))
               )
+              test("Multiple users mapped to same player - throws", ()->
+
+                oldUser1 = rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user")
+                oldUser2 = rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user")
+                rcvm.get("selectedChallenge").get("users").reset([
+                  id:"MOCK_USER"
+                  playerId:"USERLESS_PLAYER"
+                  status:"MOCK_USER_STATUS"
+                ,
+                  id:"OTHER_USER"
+                  playerId: "USERLESS_PLAYER"
+                  status:"OTHER_USER_STATUS"
+                ,
+                  id:"USERLESS_USER"
+                  playerId:"USERLESS_PLAYER"
+                  status:"USERLESS_STATUS"
+
+                ])
+                chai.assert.throw(()->handler())
+              )
             )
           )
         )

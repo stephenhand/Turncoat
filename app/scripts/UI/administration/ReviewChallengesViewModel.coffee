@@ -69,7 +69,9 @@ define(["setTimeout", "underscore", "backbone", "lib/turncoat/Game", "lib/turnco
 
             remapUsers = (players)->
               for player in players.models
-                listUser = selectedChallenge.get("users").findWhere(playerId:player.get("id"))
+                listUsers = selectedChallenge.get("users").where(playerId:player.get("id"))
+                if (listUsers.length>1) then throw new Error("Cannot map multiple users to one player")
+                listUser = listUsers[0]
                 player.get("user")?.unwatch()
                 if !listUser?
                   player.unset("user")
