@@ -70,10 +70,37 @@ define(['isolate!UI/component/ObservingViewModelItem','backbone'], (ObservingVie
         JsMockito.verify(mockWatchDataMultiModel[2].model.on)("change:E",JsHamcrest.Matchers.func())
         JsMockito.verify(mockWatchDataMultiModel[2].model.on)("change:F",JsHamcrest.Matchers.func())
       )
-      test("doesNotDupBinds", ()->
+      test("Multiple watch calls add subsequent models & attributes to existing ones", ()->
+        bvmi = new ObservingViewModelItem()
+        bvmi.watch(mockWatchDataSingleAttribute)
+        bvmi.watch(mockWatchDataMultiAttribute)
+        JsMockito.verify(mockWatchDataSingleAttribute[0].model.on)("change:A",JsHamcrest.Matchers.func())
+        JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:A",JsHamcrest.Matchers.func())
+        JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:B",JsHamcrest.Matchers.func())
+        JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:C",JsHamcrest.Matchers.func())
+      )
+      test("Does not duplicate attribute binds in same model", ()->
         bvmi = new ObservingViewModelItem()
         bvmi.watch(mockWatchDataDupAttribute)
         JsMockito.verify(mockWatchDataDupAttribute[0].model.on, JsMockito.Verifiers.once())("change:A",JsHamcrest.Matchers.func())
+      )
+      test("Does not duplicate model binds when same model is repeatedly watched", ()->
+        bvmi = new ObservingViewModelItem()
+        bvmi.watch(mockWatchDataSingleAttribute)
+        bvmi.watch(mockWatchDataSingleAttribute)
+        bvmi.watch(mockWatchDataSingleAttribute)
+        bvmi.watch(mockWatchDataSingleAttribute)
+        bvmi.watch(mockWatchDataSingleAttribute)
+        JsMockito.verify(mockWatchDataSingleAttribute[0].model.on, JsMockito.Verifiers.once())("change:A",JsHamcrest.Matchers.func())
+      )
+      test("Merges model binds when partial duplication occurs accross multiple watches", ()->
+        bvmi = new ObservingViewModelItem()
+        bvmi.watch(mockWatchDataSingleAttribute)
+        bvmi.watch([mockWatchDataSingleAttribute[0], mockWatchDataMultiAttribute[0]])
+        JsMockito.verify(mockWatchDataSingleAttribute[0].model.on)("change:A",JsHamcrest.Matchers.func())
+        JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:A",JsHamcrest.Matchers.func())
+        JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:B",JsHamcrest.Matchers.func())
+        JsMockito.verify(mockWatchDataMultiAttribute[0].model.on)("change:C",JsHamcrest.Matchers.func())
       )
     )
     suite("watchedEvent",()->

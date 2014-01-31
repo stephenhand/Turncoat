@@ -1,6 +1,6 @@
 PLAYING_USERSTATUS = "PLAYING"
 
-define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModelItem", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, ObservingViewModelItem, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
+define(["setTimeout", "underscore", "backbone", "lib/turncoat/Game", "lib/turncoat/User", "UI/component/ObservingViewModelItem", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, Game, User, ObservingViewModelItem, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
   GetStatusText = (userStatus)->
     switch userStatus
       when "READY"
@@ -57,79 +57,74 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
       )
       @on("change:selectedChallengeId", ()=>
         challengePlayers = @get("challengePlayerList")
+        if @get("selectedChallenge")?.get("users")?
+          challengePlayers.stopListening(@get("selectedChallenge").get("users"))
         challengePlayers.unwatch(true)
         if @get("selectedChallengeId")?
           @set("selectedChallenge",AppState.loadGame(@get("selectedChallengeId")))
-          if @get("selectedChallenge")?
-            challengePlayers.watch([@get("selectedChallenge").get("players")])
+          selectedChallenge = @get("selectedChallenge")
+          if selectedChallenge?
+            challengePlayers.watch([selectedChallenge.get("players")])
             rcvm = @
+
+            remapUsers = (players)->
+              for player in players.models
+                listUser = selectedChallenge.get("users").findWhere(playerId:player.get("id"))
+                player.get("user")?.unwatch()
+                if !listUser?
+                  player.unset("user")
+                else
+                  if !player.get("user")?
+                    player.set(
+                      "user",
+                      new ObservingViewModelItem(
+                        id:listUser.get("id")
+                        status:listUser.get("status")
+                      )
+                    )
+                    player.get("user").onModelUpdated = (m)->
+                      if m.get("id") isnt player.get("user").get("id") then remapUsers(challengePlayers) else player.get("user").set("status",m.get("status"))
+                  else
+                    player.get("user").set(
+                      id:listUser.get("id")
+                      status:listUser.get("status")
+                    )
+                  player.get("user").watch([
+                    model:listUser
+                    attributes:["id","status"]
+                  ])
+
             challengePlayers.onSourceUpdated=()->
               @updateFromWatchedCollections(
                 (item, watched)->
                   item.get("id")? and item.get("id") is watched.get("id")
               ,
                 (input)->
-                  if input.get("user")? and !(input.get("user") instanceof Backbone.Model) then throw new Error("Invalid user")
-                  user = input.get("user") ? get:()->
                   ovmi=new ObservingViewModelItem(
                     id:input.get("id")
                     name:input.get("name")
-                    user:new Backbone.Model(
-                      id:user.get("id")
-                      status:user.get("status")
-                    )
                     description:input.get("description")
                   )
-                  watchedUser = input.get("user")
+                  ovmi.onModelUpdated = (model, attribute)->
+                    ovmi.set(
+                      name:model.get("name")
+                      description:model.get("description")
+                    )
                   ovmi.watch([
-                      model:input
-                      attributes:[
-                        "name",
-                        "description"
-                      ]
-                    ,
-                      model:watchedUser
-                      attributes:[
-                        "status"
-                      ]
+                    model:input
+                    attributes:[
+                      "name",
+                      "description"
                     ]
-                  ,
-                    (model, attribute)->
-                      if model is input
-                        if attribute is "user"
-                          ovmi.get("user").set(
-                            id:model.get("user").get("id")
-                            status:model.get("user").get("status")
-                          )
-                          ovmi.unwatch(watchedUser)
-                          watchedUser = model.get("user")
-                          ovmi.watch(
-                            [
-                              model:watchedUser
-                              attributes:[
-                                "status"
-                              ]
-                            ]
-                          ,
-                            ovmi.onModelUpdated
-                          )
-                        else
-                          ovmi.set(
-                            name:model.get("name")
-                            description:model.get("description")
-                          )
-                      else if input.get("user")? and model is input.get("user")
-                        ovmi.get("user").set(
-                          id:model.get("id")
-                          status:model.get("status")
-                        )
-                  )
+                  ])
+                  remapUsers(new Backbone.Collection([ovmi]))
                   ovmi
               ,
                 undefined
               ,
                 (removed)->
                   removed.unwatch()
+                  removed.get("user")?.unwatch()
               )
               currentPlayer = challengePlayers?.find((p)->p.get("user")?.get("id") is AppState.get("currentUser").get("id"))
               if currentPlayer?
@@ -138,6 +133,11 @@ define(["setTimeout", "underscore", "backbone", "UI/component/ObservingViewModel
               else
                 rcvm.unset("selectedChallengeUserStatus")
             challengePlayers.onSourceUpdated()
+            remapAllUsers = ()->
+              remapUsers(challengePlayers)
+            challengePlayers.listenTo(selectedChallenge.get("users"), "add", remapAllUsers, @)
+            challengePlayers.listenTo(selectedChallenge.get("users"), "remove", remapAllUsers, @)
+            challengePlayers.listenTo(selectedChallenge.get("users"), "reset", remapAllUsers, @)
         else
           @unset("selectedChallenge")
       )
