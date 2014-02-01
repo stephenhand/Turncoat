@@ -10,8 +10,8 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route",
 
 
     launch:()=>
-      AppHost.render()
       AppState.activate()
+      AppHost.render()
 
     innerRoute:(user, gameIdentifier, inner)->
       if (user is AppState.get("currentUser")?.id) && ((gameIdentifier is "-" && !AppState.get("game")?)|| gameIdentifier is AppState.get("game")?.id)

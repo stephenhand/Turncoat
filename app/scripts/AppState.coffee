@@ -31,16 +31,7 @@ define(["setInterval", "uuid", "moment", "underscore", "backbone", "lib/turncoat
       persister.loadGameState(@get("currentUser").get("id"), id)
 
     createGameFromTemplate:(state)->
-      state.set("templateId",state.get("id"))
-      state.set("id",UUID())
-      state.logEvent(moment.utc(),Constants.CREATED_STATE,"Game created locally")
-      for player in state.get("players").models when player.get("user")?
-        playerUser = player.get("user")
-        if (playerUser.get("id") is @get("currentUser").get("id"))
-          player.get("user").set("status",Constants.READY_STATE)
-        else
-          player.get("user").set("status",Constants.CREATED_STATE)
-      persister.saveGameState(@get("currentUser").get("id"), state)
+      @get("currentUser").createNewGameFromTemplate(state)
 
     issueChallenge:(userId, game)->
       if !@get("currentUser")? then throw new Error("Valid user must be logged in to issue a challenge")

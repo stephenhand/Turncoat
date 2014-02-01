@@ -425,83 +425,64 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
       )
     )
     suite("getHeaderForUser", ()->
-      test("returnsGameHeader",()->
+      test("returns GameHeader",()->
         gh = new GameStateModel().getHeaderForUser()
         chai.assert.instanceOf(gh,GameHeader)
       )
 
-      test("stateWithIdAndLabel_copiesIdAndLabel", ()->
+      test("State with id and label - copies Id and label", ()->
         gsm =new GameStateModel(
           id:"MOCK_SAVED_ID"
           label:"MOCK GAME TO SAVE"
           _type:"MOCK_TYPE"
+          users:new Backbone.Collection()
           players:new Backbone.Collection()
         )
         gh = gsm.getHeaderForUser("mock_user")
         chai.assert.equal(gh.get("id"), "MOCK_SAVED_ID")
         chai.assert.equal(gh.get("label"), "MOCK GAME TO SAVE")
       )
-      test("stateWithPlayerAsCurrentUserWithStatus_setsUserStatusAsMatchedUserStatus", ()->
+      test("State with currentUser with status - sets userStatus as matched userStatus", ()->
         gsm =new GameStateModel(
           id:"MOCK_SAVED_ID"
           label:"MOCK GAME TO SAVE"
           _type:"MOCK_TYPE"
-          players:new Backbone.Collection([
-            new Backbone.Model(
-              user:new Backbone.Model(
-                id:"mock_user"
-                status:"MOCK_STATUS1"
-              )
-            )
-            new Backbone.Model(
-              user:new Backbone.Model(
-                id:"mock_other_user"
-                status:"MOCK_STATUS2"
-              )
-            )
+          users:new Backbone.Collection([
+            id:"mock_user"
+            status:"MOCK_STATUS1"
+          ,
+            id:"mock_other_user"
+            status:"MOCK_STATUS2"
+
           ])
         )
         chai.assert.equal(gsm.getHeaderForUser("mock_user").get("userStatus"), "MOCK_STATUS1")
       )
-      test("noUserSpecified_doesntSetUserStatus", ()->
+      test("No user specified - doesnt set user status", ()->
         gsm =new GameStateModel(
           id:"MOCK_SAVED_ID"
           label:"MOCK GAME TO SAVE"
           _type:"MOCK_TYPE"
-          players:new Backbone.Collection([
-            new Backbone.Model(
-              user:new Backbone.Model(
-                id:"mock_user"
-                status:"MOCK_STATUS1"
-              )
-            )
-            new Backbone.Model(
-              user:new Backbone.Model(
-                id:"mock_other_user"
-                status:"MOCK_STATUS2"
-              )
-            )
+          users:new Backbone.Collection([
+            id:"mock_user"
+            status:"MOCK_STATUS1"
+          ,
+            id:"mock_other_user"
+            status:"MOCK_STATUS2"
           ])
         )
         chai.assert.isUndefined(gsm.getHeaderForUser().get("userStatus"))
       )
-      test("stateWithPlayerAsCurrentUserWithoutStatus_doesntSetUserStatus", ()->
+      test("State with currentUser that has no status - doesnt set user status", ()->
         gsm =new GameStateModel(
           id:"MOCK_SAVED_ID"
           label:"MOCK GAME TO SAVE"
           _type:"MOCK_TYPE"
-          players:new Backbone.Collection([
-            new Backbone.Model(
-              user:new Backbone.Model(
-                id:"mock_user"
-              )
-            )
-            new Backbone.Model(
-              user:new Backbone.Model(
-                id:"mock_other_user"
-                status:"MOCK_STATUS2"
-              )
-            )
+          users:new Backbone.Collection([
+            id:"mock_user"
+          ,
+            id:"mock_other_user"
+            status:"MOCK_STATUS2"
           ])
         )
         chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("userStatus"))
@@ -511,23 +492,19 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
           id:"MOCK_SAVED_ID"
           label:"MOCK GAME TO SAVE"
           _type:"MOCK_TYPE"
-          players:new Backbone.Collection([
-            new Backbone.Model(
-              user:new Backbone.Model(
-                id:"mock_other_user"
-                status:"MOCK_STATUS2"
-              )
-            )
+          users:new Backbone.Collection([
+            id:"mock_other_user"
+            status:"MOCK_STATUS2"
           ])
         )
         chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("userStatus"))
       )
-      test("stateWithNoPlayers_doesntSetUserStatus", ()->
+      test("stateWithNoUserss_doesntSetUserStatus", ()->
         gsm =new GameStateModel(
           id:"MOCK_SAVED_ID"
           label:"MOCK GAME TO SAVE"
           _type:"MOCK_TYPE"
-          players:new Backbone.Collection()
+          users:new Backbone.Collection()
         )
         chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("userStatus"))
       )

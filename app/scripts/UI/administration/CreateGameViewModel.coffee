@@ -61,7 +61,8 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
       for player in @selectedGameType.get("playerList").models
         if player.get("id") is id
           player.set("selectedForUser", true)
-          player.set("user", AppState.get("currentUser"))
+          player.set("user",
+            new Backbone.Model(id:AppState.get("currentUser").get("id")))
         else
           if player.get("selectedForUser") is true then player.unset("user")
           player.unset("selectedForUser")
