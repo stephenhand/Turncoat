@@ -1,4 +1,4 @@
-define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turncoat/Factory"], (_, Backbone, moment, Constants, Factory)->
+define(["underscore", "backbone", "moment", "uuid", "lib/turncoat/Constants", "lib/turncoat/Factory"], (_, Backbone, moment, UUID, Constants, Factory)->
   User = Backbone.Model.extend(
     initialize: (options)->
       transport = Factory.buildTransport(userId:@id)
@@ -22,6 +22,16 @@ define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turnc
         if !user? then throw new Error("Current user has not been challenged to play this game.")
         game.updateUserStatus(@get("id"), Constants.READY_STATE)
 
+      @createNewGameFromTemplate = (template)->
+        template.set("templateId",template.get("id"))
+        template.set("id",UUID())
+        template.logEvent(template.generateEvent(Constants.LogEvents.GAMECREATED))
+        for user in template.get("users").models
+          if (user.get("id") is @get("id"))
+            user.set("status",Constants.READY_STATE)
+          else
+            user.set("status",Constants.CREATED_STATE)
+        persister.saveGameState(@get("id"), template)
 
 
       toggled = null
@@ -52,6 +62,8 @@ define(["underscore", "backbone", "moment", "lib/turncoat/Constants", "lib/turnc
     issueChallenge:(userId, game)->
 
     acceptChallenge:(game)->
+
+    createGameFromTemplate:(template)->
 
     activate:()->
     deactivate:()->

@@ -40,9 +40,9 @@ define(["underscore", "backbone", "lib/turncoat/Constants", 'lib/turncoat/GameSt
               status:status
             )
           )
-          recipients = (user.get("id") for user in @get("users").models)
+          recipients = (user.get("id") for user in @get("users").models when user.get("status") isnt Constants.CREATED_STATE)
           if (recipients.length)
-            transport.broadcastEvent(@, recipients,event)
+            transport.broadcastEvent(recipients,event)
 
 
     activate:()->

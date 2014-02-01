@@ -235,7 +235,7 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
 
       )
     )
-    suite("UpdateUserStatus", ()->
+    suite("updateUserStatus", ()->
       game = null
       event ={}
       setup(()->
@@ -280,11 +280,11 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         )
         test("Broadcasts event via transport", ()->
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(game, m.anything(), event)
+          jm.verify(transport.broadcastEvent)(m.anything(), event)
         )
         test("Broadcasts with all users including the current one as recipients", ()->
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(game, m.hasItems("MOCK_USER","OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
+          jm.verify(transport.broadcastEvent)(m.hasItems("MOCK_USER","OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
         )
         test("Current user is only user - still broadcast.", ()->
           g = new Backbone.Model(
@@ -293,7 +293,17 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
             ])
           )
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(game, m.hasItems("MOCK_USER"), m.anything())
+          jm.verify(transport.broadcastEvent)(m.hasItems("MOCK_USER"), m.anything())
+        )
+        test("Users have CREATED status are omitted,", ()->
+          game.get("users").get("OTHER_CHALLENGED_USER").set("status", Constants.CREATED_STATE)
+          game.updateUserStatus("MOCK_USER", "TEST STATUS")
+          jm.verify(transport.broadcastEvent)(m.allOf(m.not(m.hasItem("OTHER_CHALLENGED_USER")),m.hasItems("MOCK_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
+        )
+        test("User whose status is updated set to CREATED - doesnt broadcast to self, but does to other users without CREATED status", ()->
+          game.get("users").get("MOCK_USER").set("status", Constants.CREATED_STATE)
+          game.updateUserStatus("MOCK_USER", "TEST STATUS")
+          jm.verify(transport.broadcastEvent)(m.allOf(m.not(m.hasItem("MOCK_USER")),m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
         )
       )
       test("Game has no users - does nothing",()->

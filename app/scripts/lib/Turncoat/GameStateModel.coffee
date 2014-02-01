@@ -87,7 +87,7 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Factory", "li
         created:@getLatestEvent("CREATED")?.get("timestamp")
         lastActivity:@getLatestEvent()?.get("timestamp")
       )
-      header.set("userStatus", player.get("user")?.get("status")) for player in @get("players")?.models ? [] when player.get("user")?.get("id") is userId
+      header.set("userStatus", user.get("status")) for user in @get("users")?.models ? [] when user?.get("id") is userId
       header
   )
 
