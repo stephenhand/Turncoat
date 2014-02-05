@@ -27,7 +27,7 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
     setup(()->
       transport =
         sendChallenge: jm.mockFunction()
-        broadcastEvent: jm.mockFunction()
+        broadcastGameEvent: jm.mockFunction()
         startListening:jm.mockFunction()
         stopListening:jm.mockFunction()
         on:jm.mockFunction()
@@ -47,37 +47,12 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         jm.verify(GSMConstructor.prototype.initialize)(att, opt)
         GSMConstructor.prototype.initialize = origGSMInit
       )
-      test("User Id not supplied in options - Builds transport using game Id only", ()->
+      test("Builds transport using game Id", ()->
         new Game(
           id:"A GAME ID"
         ,{})
         jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(
           m.allOf(
-            m.anyOf(m.hasMember("userId",m.nil()),!m.hasMember("userId")),
-            m.hasMember("gameId","A GAME ID")
-          )
-        )
-      )
-      test("Options not supplied - Builds transport using game Id only", ()->
-        new Game(
-          id:"A GAME ID"
-        )
-        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(
-          m.allOf(
-            m.anyOf(m.hasMember("userId",m.nil()),!m.hasMember("userId")),
-            m.hasMember("gameId","A GAME ID")
-          )
-        )
-      )
-      test("User Id supplied in options - Builds transport using game Id and user id", ()->
-        new Game(
-          id:"A GAME ID"
-        ,
-          userId:"A USER ID"
-        )
-        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(
-          m.allOf(
-            m.hasMember("userId","A USER ID"),
             m.hasMember("gameId","A GAME ID")
           )
         )
@@ -93,21 +68,36 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           userId:"A USER ID"
         )
       )
+      test("No parameter - throws", ()->
+        a.throw(()->
+          game.activate()
+        )
+      )
+      test("Sets transport's userId to  supplied parameter", ()->
+        game.activate("A USER ID")
+        a.equal(transport.userId, "A USER ID")
+      )
       test("Calls transport's 'startListening'", ()->
-        game.activate()
+        game.activate("A USER ID")
         jm.verify(transport.startListening)()
       )
       test("Listens to transport's 'eventReceived' handler", ()->
         game.listenTo = jm.mockFunction()
-        game.activate()
+        game.activate("A USER ID")
         jm.verify(game.listenTo)(transport, "eventReceived", m.func())
       )
       test("Multiple calls calls 'startListening' once.", ()->
-        game.activate()
-        game.activate()
-        game.activate()
-        game.activate()
+        game.activate("A USER ID")
+        game.activate("A USER ID")
+        game.activate("A USER ID")
+        game.activate("A USER ID")
         jm.verify(transport.startListening, v.once())()
+      )
+      test("Multiple calls calls 'startListening' once even if Id changes.", ()->
+        game.activate("A USER ID")
+        game.activate("ANOTHER USER ID")
+        jm.verify(transport.startListening, v.once())()
+        a.equal(transport.userId, "A USER ID")
       )
       suite("eventReceived handler", ()->
         handler = null
@@ -117,7 +107,7 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           jm.when(game.listenTo)(transport, "eventReceived", m.func()).then((t, e, f)=>
             handler = f
           )
-          game.activate()
+          game.activate("A USER ID")
           game.logEvent = jm.mockFunction()
           event = new Backbone.Model()
         )
@@ -179,21 +169,21 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
       )
       suite("deactivate", ()->
         test("Calls transport's 'stopListening'", ()->
-          game.activate()
+          game.activate("A USER ID")
           game.deactivate()
           jm.verify(transport.stopListening)()
         )
         test("Stops listening to transport", ()->
           game.listenTo = jm.mockFunction()
           game.stopListening = jm.mockFunction()
-          game.activate()
+          game.activate("A USER ID")
           game.deactivate()
           jm.verify(game.stopListening)(transport)
         )
         test("Multiple calls calls 'stopListening' once.", ()->
           game.listenTo = jm.mockFunction()
           game.stopListening = jm.mockFunction()
-          game.activate()
+          game.activate("A USER ID")
           game.deactivate()
           game.deactivate()
           game.deactivate()
@@ -207,7 +197,7 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           jm.verify(transport.stopListening, v.never())()
         )
         test("Multiple calls 'stopListening' once.", ()->
-          game.activate()
+          game.activate("A USER ID")
           game.deactivate()
           game.deactivate()
           game.deactivate()
@@ -218,20 +208,36 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         )
       )
       test("Activate / Deactivate toggle", ()->
-        game.activate()
+        game.activate("A USER ID")
         game.deactivate()
         game.deactivate()
-        game.activate()
-        game.activate()
-        game.activate()
+        game.activate("A USER ID")
+        game.activate("A USER ID")
+        game.activate("A USER ID")
         game.deactivate()
         game.deactivate()
-        game.activate()
+        game.activate("A USER ID")
         game.deactivate()
-        game.activate()
+        game.activate("A USER ID")
         game.deactivate()
         jm.verify(transport.startListening, v.times(4))()
         jm.verify(transport.stopListening, v.times(4))()
+
+      )
+      test("Activate / Deactivate toggling changes user id if different on further activations", ()->
+        game.activate("A USER ID")
+        game.deactivate()
+        game.deactivate()
+        game.activate("A USER ID")
+        game.activate("A USER ID")
+        game.activate("A USER ID")
+        game.deactivate()
+        game.deactivate()
+        game.activate("A USER ID")
+        game.deactivate()
+        game.activate("ANOTHER USER ID")
+        game.deactivate()
+        a.equal(transport.userId, "ANOTHER USER ID")
 
       )
     )
@@ -280,11 +286,11 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         )
         test("Broadcasts event via transport", ()->
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(m.anything(), event)
+          jm.verify(transport.broadcastGameEvent)(m.anything(), event)
         )
         test("Broadcasts with all users including the current one as recipients", ()->
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(m.hasItems("MOCK_USER","OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
+          jm.verify(transport.broadcastGameEvent)(m.hasItems("MOCK_USER","OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
         )
         test("Current user is only user - still broadcast.", ()->
           g = new Backbone.Model(
@@ -293,34 +299,34 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
             ])
           )
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(m.hasItems("MOCK_USER"), m.anything())
+          jm.verify(transport.broadcastGameEvent)(m.hasItems("MOCK_USER"), m.anything())
         )
         test("Users have CREATED status are omitted,", ()->
           game.get("users").get("OTHER_CHALLENGED_USER").set("status", Constants.CREATED_STATE)
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(m.allOf(m.not(m.hasItem("OTHER_CHALLENGED_USER")),m.hasItems("MOCK_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
+          jm.verify(transport.broadcastGameEvent)(m.allOf(m.not(m.hasItem("OTHER_CHALLENGED_USER")),m.hasItems("MOCK_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
         )
         test("User whose status is updated set to CREATED - doesnt broadcast to self, but does to other users without CREATED status", ()->
           game.get("users").get("MOCK_USER").set("status", Constants.CREATED_STATE)
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastEvent)(m.allOf(m.not(m.hasItem("MOCK_USER")),m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
+          jm.verify(transport.broadcastGameEvent)(m.allOf(m.not(m.hasItem("MOCK_USER")),m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
         )
       )
       test("Game has no users - does nothing",()->
         game.unset("users")
         game.updateUserStatus("MOCK_USER", "TEST STATUS")
-        jm.verify(transport.broadcastEvent, v.never())(m.anything(), m.anything(), m.anything())
+        jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything(), m.anything())
 
       )
       test("Specified user ID isnt part of game - does nothing",()->
         game.updateUserStatus("NOT_MOCK_USER", "TEST STATUS")
-        jm.verify(transport.broadcastEvent, v.never())(m.anything(), m.anything(), m.anything())
+        jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything(), m.anything())
 
       )
       test("User currently has same status - does nothing",()->
         game.get("users").get("MOCK_USER").set("status", "TEST STATUS")
         game.updateUserStatus("MOCK_USER", "TEST STATUS")
-        jm.verify(transport.broadcastEvent, v.never())(m.anything(), m.anything())
+        jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything())
 
       )
     )

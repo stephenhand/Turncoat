@@ -336,7 +336,7 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
       gsmInput=null
       setup(()->
         JsMockito.when(fakeBuiltMarshaller.unmarshalModel)(JsHamcrest.Matchers.anything()).then((a)->
-          new Backbone.Collection([
+          ret = new Backbone.Collection([
             label:"MOCK GAME TYPE 1"
             name:"MOCK_GAMETYPE1"
             id:"MOCK_TEMPLATE_ID1"
@@ -348,35 +348,48 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
           ,
             label:"MOCK GAME TEMPLATE 3"
             id:"MOCK_TEMPLATE_ID3"
+
           ])
+          m.activate=JsMockito.mockFunction() for m in ret.models
+          ret
         )
+
         JsMockito.when(fakeBuiltMarshaller.marshalModel)(JsHamcrest.Matchers.anything()).then(
           (a)->
             JSON.stringify(a.attributes)
         )
         mocks["lib/turncoat/GameStateModel"].fromString=JsMockito.mockFunction()
         JsMockito.when(mocks["lib/turncoat/GameStateModel"].fromString)(JsHamcrest.Matchers.anything()).then((a)->
-          gsmInput=a
+          gsmInput=
+            input:a
+            activate:JsMockito.mockFunction()
         )
       )
-      test("validTemplateId_callsGameStateModelFromStringOnTemplateWithId",()->
-        lps = new LocalStoragePersister()
-        lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
-        JsMockito.verify(mocks["lib/turncoat/GameStateModel"].fromString)(JsHamcrest.Matchers.containsString("MOCK_TEMPLATE_ID2"))
-      )
-      test("validTemplateId_callsGameStateModelFromStringWithValidJSON",()->
-        lps = new LocalStoragePersister()
-        lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
-        chai.assert.doesNotThrow(()->
-          JSON.parse(gsmInput)
+      suite("Valid template Id", ()->
+        test("Calls GameStateModel from string on template with Id",()->
+          lps = new LocalStoragePersister()
+          lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
+          JsMockito.verify(mocks["lib/turncoat/GameStateModel"].fromString)(JsHamcrest.Matchers.containsString("MOCK_TEMPLATE_ID2"))
+        )
+        test("calls GameStateModel fromString with valid JSON",()->
+          lps = new LocalStoragePersister()
+          lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
+          chai.assert.doesNotThrow(()->
+            JSON.parse(gsmInput.input)
+          )
+        )
+        test("Calls GameStateModel fromString with valid JSON with correct data",()->
+          lps = new LocalStoragePersister()
+          lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
+          chai.assert.equal(JSON.parse(gsmInput.input).label, "MOCK GAME TEMPLATE 2")
+        )
+        test("Doesn't activate resulting model",()->
+          lps = new LocalStoragePersister()
+          lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
+          JsMockito.verify(gsmInput.activate, JsMockito.Verifiers.never())()
         )
       )
-      test("validTemplateId_callsGameStateModelFromStringWithValidJSONWithCorrectData",()->
-        lps = new LocalStoragePersister()
-        lps.loadGameTemplate("MOCK_TEMPLATE_ID2")
-        chai.assert.equal(JSON.parse(gsmInput).label, "MOCK GAME TEMPLATE 2")
-      )
-      test("missingId_throws",()->
+      test("Missing Id - throws",()->
         lps = new LocalStoragePersister()
         chai.assert.throws(()->
           lps.loadGameTemplate("MOCK_TEMPLATE_MISSINGID")
@@ -426,7 +439,7 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
             return new Backbone.Model(p)
         )
       )
-      test("retrievesGamesIfThereAreAny", ()->
+      test("Retrieves games if there are any", ()->
         lps = new LocalStoragePersister()
         list = lps.loadGameList("mock_user")
         chai.assert.equal(list.length, 3)
@@ -443,22 +456,22 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
         chai.assert.equal(list.at(2).get("id"), "MOCK_ID3")
         chai.assert.equal(list.at(2).get("userStatus"),"REJECTED")
       )
-      test("returnsNullIfWrongPlayer", ()->
+      test("Wrong player - returns null", ()->
         lps = new LocalStoragePersister()
         list = lps.loadGameList("other_user")
         chai.assert.isNull(list)
       )
-      test("throwsIfNoPlayer", ()->
+      test("No player - throws", ()->
         lps = new LocalStoragePersister()
         chai.assert.throws(()->lps.loadGameList())
       )
-      test("returnsNullIfNoGamesSaved", ()->
+      test("No games saved - returns null", ()->
         window.localStorage.removeItem("current-games::mock_user")
         lps = new LocalStoragePersister()
         list = lps.loadGameList("mock_user")
         chai.assert.isNull(list)
       )
-      test("GameTypeSpecified_returnsOnlyCorrectTypeOfGame", ()->
+      test("Game Type specified - returns only correct type of game", ()->
         lps = new LocalStoragePersister()
         list = lps.loadGameList("mock_user", "MOCK_GAMETYPE")
         chai.assert.equal(list.length, 2)
@@ -474,18 +487,26 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
     suite("loadGameState", ()->
       setup(()->
         JsMockito.when(mocks["lib/turncoat/GameStateModel"].fromString)(JsHamcrest.Matchers.anything()).then((data)->
+          activate:JsMockito.mockFunction()
           originalInput:data
         )
       )
-      test("CorrectUserAndIdProvided_callsFromStringOnData", ()->
-        lps = new LocalStoragePersister()
-        game = lps.loadGameState("mock_user","MOCK_ID3")
-        JsMockito.verify(mocks["lib/turncoat/GameStateModel"].fromString)(mockGame3)
-      )
-      test("CorrectUserAndIdProvided_returnsFullVivifiedObject", ()->
-        lps = new LocalStoragePersister()
-        game = lps.loadGameState("mock_user","MOCK_ID3")
-        chai.assert.equal(game.originalInput,mockGame3)
+      suite("Correct user and Id provided", ()->
+        test("Calls fromString on data", ()->
+          lps = new LocalStoragePersister()
+          game = lps.loadGameState("mock_user","MOCK_ID3")
+          JsMockito.verify(mocks["lib/turncoat/GameStateModel"].fromString)(mockGame3)
+        )
+        test("Correct user and Id provided - returns full vivified Object", ()->
+          lps = new LocalStoragePersister()
+          game = lps.loadGameState("mock_user","MOCK_ID3")
+          chai.assert.equal(game.originalInput,mockGame3)
+        )
+        test("Correct user and Id provided - activates returned object", ()->
+          lps = new LocalStoragePersister()
+          game = lps.loadGameState("mock_user","MOCK_ID3")
+          JsMockito.verify(game.activate)()
+        )
       )
       test("returnsNullIfIdNotPresent", ()->
         lps = new LocalStoragePersister()

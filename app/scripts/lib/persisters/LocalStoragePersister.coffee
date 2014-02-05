@@ -39,9 +39,11 @@ define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factor
     loadGameTemplate:(id)->
       template = _.find(@marshaller.unmarshalModel(templatesListText).models,(t)->t.get("id") is id)
       if (!template?) then throw new Error("Failed to load listed template")
-      GameStateModel.fromString(
+      ret = GameStateModel.fromString(
         @marshaller.marshalModel(template)
       )
+      #ret.activate()
+      ret
 
     loadGameTypes:()->
       @marshaller.unmarshalModel(configText).get("gameTypes")
@@ -63,7 +65,11 @@ define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factor
     loadGameState:(user, id)->
       if (!id?) then throw new Error("Must specify a game id to retrieve it from storage")
       json = window.localStorage.getItem(CURRENT_GAMES+"::"+user+"::"+id)
-      if json? then GameStateModel.fromString(json) else null
+      if json?
+        ret = GameStateModel.fromString(json)
+        ret.activate(user)
+        ret
+      else null
 
     saveGameState:(user, state)->
       if (!user? or !state?) then throw new Error("Must specify user id and state to save a game")

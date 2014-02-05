@@ -1035,11 +1035,12 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
         )
       )
     )
-    suite("broadcastEvent", ()->
+    suite("broadcastGameEvent", ()->
       messagedata = null
       recipients = null
       counter = 0
       setup(()->
+        lst.gameId = "GAME_ID"
         counter = 0
         mocks["uuid"].func = ()->
           "MOCK_GENERATED_ID_"+(counter++)
@@ -1055,40 +1056,46 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
         delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"]
         delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_2"]
       )
+      test("Game Id not set on transport - throws", ()->
+        lst.gameId = null
+        chai.assert.throw(()->
+          lst.broadcastGameEvent("MOCK_USER", messagedata)
+        )
+      )
       test("Recipients not defined - does nothing", ()->
-        lst.broadcastEvent(null, messagedata)
+        lst.broadcastGameEvent(null, messagedata)
         chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
         JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
       )
       test("Data not defined - does nothing", ()->
-        lst.broadcastEvent("MOCK_USER")
+        lst.broadcastGameEvent("MOCK_USER")
         chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
         JsMockito.verify(mocks["lib/concurrency/Mutex"].lock, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
       )
       suite("Single recipient", ()->
         test("Creates single message item containing messagedata", ()->
-          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+          lst.broadcastGameEvent(["RECIPIENT_1"], messagedata)
           chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
           chai.assert.isUndefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"])
         )
         test("Message item type is event", ()->
-          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+          lst.broadcastGameEvent(["RECIPIENT_1"], messagedata)
           chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"]).type, EVENT_MESSAGE_TYPE)
         )
         test("Message item payload is supplied event data", ()->
-          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+          lst.broadcastGameEvent(["RECIPIENT_1"], messagedata)
           chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"]).payload, "SOME DATA")
         )
-        test("Queues message with id for recipient", ()->
-          lst.broadcastEvent(["RECIPIENT_1"], messagedata)
+        test("Queues message with id for recipient/game combination", ()->
+          lst.broadcastGameEvent(["RECIPIENT_1"], messagedata)
           JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
             new JsHamcrest.SimpleMatcher(
               describeTo:(d)->
                 d.append("mutex lock")
               matches:(o)->
                 o.criticalSection()
-                JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"]).length is 1
-                JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"])[0].id is "MOCK_GENERATED_ID_0"
+                JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1::GAME_ID"]).length is 1
+                JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1::GAME_ID"])[0].id is "MOCK_GENERATED_ID_0"
             )
 
           )
@@ -1096,7 +1103,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       )
       suite("Multiple recipients", ()->
         test("Creates message item per recipient with same content", ()->
-          lst.broadcastEvent(recipients, messagedata)
+          lst.broadcastGameEvent(recipients, messagedata)
           chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_0"])
           chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"])
           chai.assert.isDefined(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_2"])
@@ -1108,8 +1115,8 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
           chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_1"]).payload, "SOME DATA")
           chai.assert.equal(JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID_2"]).payload, "SOME DATA")
         )
-        test("Queues messages with id for each recipient", ()->
-          lst.broadcastEvent(recipients, messagedata)
+        test("Queues messages with id for each recipient/game", ()->
+          lst.broadcastGameEvent(recipients, messagedata)
           i = 0
           JsMockito.verify(mocks["lib/concurrency/Mutex"].lock,JsMockito.Verifiers.times(3))(
             new JsHamcrest.SimpleMatcher(
@@ -1120,11 +1127,11 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
                 i++
                 switch i
                   when 1
-                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1"])[0].id is "MOCK_GENERATED_ID_0"
+                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1::GAME_ID"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_1::GAME_ID"])[0].id is "MOCK_GENERATED_ID_0"
                   when 2
-                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_2"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_2"])[0].id is "MOCK_GENERATED_ID_1"
+                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_2::GAME_ID"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_2::GAME_ID"])[0].id is "MOCK_GENERATED_ID_1"
                   when 3
-                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3"])[0].id is "MOCK_GENERATED_ID_2"
+                    JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3::GAME_ID"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3::GAME_ID"])[0].id is "MOCK_GENERATED_ID_2"
             )
 
           )

@@ -24,7 +24,9 @@ define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbon
         el.style.msTransform=value
         el.style.webkitTransform=value
       classappend:(el, value)->
+        if @previousClass? then $(el).toggleClass(@previousClass, false)
         $(el).toggleClass(value, true)
+        @previousClass = value
   _.extend(Rivets.binders, RivetsExtensions.binders)
   _.extend(Rivets.formatters, RivetsExtensions.formatters)
   RivetsExtensions

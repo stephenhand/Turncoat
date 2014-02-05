@@ -54,14 +54,14 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
             if messageId? && remaining then dequeueMessage()
         )
 
-      enqueueMessage = (recipient, id)->
+      enqueueMessage = (destination, id)->
         Mutex.lock(
-          key:"LOCAL_TRANSPORT_MESSAGE_QUEUE::"+recipient
+          key:"LOCAL_TRANSPORT_MESSAGE_QUEUE::"+destination
           criticalSection:()->
-            json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+recipient) ? "[]"
+            json = window.localStorage.getItem(MESSAGE_QUEUE+"::"+destination) ? "[]"
             queue = transport.marshaller.unmarshalModel(json)
             queue.push(id:id)
-            window.localStorage.setItem(MESSAGE_QUEUE+"::"+recipient, transport.marshaller.marshalModel(queue))
+            window.localStorage.setItem(MESSAGE_QUEUE+"::"+destination, transport.marshaller.marshalModel(queue))
           success:()->
         )
 
@@ -104,7 +104,8 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
           )
           enqueueMessage(recipient, messageId)
 
-      @broadcastEvent=(recipients, data)->
+      @broadcastGameEvent=(recipients, data, onComplete)->
+        if (!@gameId?) then throw new Error("Only game level transports can broadcast game events.")
         if data? and recipients?
           for recipient in recipients
             messageId = UUID()
@@ -117,7 +118,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
                 )
               )
             )
-            enqueueMessage(recipient, messageId)
+            enqueueMessage(recipient+"::"+@gameId, messageId)
 
 
 

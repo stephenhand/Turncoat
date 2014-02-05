@@ -214,7 +214,7 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
           challenger.issueChallenge("NOT_CHALLENGED_USER",game)
         )
       )
-      test("Challenginfg user not assigned to a player in game - throws",()->
+      test("Challenging user not assigned to a player in game - throws",()->
         a.throw(()->
           challenger.set("id","OTHER_USER")
           challenger.issueChallenge("NOT_CHALLENGED_USER",game)
@@ -222,18 +222,6 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
       )
       suite("Valid input", ()->
         test("Calls transport sendChallenge with same user & game",()->
-          challenger.issueChallenge("CHALLENGED_USER", game)
-          jm.verify(transport.sendChallenge)("CHALLENGED_USER",game)
-        )
-        test("Calls updateUserStatus on game to set challenged player status to 'challenged'",()->
-          challenger.issueChallenge("CHALLENGED_USER", game)
-          jm.verify(game.updateUserStatus)("CHALLENGED_USER",Constants.CHALLENGED_STATE)
-        )
-        test("Calls transport sendChallenge after status set",()->
-          transport.sendChallenge = ()->
-          jm.when(game.updateUserStatus)("CHALLENGED_USER",Constants.CHALLENGED_STATE).then(()->
-            transport.sendChallenge = jm.mockFunction()
-          )
           challenger.issueChallenge("CHALLENGED_USER", game)
           jm.verify(transport.sendChallenge)("CHALLENGED_USER",game)
         )
@@ -328,23 +316,30 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
         jm.verify(transport.startListening, v.once())()
       )
       suite("challengeReceived handler", ()->
-        test("Saves challenge to persister", ()->
+        handler = null
+        game = null
+        setup(()->
           user.listenTo = jm.mockFunction()
+          jm.when(user.listenTo)(transport, "challengeReceived", m.func()).then((o,n,h)->
+            handler = h
+          )
           user.activate()
-          jm.verify(user.listenTo)(transport, "challengeReceived", new JsHamcrest.SimpleMatcher(
-            describeTo:(d)->
-              d.append("challengeReceived handler")
-            matches:(handler)->
-              try
-                game =
-                  logEvent:JsMockito.mockFunction()
-                handler(game)
-                jm.verify(persister.saveGameState)("MOCK_USER",game)
-                true
-              catch e
-                false
+          game =
+            updateUserStatus:()->
+            activate:()->
+        )
+        test("Saves challenge to persister", ()->
 
-          ))
+          handler(game)
+          jm.verify(persister.saveGameState)("MOCK_USER",game)
+        )
+        test("Calls updateUserStatus on game to set challenged player status to 'challenged'",()->
+
+          jm.when(persister.saveGameState)("MOCK_USER",game).then(()->
+            game.updateUserStatus = jm.mockFunction()
+          )
+          handler(game)
+          jm.verify(game.updateUserStatus)("MOCK_USER",Constants.CHALLENGED_STATE)
         )
       )
       suite("gameListUpdated Handler", ()->
