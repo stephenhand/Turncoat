@@ -1,4 +1,4 @@
-define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, moment, Backbone, Factory, LogEntry, GameHeader)->
+define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Constants", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, moment, Backbone, Constants, Factory, LogEntry, GameHeader)->
 
   recurseChildren = (item, processor, deep, earlyOut)->
     deep ?= true
@@ -84,7 +84,7 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Factory", "li
       header = new GameHeader(
         id:@get("id")
         label:@get("label")
-        created:@getLatestEvent("CREATED")?.get("timestamp")
+        created:@getLatestEvent(Constants.LogEvents.GAMECREATED)?.get("timestamp")
         lastActivity:@getLatestEvent()?.get("timestamp")
       )
       header.set("userStatus", user.get("status")) for user in @get("users")?.models ? [] when user?.get("id") is userId

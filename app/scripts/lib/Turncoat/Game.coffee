@@ -1,14 +1,16 @@
 define(["underscore", "backbone", "lib/turncoat/Constants", 'lib/turncoat/GameStateModel', 'lib/turncoat/User', "lib/turncoat/Factory"], (_, Backbone, Constants, GameStateModel, User, Factory)->
   class Game extends GameStateModel
     initialize:(attributes, options)->
+      persister = Factory.buildPersister()
       transport = Factory.buildTransport(
         gameId:@id
-        userId:(options ? {}).userId
       )
       super(attributes, options)
 
       toggled = null
-      @activate = ()->
+      @activate = (ownerId)->
+        if (!ownerId?) then throw new Error("Games must be activated with a user id")
+        transport.userId = ownerId
         transport.startListening()
         @listenTo(transport, "eventReceived",
           (event)->
@@ -19,6 +21,7 @@ define(["underscore", "backbone", "lib/turncoat/Constants", 'lib/turncoat/GameSt
                   user = @get("users").get(event.get("data").get("userId"))
                   if (user?)
                     user.set("status",event.get("data").get("status"))
+                    persister.saveGameState(ownerId, @)
         ,@)
 
         @deactivate = ()->
@@ -40,9 +43,9 @@ define(["underscore", "backbone", "lib/turncoat/Constants", 'lib/turncoat/GameSt
               status:status
             )
           )
-          recipients = (user.get("id") for user in @get("users").models when user.get("status") isnt Constants.CREATED_STATE)
+          recipients = (user.get("id") for user in @get("users").models when (user.get("status") isnt Constants.CREATED_STATE or user.get("id") is transport.userId))
           if (recipients.length)
-            transport.broadcastEvent(recipients,event)
+            transport.broadcastGameEvent(recipients,event)
 
 
     activate:()->
