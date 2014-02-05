@@ -24,6 +24,7 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
 
   suite("Game", ()->
     transport = null
+    persister = null
     setup(()->
       transport =
         sendChallenge: jm.mockFunction()
@@ -32,9 +33,15 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         stopListening:jm.mockFunction()
         on:jm.mockFunction()
         off:jm.mockFunction()
+      persister =
+        saveGameState:jm.mockFunction()
       mocks["lib/turncoat/Factory"].buildTransport = jm.mockFunction()
       jm.when(mocks["lib/turncoat/Factory"].buildTransport)(m.anything()).then((opts)->
         transport
+      )
+      mocks["lib/turncoat/Factory"].buildPersister = jm.mockFunction()
+      jm.when(mocks["lib/turncoat/Factory"].buildPersister)().then((opts)->
+        persister
       )
     )
     suite("initialize", ()->
@@ -56,6 +63,12 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
             m.hasMember("gameId","A GAME ID")
           )
         )
+      )
+      test("Builds persister", ()->
+        new Game(
+          id:"A GAME ID"
+        ,{})
+        jm.verify(mocks["lib/turncoat/Factory"].buildPersister)()
       )
     )
 
@@ -164,6 +177,10 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           test("Specified user exists and status set - sets status", ()->
             handler.call(game,event)
             a.equal(game.get("users").get("MOCK USER").get("status"),"MOCK STATUS")
+          )
+          test("Specified user exists and status set - save's game state via persister using transport's user id", ()->
+            handler.call(game,event)
+            jm.verify(persister.saveGameState)("A USER ID", game)
           )
         )
       )

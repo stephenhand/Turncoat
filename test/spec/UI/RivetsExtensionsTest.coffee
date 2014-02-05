@@ -87,10 +87,20 @@ define(['isolate!UI/RivetsExtensions'], (RivetsExtensions)->
         )
       )
       suite("classappend",()->
-        test("callsJQToggleClassOnElementWithTrue", ()->
+        test("Calls JQ toggleClass on element with true", ()->
           mockEle ={}
           RivetsExtensions.binders.classappend(mockEle,"MOCK_CLASS")
           mocks.jqueryObjects[mockEle].toggleClass("MOCK_CLASS",true)
+        )
+        test("Subsequent calls on same binder - calls JQ toggleClass using previously appended class on element with false", ()->
+          mockEle ={}
+          RivetsExtensions.binders.classappend(mockEle,"MOCK_CLASS")
+          RivetsExtensions.binders.classappend(mockEle,"MOCK_CLASS_NEXT")
+          mocks.jqueryObjects[mockEle].toggleClass("MOCK_CLASS",false)
+          RivetsExtensions.binders.classappend(mockEle,"MOCK_CLASS")
+          mocks.jqueryObjects[mockEle].toggleClass("MOCK_CLASS_NEXT",false)
+          RivetsExtensions.binders.classappend(mockEle,"MOCK_CLASS_ANOTHER")
+          mocks.jqueryObjects[mockEle].toggleClass("MOCK_CLASS",false)
         )
       )
     )

@@ -23,7 +23,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (GameStateModel, Backbone, LogEntry, GameHeader)->
+define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constants", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (GameStateModel, Backbone, Constants, LogEntry, GameHeader)->
   #GameStateModelTest.coffee test file    
   suite("GameStateModelTest", ()->
     mockMarshaller ={}
@@ -511,7 +511,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
       test("stateWithSingleCreatedLogEntry_setsCreatedToTimestamp", ()->
         gsm =new GameStateModel(
           _eventLog:new Backbone.Collection([
-            name:"CREATED"
+            name:Constants.LogEvents.GAMECREATED
             details:"MOCK_DETAILS"
             timestamp:{moment:"MOCK_TIME_1"}
           ,
@@ -529,7 +529,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
             details:"MOCK_DETAILS"
             timestamp:{moment:"MOCK_TIME_1"}
           ,
-            name:"CREATED"
+            name:Constants.LogEvents.GAMECREATED
             details:"MOCK_DETAILS_2"
             timestamp:{moment:"MOCK_TIME_2"}
           ,
@@ -537,7 +537,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
             details:"MOCK_DETAILS"
             timestamp:{moment:"MOCK_TIME_3"}
           ,
-            name:"CREATED"
+            name:Constants.LogEvents.GAMECREATED
             details:"MOCK_DETAILS_2"
             timestamp:{moment:"MOCK_TIME_4"}
           ])
@@ -570,7 +570,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
             details:"MOCK_DETAILS"
             timestamp:{moment:"MOCK_TIME_1"}
           ,
-            name:"CREATED"
+            name:Constants.LogEvents.GAMECREATED
             details:"MOCK_DETAILS_2"
             timestamp:{moment:"MOCK_TIME_2"}
           ,
@@ -578,7 +578,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/LogEntr
             details:"MOCK_DETAILS"
             timestamp:{moment:"MOCK_TIME_3"}
           ,
-            name:"CREATED"
+            name:Constants.LogEvents.GAMECREATED
             details:"MOCK_DETAILS_2"
             timestamp:{moment:"MOCK_TIME_4"}
           ])
