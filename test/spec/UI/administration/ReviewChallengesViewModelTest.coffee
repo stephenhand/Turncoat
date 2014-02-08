@@ -42,7 +42,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallengesViewModel)->
+define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Constants"], (ReviewChallengesViewModel, Constants)->
   mocks = window.mockLibrary['UI/administration/ReviewChallengesViewModel']
   suite("ReviewChallengesViewModel", ()->
     setup(()->
@@ -428,7 +428,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                       get:()->
                         format:()->
                     get:(key)->
-                      if key is "userStatus" then return "CHALLENGED"
+                      if key is "userStatus" then return Constants.CHALLENGED_STATE
                   )
                   _.isString(ret.get("statusText"))
               ),
@@ -448,7 +448,7 @@ define(['isolate!UI/administration/ReviewChallengesViewModel'], (ReviewChallenge
                       get:()->
                         format:()->
                     get:(key)->
-                      if key is "userStatus" then return "READY"
+                      if key is "userStatus" then return Constants.READY_STATE
                   )
                   _.isString(ret.get("statusText"))
               ),

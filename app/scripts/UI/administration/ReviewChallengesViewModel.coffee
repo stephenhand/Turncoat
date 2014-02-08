@@ -1,11 +1,11 @@
-PLAYING_USERSTATUS = "PLAYING"
 
-define(["setTimeout", "underscore", "backbone", "lib/turncoat/Game", "lib/turncoat/User", "UI/component/ObservingViewModelItem", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, Game, User, ObservingViewModelItem, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
+
+define(["setTimeout", "underscore", "backbone", "lib/turncoat/Constants", "lib/turncoat/Game", "lib/turncoat/User", "UI/component/ObservingViewModelItem", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, Constants, Game, User, ObservingViewModelItem, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
   GetStatusText = (userStatus)->
     switch userStatus
-      when "READY"
+      when Constants.READY_STATE
         "Waiting on other players to respond to the challenge."
-      when "CHALLENGED"
+      when Constants.CHALLENGED_STATE
         "A challenge awaiting your response."
 
   ReviewChallengesViewModel = Backbone.Model.extend(
@@ -48,7 +48,7 @@ define(["setTimeout", "underscore", "backbone", "lib/turncoat/Game", "lib/turnco
             newItem
         ,
           (item)->
-            item.get("userStatus")? && item.get("userStatus") isnt PLAYING_USERSTATUS
+            item.get("userStatus")? && item.get("userStatus") isnt Constants.PLAYING_STATE
         )
 
       @get("challenges").onSourceUpdated()
@@ -68,6 +68,7 @@ define(["setTimeout", "underscore", "backbone", "lib/turncoat/Game", "lib/turnco
             rcvm = @
 
             remapUsers = (players)->
+
               for player in players.models
                 listUsers = selectedChallenge.get("users").where(playerId:player.get("id"))
                 if (listUsers.length>1) then throw new Error("Cannot map multiple users to one player")
@@ -85,7 +86,12 @@ define(["setTimeout", "underscore", "backbone", "lib/turncoat/Game", "lib/turnco
                       )
                     )
                     player.get("user").onModelUpdated = (m)->
-                      if m.get("id") isnt player.get("user").get("id") then remapUsers(challengePlayers) else player.get("user").set("status",m.get("status"))
+                      if m.get("id") isnt player.get("user").get("id")
+                        remapUsers(challengePlayers)
+                      else
+                        player.get("user").set("status",m.get("status"))
+                        if player.get("user").get("id") is AppState.get("currentUser").get("id")
+                          rcvm.set("selectedChallengeUserStatus", player.get("user").get("status"))
                   else
                     player.get("user").set(
                       id:listUser.get("id")
@@ -95,6 +101,11 @@ define(["setTimeout", "underscore", "backbone", "lib/turncoat/Game", "lib/turnco
                     model:listUser
                     attributes:["id","status"]
                   ])
+                  if player.get("user").get("id") is AppState.get("currentUser").get("id")
+                    player.set("selectedForUser",true)
+                    rcvm.set("selectedChallengeUserStatus", player.get("user").get("status"))
+                  else
+                    player.set("selectedForUser",false)
 
             challengePlayers.onSourceUpdated=()->
               @updateFromWatchedCollections(

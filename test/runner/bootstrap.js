@@ -11,6 +11,8 @@ require.config({
     paths: {
         expect: '../lib/expect',
         chai: '../lib/chai',
+        jsHamcrest: '../lib/jshamcrest',
+        jsMockito: '../lib/jsmockito',
         isolate: "../runner/isolate",
         isolateHelper:"../runner/isolateHelper",
         configureIsolate: "../runner/configureIsolate",
@@ -49,6 +51,12 @@ require.config({
         },
         'setTimeout':{
             exports:"setTimeout"
+        },
+        'jsHamcrest':{
+            exports:'JsHamcrest'
+        },
+        'jsMockito':{
+            exports:'JsMockito'
         }
     }
 });
@@ -86,6 +94,7 @@ require(['spec/AppHostTest',
     'spec/UI/administration/CreateGameViewModelTest',
     'spec/UI/administration/ReviewChallengesViewTest',
     'spec/UI/administration/ReviewChallengesViewModelTest',
+    'spec/lib/backboneTools/ModelProcessorTest',
     'spec/lib/2D/PolygonToolsTest',
     'spec/lib/2D/TransformBearingsTest',
     'spec/lib/turncoat/StateRegistryTest',

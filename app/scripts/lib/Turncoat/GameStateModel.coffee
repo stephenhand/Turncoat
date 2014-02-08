@@ -87,7 +87,13 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Constants", "
         created:@getLatestEvent(Constants.LogEvents.GAMECREATED)?.get("timestamp")
         lastActivity:@getLatestEvent()?.get("timestamp")
       )
-      header.set("userStatus", user.get("status")) for user in @get("users")?.models ? [] when user?.get("id") is userId
+      userStatus = undefined
+      allReady = true
+      for u in @get("users")?.models ? []
+        if u.get("status") isnt Constants.READY_STATE then allReady = false
+        if u.get("id") is userId then userStatus = u.get("status")
+      if allReady && userStatus? then userStatus = Constants.PLAYING_STATE
+      header.set("userStatus",userStatus)
       header
   )
 

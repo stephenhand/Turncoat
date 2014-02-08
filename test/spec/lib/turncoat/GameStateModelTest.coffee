@@ -458,6 +458,41 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constan
         )
         chai.assert.equal(gsm.getHeaderForUser("mock_user").get("userStatus"), "MOCK_STATUS1")
       )
+      test("State with currentUser and all other users with READY_STATE - sets userStatus as PLAYING_STATE", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          users:new Backbone.Collection([
+            id:"mock_user"
+            status:Constants.READY_STATE
+          ,
+            id:"mock_other_user"
+            status:Constants.READY_STATE
+
+          ])
+        )
+        chai.assert.equal(gsm.getHeaderForUser("mock_user").get("userStatus"), Constants.PLAYING_STATE)
+      )
+      test("State with currentUser with READY_STATE but any other users not READY_STATE  - sets userStatus as READY_STATE", ()->
+        gsm =new GameStateModel(
+          id:"MOCK_SAVED_ID"
+          label:"MOCK GAME TO SAVE"
+          _type:"MOCK_TYPE"
+          users:new Backbone.Collection([
+            id:"mock_user"
+            status:Constants.READY_STATE
+          ,
+            id:"mock_other_user"
+            status:Constants.READY_STATE
+          ,
+            id:"mock_third_user"
+            status:undefined
+
+          ])
+        )
+        chai.assert.equal(gsm.getHeaderForUser("mock_user").get("userStatus"), Constants.READY_STATE)
+      )
       test("No user specified - doesnt set user status", ()->
         gsm =new GameStateModel(
           id:"MOCK_SAVED_ID"
@@ -499,7 +534,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constan
         )
         chai.assert.isUndefined(gsm.getHeaderForUser("mock_user").get("userStatus"))
       )
-      test("stateWithNoUserss_doesntSetUserStatus", ()->
+      test("stateWithNoUsers_doesntSetUserStatus", ()->
         gsm =new GameStateModel(
           id:"MOCK_SAVED_ID"
           label:"MOCK GAME TO SAVE"
