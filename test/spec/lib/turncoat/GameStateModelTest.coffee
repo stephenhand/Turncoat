@@ -21,10 +21,17 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
         "MOCK_UUID::"+actual()
     )
   )
+  Isolate.mapAsFactory("lib/backboneTools/ModelProcessor","lib/turncoat/GameStateModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      recurse:actual.recurse
+    )
+  )
 )
 
 define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constants", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (GameStateModel, Backbone, Constants, LogEntry, GameHeader)->
-  #GameStateModelTest.coffee test file    
+
+  mocks = window.mockLibrary["lib/turncoat/GameStateModel"]
+  #GameStateModelTest.coffee test file
   suite("GameStateModelTest", ()->
     mockMarshaller ={}
     mockType = Backbone.Model.extend(
@@ -82,298 +89,190 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constan
       )
     )
     suite("searchChildren", ()->
-      gsmWith1LevelSubGSms = new GameStateModel()
-      gsmWith1LevelSubGSms.attributes =
-        a:new GameStateModel()
-        b:new GameStateModel()
-
-      gsmWith1LevelSubGSms.attributes.a.val = 8
-      gsmWith1LevelSubGSms.attributes.b.val = 7
-
-      gsmWith3LevelSubGSms = new GameStateModel()
-      gsmWith3LevelSubGSms.attributes = {
-        a:new GameStateModel()
-        b:new GameStateModel()
-      }
-      gsmWith3LevelSubGSms.attributes.a.val = 8
-      gsmWith3LevelSubGSms.attributes.b.val = 7
-      gsmWith3LevelSubGSms.attributes.a.attributes =
-        c:new GameStateModel()
-        d:new GameStateModel()
-        dd:{}
-        e:new GameStateModel()
-      gsmWith3LevelSubGSms.attributes.a.attributes.c.val = 9
-      gsmWith3LevelSubGSms.attributes.a.attributes.d.val = 10
-      gsmWith3LevelSubGSms.attributes.a.attributes.dd.val = 11
-      gsmWith3LevelSubGSms.attributes.a.attributes.e.val = 12
-      gsmWith3LevelSubGSms.attributes.a.attributes.c.attributes =
-        f:new GameStateModel()
-      gsmWith3LevelSubGSms.attributes.a.attributes.c.attributes.f.val = 13
-
-      gsmWithGSMChildrenOfNoneGSMs = new GameStateModel()
-      gsmWithGSMChildrenOfNoneGSMs.attributes = {
-        a:new GameStateModel()
-        b:new GameStateModel()
-      }
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.val = 8
-      gsmWithGSMChildrenOfNoneGSMs.attributes.b.val = 7
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes =
-        c:new GameStateModel()
-        d:new GameStateModel()
-        dd:
-          dda:new GameStateModel()
-          ddb:new GameStateModel()
-
-        e:new GameStateModel()
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.c.val = 9
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.d.val = 10
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.dd.val = 11
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.dd.dda.val = 111
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.dd.ddb.val = 111
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.e.val = 12
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.c.attributes =
-        f:new GameStateModel()
-      gsmWithGSMChildrenOfNoneGSMs.attributes.a.attributes.c.attributes.f.val = 13
-
-      gsmWithNoSubGSMs = new GameStateModel()
-      gsmWithNoSubGSMs.attributes = {
-        a:{}
-        b:{}
-      }
-      gsmWithNoSubGSMs.attributes.a.val = 8
-      gsmWithNoSubGSMs.attributes.b.val = 7
-
-
-      gsmWithGSMChildrenOfBackboneCollections = new GameStateModel()
-      gsmWithGSMChildrenOfBackboneCollections.attributes = {
-        a:new GameStateModel()
-        b:new GameStateModel()
-      }
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.val = 8
-      gsmWithGSMChildrenOfBackboneCollections.attributes.b.val = 7
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes =
-        c:new GameStateModel()
-        d:new GameStateModel()
-        dd:
-          dda:new GameStateModel()
-          ddb:new GameStateModel()
-        e:new GameStateModel()
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.val = 9
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.d.val = 10
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.dd.val = 11
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.dd.dda.val = 111
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.dd.ddb.val = 111
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.e.val = 12
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes =
-        f:new GameStateModel()
-        g:new Backbone.Collection([
-          new Backbone.Model()
-          new GameStateModel()
-          {val:142}
-          new GameStateModel()
-        ])
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.f.val = 13
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.g.at(0).val = 140
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.g.at(1).val = 141
-      gsmWithGSMChildrenOfBackboneCollections.attributes.a.attributes.c.attributes.g.at(3).val = 143
-
-      gsmWithNestedCollections = new GameStateModel()
-      gsmWithNestedCollections.attributes = {
-        a:new GameStateModel()
-        b:new Backbone.Collection([
-          new Backbone.Model(
-            bb:new Backbone.Collection([
-              new GameStateModel()
-              new Backbone.Model()
-            ])
-            bc:{val:14}
+      gsm = null
+      origRecurse = mocks["lib/backboneTools/ModelProcessor"].recurse
+      setup(()->
+        mocks["lib/backboneTools/ModelProcessor"].recurse = JsMockito.mockFunction()
+        gsm = new GameStateModel()
+      )
+      teardown(()->
+        mocks["lib/backboneTools/ModelProcessor"].recurse = origRecurse
+      )
+      test("Returns array", ()->
+        chai.assert.isArray(gsm.searchChildren())
+      )
+      test("No search function set - calls ModelProcessor.recurse with default function", ()->
+        gsm.searchChildren()
+        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func())
+      )
+      test("No search function set, but deep recursion set - calls ModelProcessor.recurse with default function and deepRecusion flag set", ()->
+        gsm.searchChildren(true)
+        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
+      )
+      test("Null search function set, but deep recursion set - calls ModelProcessor.recurse with default function and deepRecusion flag set", ()->
+        gsm.searchChildren(null, true)
+        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
+      )
+      test("Search function set and deep recursion set - calls ModelProcessor.recurse with wrapper function", ()->
+        gsm.searchChildren(
+            ()->true
+        ,
+          true
+        )
+        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
+      )
+      test("Search function set and deep recursion unset - calls ModelProcessor.recurse with wrapper function and deep recursion set false", ()->
+        gsm.searchChildren(
+          ()->true
+        ,
+          true
+        )
+        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
+      )
+      suite("Default checker function",()->
+        setup(()->
+        )
+        test("Adds item checked to array",()->
+          item1={}
+          item2={}
+          item3={}
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+            (m,f)->
+              f(item3)
+              f(item1)
+              f(item2)
           )
-          new Backbone.Model()
-          new GameStateModel()
-        ])
-        c:new Backbone.Model()
-      }
-
-      gsmWithNestedCollections.attributes.a.val = 5
-      gsmWithNestedCollections.attributes.b.val = 6
-      gsmWithNestedCollections.attributes.c.val = 7
-      gsmWithNestedCollections.attributes.b.at(0).val = 8
-      gsmWithNestedCollections.attributes.b.at(1).val = 9
-      gsmWithNestedCollections.attributes.b.at(2).val = 10
-      gsmWithNestedCollections.attributes.b.at(0).attributes.bb.val = 11
-      gsmWithNestedCollections.attributes.b.at(0).attributes.bb.at(0).val = 12
-      gsmWithNestedCollections.attributes.b.at(0).attributes.bb.at(1).val = 13
-
-      test("noSearchFuncSet_findsGameStateModelsOnAttributes", ()->
-        res = gsmWith1LevelSubGSms.searchChildren()
-        chai.assert.equal(res.length, 2)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-      )
-      
-      test("noSearchFuncSet_returnsEmptyArrayIfNothingToFind", ()->
-        res = gsmWithNoSubGSMs.searchChildren()
-        chai.assert.deepEqual(res, [])
-      )
-
-
-      test("noSearchFuncSet_findsGameStateModelsOnAttributesRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren()
-        chai.assert.equal(res.length, 6)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 10)
-        chai.assert.include(resVals, 12)
-        chai.assert.include(resVals, 13)
-      )
-
-
-      test("noSearchFuncSet_ignoresGameStateModelChildrenOfNonGSMs", ()->
-        res = gsmWithGSMChildrenOfNoneGSMs.searchChildren()
-        chai.assert.equal(res.length, 6)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 10)
-        chai.assert.include(resVals, 12)
-        chai.assert.include(resVals, 13)
-      )
-
-      test("deepExplicitFalseSetAsFirstParam_doesntFindGameStateModelsRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren(false)
-        chai.assert.equal(res.length, 2)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-      )
-
-      test("deepExplicitFalseSetAsSecondParam_doesntFindGameStateModelsRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren((model)->
-          true
-        , false)
-        chai.assert.equal(res.length, 2)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-      )
-
-      test("deepExplicitTrueSetAsFirstParam_doesFindGameStateModelsRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren(true)
-        chai.assert.equal(res.length, 6)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 10)
-        chai.assert.include(resVals, 12)
-        chai.assert.include(resVals, 13)
-      )
-
-      test("deepExplicitTrueSetAsSecondParam_doesFindGameStateModelsRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren((model)->
-          true
-        , true)
-        chai.assert.equal(res.length, 6)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 10)
-        chai.assert.include(resVals, 12)
-        chai.assert.include(resVals, 13)
-      )
-
-      test("modelCheckerSetAsOnlyParam_findsAndChecksGameStateModelsRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren((model)->
-          model.val%2 is 1
+          list = gsm.searchChildren()
+          chai.assert.equal(list[0], item3)
+          chai.assert.equal(list[1], item1)
+          chai.assert.equal(list[2], item2)
+          chai.assert.equal(list.length, 3)
         )
-        chai.assert.equal(res.length, 3)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 13)
       )
-
-      test("modelCheckerSetWithExplicitDeepTrue_findsAndChecksGameStateModelsRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren((model)->
-          model.val%2 is 1
-        , true
+      suite("User supplied checker function",()->
+        setup(()->
         )
-        chai.assert.equal(res.length, 3)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 13)
-      )
-
-      test("modelCheckerSetWithExplicitDeepFalse_findsAndChecksGameStateModelsNonRecursively", ()->
-        res = gsmWith3LevelSubGSms.searchChildren((model)->
-          model.val%2 is 1
-        , false
+        test("Adds item checked to returned array if checker function returns true",()->
+          item1=
+            check:true
+          item2=
+            check:false
+          item3=
+            check:true
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+            (m,f)->
+              f(item3)
+              f(item1)
+              f(item2)
+          )
+          list = gsm.searchChildren((item)->
+            item.check
+          )
+          chai.assert.equal(list[0], item3)
+          chai.assert.equal(list[1], item1)
+          chai.assert.equal(list.length, 2)
         )
-        chai.assert.equal(res.length, 1)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 7)
-      )
-
-
-      test("noSearchFuncSet_findsModelsInBackboneCollections", ()->
-        res = gsmWithGSMChildrenOfBackboneCollections.searchChildren()
-        chai.assert.equal(res.length, 11)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 10)
-        chai.assert.include(resVals, 12)
-        chai.assert.include(resVals, 13)
-        chai.assert.include(resVals, 140)
-        chai.assert.include(resVals, 141)
-        chai.assert.include(resVals, 143)
-      )
-
-      test("noSearchFuncSet_findsModelsInNestedBackboneCollections", ()->
-        res = gsmWithNestedCollections.searchChildren()
-        chai.assert.equal(res.length, 9)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 5)
-        chai.assert.include(resVals, 6)
-        chai.assert.include(resVals, 7)
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 9)
-        chai.assert.include(resVals, 10)
-        chai.assert.include(resVals, 11)
-        chai.assert.include(resVals, 12)
-        chai.assert.include(resVals, 13)
-      )
-
-      test("collectionsOnlySearchFunc_findsCollectionsInNestedBackboneCollections", ()->
-        res = gsmWithNestedCollections.searchChildren((item)->
-          item instanceof Backbone.Collection
-        )
-        chai.assert.equal(res.length, 2)
-        resVals = thisRes.val for thisRes in res
-        chai.assert.include(resVals, 8)
-        chai.assert.include(resVals, 11)
       )
 
       suite("searchGameStateModels", ()->
-        test("noSearchFuncSet_findsOnlyGSMsInBackboneCollections", ()->
-          res = gsmWithGSMChildrenOfBackboneCollections.searchGameStateModels()
-          chai.assert.equal(res.length, 8)
-          resVals = thisRes.val for thisRes in res
-          chai.assert.include(resVals, 8)
-          chai.assert.include(resVals, 7)
-          chai.assert.include(resVals, 9)
-          chai.assert.include(resVals, 10)
-          chai.assert.include(resVals, 12)
-          chai.assert.include(resVals, 13)
-          chai.assert.include(resVals, 140)
-          chai.assert.include(resVals, 143)
+        scRet = {}
+        gsm = null
+        setup(()->
+          gsm = new GameStateModel()
+          gsm.searchChildren = JsMockito.mockFunction()
+          JsMockito.when(gsm.searchChildren)(JsHamcrest.Matchers.func()).then((f)->
+            scRet
+          )
+        )
+        test("Calls searchChildren with default function", ()->
+          gsm.searchGameStateModels()
+          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func(), undefined)
+        )
+        test("Checker function set - Calls searchChildren with wrapper function", ()->
+          gsm.searchGameStateModels(()->true)
+          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func(), undefined)
+        )
+        test("'Deep' flag set - passes flag to searchChildren", ()->
+          flag = {}
+          gsm.searchGameStateModels(
+            ()->
+              true
+            , flag)
+          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func(), flag)
+        )
+        test("Returns result of searchChildren", ()->
+          chai.assert.equal(gsm.searchGameStateModels(), scRet)
+        )
+        suite("Checker function", ()->
+          cf = null
+          setup(()->
+            JsMockito.when(gsm.searchChildren)(JsHamcrest.Matchers.func()).then((f)->
+              cf = f
+            )
+          )
+          suite("No checker", ()->
+            setup(()->
+              gsm.searchGameStateModels()
+            )
+            test("Returns true when supplied with GameStateModel", ()->
+              chai.assert(cf(new GameStateModel()))
+            )
+            test("Returns false when supplied with anything else", ()->
+              chai.assert.isFalse(cf(new Backbone.Model()))
+              chai.assert.isFalse(cf({}))
+              chai.assert.isFalse(cf(12))
+            )
+            test("Returns false when supplied with nothing", ()->
+              chai.assert.isFalse(cf())
+            )
+          )
+          suite("Checker specified", ()->
+            checker = null
+            setup(()->
+              checker = JsMockito.mockFunction()
+              gsm.searchGameStateModels(checker)
+            )
+            suite("Called with GameStateModel", ()->
+              m = null
+              setup(()->
+                m = new GameStateModel()
+              )
+              test("Calls checker when supplied", ()->
+                cf(m)
+                JsMockito.verify(checker)(m)
+              )
+              test("Returns true if checker returns true", ()->
+                JsMockito.when(checker)(m).then(()->true)
+                chai.assert.isTrue(cf(m))
+              )
+              test("Returns true if checker returns truthy", ()->
+                JsMockito.when(checker)(m).then(()->{})
+                chai.assert(cf(m))
+                JsMockito.when(checker)(m).then(()->1)
+                chai.assert(cf(m))
+                JsMockito.when(checker)(m).then(()->"HELLO")
+                chai.assert(cf(m))
+              )
+              test("Returns false if checker returns false", ()->
+                JsMockito.when(checker)(m).then(()->false)
+                chai.assert.isFalse(cf(m))
+              )
+              test("Returns falsey if checker returns falsey", ()->
+                JsMockito.when(checker)(m).then(()->null)
+                chai.assert(!cf(m))
+                JsMockito.when(checker)(m).then(()->0)
+                chai.assert(!cf(m))
+                JsMockito.when(checker)(m).then(()->"")
+                chai.assert(!cf(m))
+              )
+            )
+            test("Called with anything else or nothing - Returns false and doesn't call checker", ()->
+              chai.assert.isFalse(cf(new Backbone.Model()))
+              chai.assert.isFalse(cf({}))
+              chai.assert.isFalse(cf(12))
+              JsMockito.verify(checker, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+            )
+          )
         )
       )
     )
