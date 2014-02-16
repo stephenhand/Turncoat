@@ -1,21 +1,4 @@
-define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Constants", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, moment, Backbone, Constants, Factory, LogEntry, GameHeader)->
-
-  recurseChildren = (item, processor, deep, earlyOut)->
-    deep ?= true
-    recRes = []
-    searchSet
-    if item instanceof Backbone.Model
-      searchSet = (item.attributes[searchItem] for searchItem of item.attributes when item.attributes[searchItem] instanceof Backbone.Model or item.attributes[searchItem] instanceof Backbone.Collection)
-    else if item instanceof Backbone.Collection
-      searchSet = (searchItem for searchItem in item.models when searchItem instanceof Backbone.Model or searchItem instanceof Backbone.Collection)
-    else throw new Error("Only Backbone.Models and Backbone.Collections support recursiveSearch")
-
-    for setItem in searchSet
-      if deep then recurseChildren(setItem, processor)
-      earlyOut = {byRef:false}
-      processor(setItem, earlyOut)
-      if earlyOut.byRef then break
-
+define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelProcessor", "lib/turncoat/Constants", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, moment, Backbone, ModelProcessor, Constants, Factory, LogEntry, GameHeader)->
 
   GameStateModel = Backbone.Model.extend(
     initialize:(attributes, options)->
@@ -34,8 +17,8 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Constants", "
         deep = checker
         checker = null
       recRes = []
-      recurseChildren(@, (item)->
-        if (!checker? || checker(item)) then recRes.push(item)
+      ModelProcessor.recurse(@, (item)=>
+        if (@ isnt item and (!checker? || checker(item))) then recRes.push(item)
       , deep)
       recRes
 
@@ -49,7 +32,7 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/turncoat/Constants", "
       root.searchChildren((model, earlyOut)=>
         if model is @ or chain.length
           chain.push(model)
-          if earlyOut? then earlyOut.byRef = true
+          true
       , true)
       if (chain.length) then chain.push(root) else chain = null
       chain
