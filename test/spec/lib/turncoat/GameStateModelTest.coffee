@@ -24,11 +24,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("lib/backboneTools/ModelProcessor","lib/turncoat/GameStateModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       recurse:actual.recurse
+      CONTINUERECURSION:actual.CONTINUERECURSION
     )
   )
 )
 
-define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constants", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (GameStateModel, Backbone, Constants, LogEntry, GameHeader)->
+define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/ModelProcessor", "lib/turncoat/Constants", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (GameStateModel, Backbone, ModelProcessor, Constants, LogEntry, GameHeader)->
 
   mocks = window.mockLibrary["lib/turncoat/GameStateModel"]
   #GameStateModelTest.coffee test file
@@ -148,6 +149,15 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constan
           chai.assert.equal(list[2], item2)
           chai.assert.equal(list.length, 3)
         )
+        test("Returns CONTINUERECURSION",()->
+          ch = null
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+            (m,f)->
+              ch = f
+          )
+          gsm.searchChildren()
+          chai.assert.equal(ch({}), ModelProcessor.CONTINUERECURSION)
+        )
       )
       suite("User supplied checker function",()->
         setup(()->
@@ -171,6 +181,17 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/turncoat/Constan
           chai.assert.equal(list[0], item3)
           chai.assert.equal(list[1], item1)
           chai.assert.equal(list.length, 2)
+        )
+        test("Returns CONTINUERECURSION",()->
+          ch = null
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+            (m,f)->
+              ch = f
+          )
+          gsm.searchChildren((item)->
+            item.check
+          )
+          chai.assert.equal(ch({check:false}), ModelProcessor.CONTINUERECURSION)
         )
       )
 

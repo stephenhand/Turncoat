@@ -10,7 +10,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
       recurser = null
       setup(()->
         recurser = jm.mockFunction()
-        jm.when(recurser)(m.anything()).then(()->true)
+        jm.when(recurser)(m.anything()).then(()->ModelProcessor.CONTINUERECURSION)
       )
       suite("Model with no sub models", ()->
         modelWithNoSubmodels = null
@@ -79,10 +79,10 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           jm.verify(recurser)(collectionWithModels.at(1))
           jm.verify(recurser)(collectionWithModels.at(2))
         )
-        suite("Recurser returns false partway through a collection", ()->
+        suite("Recurser returns ABANDONRECURSION partway through a collection", ()->
           test("In order traversal - processes root and items prior to collection",()->
             jm.when(recurser)(m.anything()).then((item)->
-              if item is collectionWithModels.at(1) then false else true
+              if item is collectionWithModels.at(1) then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(collectionWithModels, recurser)
             jm.verify(recurser)(collectionWithModels)
@@ -91,7 +91,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           )
           test("Pre order traversal - same as in order",()->
             jm.when(recurser)(m.anything()).then((item)->
-              if item is collectionWithModels.at(1) then false else true
+              if item is collectionWithModels.at(1) then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(collectionWithModels, recurser, ModelProcessor.PREORDER)
             jm.verify(recurser)(collectionWithModels)
@@ -116,11 +116,11 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           jm.verify(recurser)(modelWith1LevelSubmodels.get("a"))
           jm.verify(recurser)(modelWith1LevelSubmodels.get("b"))
         )
-        suite("Root returns false", ()->
+        suite("Root returns ABANDONRECURSION", ()->
           test("In order traversal - calls recurser function on children and root",()->
 
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith1LevelSubmodels then false else true
+              if item is modelWith1LevelSubmodels then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith1LevelSubmodels, recurser, ModelProcessor.INORDER)
             jm.verify(recurser)(modelWith1LevelSubmodels)
@@ -130,7 +130,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           test("Pre order traversal - calls recurser function on root only",()->
 
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith1LevelSubmodels then false else true
+              if item is modelWith1LevelSubmodels then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith1LevelSubmodels, recurser, ModelProcessor.PREORDER)
             jm.verify(recurser)(modelWith1LevelSubmodels)
@@ -140,7 +140,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           test("No traversal specified - treated as in order",()->
 
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith1LevelSubmodels then false else true
+              if item is modelWith1LevelSubmodels then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith1LevelSubmodels, recurser)
             jm.verify(recurser)(modelWith1LevelSubmodels)
@@ -148,11 +148,11 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             jm.verify(recurser)(modelWith1LevelSubmodels.get("b"))
           )
         )
-        suite("First child returns false",()->
+        suite("First child returns ABANDONRECURSION",()->
           test("In order traveral - calls recurser function on first child and ancestors (i.e. the root)",()->
 
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith1LevelSubmodels.get("a") then false else true
+              if item is modelWith1LevelSubmodels.get("a") then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith1LevelSubmodels, recurser, ModelProcessor.INORDER)
             jm.verify(recurser)(modelWith1LevelSubmodels)
@@ -162,7 +162,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           test("Pre order traveral - same as in order.",()->
 
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith1LevelSubmodels.get("a") then false else true
+              if item is modelWith1LevelSubmodels.get("a") then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith1LevelSubmodels, recurser, ModelProcessor.PREORDER)
             jm.verify(recurser)(modelWith1LevelSubmodels)
@@ -170,11 +170,11 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             jm.verify(recurser, v.never())(modelWith1LevelSubmodels.get("b"))
           )
         )
-        suite("Last child returns false", ()->
+        suite("Last child returns ABANDONRECURSION", ()->
           test("In order traversal - calls recurser function on all nodes",()->
 
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith1LevelSubmodels.get("b") then false else true
+              if item is modelWith1LevelSubmodels.get("b") then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith1LevelSubmodels, recurser, ModelProcessor.INORDER)
             jm.verify(recurser)(modelWith1LevelSubmodels)
@@ -184,7 +184,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           test("Pre order traversal - calls recurser function on all nodes",()->
 
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith1LevelSubmodels.get("b") then false else true
+              if item is modelWith1LevelSubmodels.get("b") then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith1LevelSubmodels, recurser, ModelProcessor.PREORDER)
             jm.verify(recurser)(modelWith1LevelSubmodels)
@@ -212,7 +212,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             b:new Backbone.Model()
           )
         )
-        suite("Recurser always returns true", ()->
+        suite("Recurser always returns CONTINUERECURSION", ()->
           test("In order traversal - recurses all models that form tree", ()->
             ModelProcessor.recurse(modelWith3LevelSubmodels, recurser, ModelProcessor.INORDER)
             jm.verify(recurser)(modelWith3LevelSubmodels)
@@ -251,10 +251,10 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           jm.verify(recurser, v.never())(modelWith3LevelSubmodels.get("a").get("dd").ddd)
           jm.verify(recurser, v.never())(modelWith3LevelSubmodels.get("a").get("dd").dde)
         )
-        suite("Intermediate model returns false", ()->
+        suite("Intermediate model returns ABANDONRECURSION", ()->
           test("In order traversal - recurses all children and ancestors of node, but no further siblings of node or further siblings of ancestor nodes", ()->
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith3LevelSubmodels.get("a").get("d") then false else true
+              if item is modelWith3LevelSubmodels.get("a").get("d") then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith3LevelSubmodels, recurser, ModelProcessor.INORDER)
             jm.verify(recurser)(modelWith3LevelSubmodels)
@@ -269,7 +269,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
           )
           test("Pre order traversal - recurses node and ancestors of node only, no further siblings or children", ()->
             jm.when(recurser)(m.anything()).then((item)->
-              if item is modelWith3LevelSubmodels.get("a").get("d") then false else true
+              if item is modelWith3LevelSubmodels.get("a").get("d") then ModelProcessor.ABANDONRECURSION else ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith3LevelSubmodels, recurser, ModelProcessor.PREORDER)
             jm.verify(recurser)(modelWith3LevelSubmodels)
@@ -283,6 +283,38 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             jm.verify(recurser, v.never())(modelWith3LevelSubmodels.get("b"))
           )
         )
+        suite("Intermediate model returns ABANDONNODE", ()->
+          test("In order traversal - ignores ABANDONNODE and continues", ()->
+            jm.when(recurser)(m.anything()).then((item)->
+              if item is modelWith3LevelSubmodels.get("a").get("d") then ModelProcessor.ABANDONNODE else ModelProcessor.CONTINUERECURSION
+            )
+            ModelProcessor.recurse(modelWith3LevelSubmodels, recurser, ModelProcessor.INORDER)
+            jm.verify(recurser)(modelWith3LevelSubmodels)
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("c"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("c").get("f"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("d"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("d").get("g"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("d").get("h"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("e"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("b"))
+          )
+          test("Pre order traversal - recurses all but affected node's children", ()->
+            jm.when(recurser)(m.anything()).then((item)->
+              if item is modelWith3LevelSubmodels.get("a").get("d") then ModelProcessor.ABANDONNODE else ModelProcessor.CONTINUERECURSION
+            )
+            ModelProcessor.recurse(modelWith3LevelSubmodels, recurser, ModelProcessor.PREORDER)
+            jm.verify(recurser)(modelWith3LevelSubmodels)
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("c"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("c").get("f"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("d"))
+            jm.verify(recurser, v.never())(modelWith3LevelSubmodels.get("a").get("d").get("g"))
+            jm.verify(recurser, v.never())(modelWith3LevelSubmodels.get("a").get("d").get("h"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("a").get("e"))
+            jm.verify(recurser)(modelWith3LevelSubmodels.get("b"))
+          )
+        )
         suite("Recusion modifies children of node", ()->
 
           test("In order traversal - recurses tree prior to modification", ()->
@@ -291,7 +323,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
               if item is modelWith3LevelSubmodels.get("a").get("d")
                 item.unset("g")
                 item.set("i", new Backbone.Model())
-              true
+              ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith3LevelSubmodels, recurser, ModelProcessor.INORDER)
             jm.verify(recurser)(modelWith3LevelSubmodels)
@@ -311,7 +343,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
               if item is modelWith3LevelSubmodels.get("a").get("d")
                 item.unset("g")
                 item.set("i", new Backbone.Model())
-              true
+              ModelProcessor.CONTINUERECURSION
             )
             ModelProcessor.recurse(modelWith3LevelSubmodels, recurser, ModelProcessor.PREORDER)
             jm.verify(recurser)(modelWith3LevelSubmodels)
@@ -947,6 +979,177 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             jm.verify(add, v.times(2))()
             jm.verify(remove)()
             jm.verify(reset, v.never())()
+          )
+          test("Entire collection different - removes all and adds all instead of resetting", ()->
+            u = new Backbone.Collection([
+              new Backbone.Model(id:"AA")
+            ,
+
+              new Backbone.Model(id:"BB")
+            ,
+
+              new Backbone.Model(id:"CC")
+            ,
+
+              new Backbone.Model(id:"DD")
+            ,
+
+              new Backbone.Model(id:"EE")
+            ])
+            ModelProcessor.deepUpdate(t, u)
+            a.equal(t.at(0), u.at(0))
+            a.equal(t.at(1), u.at(1))
+            a.equal(t.at(2), u.at(2))
+            a.equal(t.at(3), u.at(3))
+            a.equal(t.at(4), u.at(4))
+            a.equal(t.length, 5)
+            jm.verify(add, v.times(5))()
+            jm.verify(remove, v.times(4))()
+            jm.verify(reset, v.never())()
+          )
+          suite("Deep mixed model", ()->
+            u = null
+            ua = null
+            ub= null
+            uc = null
+            ud = null
+            ciaa = null
+            ciabb = null
+            ciaaaa = null
+            add_iaaa = null
+            remove_iaaa = null
+            reset_iaaa = null
+
+            setup(()->
+              ia.set("a",new Backbone.Collection([
+                new Backbone.Model(
+                  id:"iaaa"
+                  a:1
+                  b:2
+                ),
+                new Backbone.Model(
+                  id:"iaab"
+                  a:3
+                  b:4
+                )
+              ]))
+              ia.set("b", new Backbone.Model(
+                id:"iab"
+                a:5
+                b:new Backbone.Model(
+                  id:"iabb"
+                  a:6
+                  b:7
+                )
+                c:8
+              ))
+              ua = new Backbone.Model(
+                id:"A"
+                a:new Backbone.Collection([
+                  new Backbone.Model(
+                    id:"iaaa"
+                    a:1
+                    b:2
+                  ),
+                  new Backbone.Model(
+                    id:"iaab"
+                    a:3
+                    b:4
+                  )
+                ])
+                b:new Backbone.Model(
+                  id:"iab"
+                  a:5
+                  b:new Backbone.Model(
+                    id:"iabb"
+                    a:6
+                    b:7
+                  )
+                  c:8
+                )
+              )
+              ub = new Backbone.Model(
+                id:"B"
+              )
+              uc = new Backbone.Model(
+                id:"C"
+              )
+              ud = new Backbone.Model(
+                id:"D"
+              )
+              u = new Backbone.Collection([
+                ua
+              ,
+                ub
+              ,
+                uc
+              ,
+                ud
+              ])
+              ciaa = jm.mockFunction()
+              ciabb = jm.mockFunction()
+              ciaaaa = jm.mockFunction()
+              add_iaaa = jm.mockFunction()
+              remove_iaaa = jm.mockFunction()
+              reset_iaaa = jm.mockFunction()
+              ia.on("change:a", ciaa)
+              ia.get("b").on("change:b", ciabb)
+              ia.get("a").at(0).on("change:a", ciaaaa)
+              ia.get("a").on("add",add_iaaa)
+              ia.get("a").on("remove",remove_iaaa)
+              ia.get("a").on("reset",reset_iaaa)
+            )
+            test("Leaf model under chain containing models and collections has different properties - modified those properties on that model and fires appropriate events", ()->
+              ua.get("a").at(0).set("a",11)
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(ciaaaa)()
+              a.equal(ia.get("a").at(0).get("a"),11)
+            )
+            test("Model in sub collection has different id in update - model is removed and updated one added", ()->
+              ua.get("a").at(1).id ="DIFFERENT"
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(add_iaaa)()
+              jm.verify(remove_iaaa)()
+              jm.verify(reset_iaaa, v.never())()
+              a.equal(ia.get("a").at(1),ua.get("a").at(1))
+            )
+            test("Collection becomes model - collection is removed and model is added, event fired for attribute on parent model", ()->
+              ua.set("a", new Backbone.Model())
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(ciaa)()
+              a.equal(ia.get("a"),ua.get("a"))
+            )
+            test("Model becomes collection - model is removed and collection is added, event fired for attribute on parent model", ()->
+              ua.get("b").set("b", new Backbone.Collection())
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(ciabb)()
+              a.equal(ia.get("b").get("a"),ua.get("b").get("a"))
+            )
+            test("Model becomes POJSO - model is removed and POJSO is added, event fired for attribute on parent model", ()->
+              ua.get("b").set("b", {})
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(ciabb)()
+              a.equal(ia.get("b").get("a"),ua.get("b").get("a"))
+            )
+            test("POJSO becomes model - POJSO is removed and model is added, event fired for attribute on parent model", ()->
+              ia.get("b").attributes.b={}
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(ciabb)()
+              a.equal(ia.get("b").get("a"),ua.get("b").get("a"))
+            )
+            test("Collection becomes POJSO - Collection is removed and POJSO is added, event fired for attribute on parent model", ()->
+              ua.set("a", {})
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(ciaa)()
+              a.equal(ia.get("a"),ua.get("a"))
+            )
+            test("POJSO becomes Collection - POJSO is removed and Collection is added, event fired for attribute on parent model", ()->
+              ia.attributes.a = {}
+              ModelProcessor.deepUpdate(t, u)
+              jm.verify(ciaa)()
+              a.equal(ia.get("a"),ua.get("a"))
+            )
+
           )
         )
       )
