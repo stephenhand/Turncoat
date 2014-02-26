@@ -1,16 +1,18 @@
-define(["underscore", "backbone", "lib/turncoat/Constants", 'lib/turncoat/GameStateModel', 'lib/turncoat/User', "lib/turncoat/Factory"], (_, Backbone, Constants, GameStateModel, User, Factory)->
+define(["underscore", "backbone", "lib/backboneTools/ModelProcessor", "lib/turncoat/Constants", 'lib/turncoat/GameStateModel', 'lib/turncoat/User', "lib/turncoat/Factory"], (_, Backbone, ModelProcessor, Constants, GameStateModel, User, Factory)->
   class Game extends GameStateModel
     initialize:(attributes, options)->
-      persister = Factory.buildPersister()
-      transport = Factory.buildTransport(
-        gameId:@id
-      )
+      persister = null
+      transport = null
       super(attributes, options)
 
       toggled = null
       @activate = (ownerId)->
         if (!ownerId?) then throw new Error("Games must be activated with a user id")
-        transport.userId = ownerId
+        persister = Factory.buildPersister()
+        transport = Factory.buildTransport(
+          userId:ownerId
+          gameId:@id
+        )
         transport.startListening()
         @listenTo(transport, "eventReceived",
           (event)->
@@ -22,13 +24,21 @@ define(["underscore", "backbone", "lib/turncoat/Constants", 'lib/turncoat/GameSt
                   if (user?)
                     user.set("status",event.get("data").get("status"))
                     persister.saveGameState(ownerId, @)
-        ,@)
-
+        )
+        @listenTo(persister, "gameUpdated",
+          (event)->
+            if !event.game? then throw new Error("Game update fired with no game set")
+            if event.gameId? and event.gameId is @id and event.userId? and event.userId is ownerId then ModelProcessor.deepUpdate(@, event.game)
+        )
         @deactivate = ()->
+          persister.stopListening()
           transport.stopListening()
           @stopListening(transport)
           @activate = toggled
           toggled = @deactivate
+
+          persister = null
+          transport = null
           @deactivate = ()->
 
         toggled = @activate

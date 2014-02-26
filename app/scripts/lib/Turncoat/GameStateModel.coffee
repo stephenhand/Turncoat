@@ -12,28 +12,26 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
         throw new Error("State Marshaller not set, set a default state marshaller before constructing GSMs you plan to marshal.")
       GameStateModel.marshaller.marshalState(@)
 
-    searchChildren:(checker, deep)->
-      if (typeof checker is "boolean")
-        deep = checker
-        checker = null
+    searchChildren:(checker)->
       recRes = []
       ModelProcessor.recurse(@, (item)=>
         if (@ isnt item and (!checker? || checker(item))) then recRes.push(item)
-      , deep)
+        ModelProcessor.CONTINUERECURSION
+      , ModelProcessor.INORDER)
       recRes
 
-    searchGameStateModels:(modelChecker, deep)->
+    searchGameStateModels:(modelChecker)->
       @searchChildren((model)->
         (model instanceof GameStateModel) and (!modelChecker? or modelChecker(model))
-      , deep)
+      )
 
     getOwnershipChain:(root)->
       chain = []
-      root.searchChildren((model, earlyOut)=>
+      root.searchChildren((model)=>
         if model is @ or chain.length
           chain.push(model)
           true
-      , true)
+      )
       if (chain.length) then chain.push(root) else chain = null
       chain
 
