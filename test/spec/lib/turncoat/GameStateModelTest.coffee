@@ -25,6 +25,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       recurse:actual.recurse
       CONTINUERECURSION:actual.CONTINUERECURSION
+      INORDER:actual.INORDER
     )
   )
 )
@@ -102,33 +103,16 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/Mo
       test("Returns array", ()->
         chai.assert.isArray(gsm.searchChildren())
       )
-      test("No search function set - calls ModelProcessor.recurse with default function", ()->
+      test("No search function set - calls ModelProcessor.recurse with default function and INORDER traversal", ()->
         gsm.searchChildren()
-        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func())
+        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), ModelProcessor.INORDER)
       )
-      test("No search function set, but deep recursion set - calls ModelProcessor.recurse with default function and deepRecusion flag set", ()->
-        gsm.searchChildren(true)
-        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
-      )
-      test("Null search function set, but deep recursion set - calls ModelProcessor.recurse with default function and deepRecusion flag set", ()->
-        gsm.searchChildren(null, true)
-        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
-      )
-      test("Search function set and deep recursion set - calls ModelProcessor.recurse with wrapper function", ()->
-        gsm.searchChildren(
-            ()->true
-        ,
-          true
-        )
-        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
-      )
-      test("Search function set and deep recursion unset - calls ModelProcessor.recurse with wrapper function and deep recursion set false", ()->
+
+      test("Search function set - calls ModelProcessor.recurse with wrapper function and INORDER traversal", ()->
         gsm.searchChildren(
           ()->true
-        ,
-          true
         )
-        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), true)
+        JsMockito.verify(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), ModelProcessor.INORDER)
       )
       suite("Default checker function",()->
         setup(()->
@@ -137,7 +121,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/Mo
           item1={}
           item2={}
           item3={}
-          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), ModelProcessor.INORDER).then(
             (m,f)->
               f(item3)
               f(item1)
@@ -151,7 +135,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/Mo
         )
         test("Returns CONTINUERECURSION",()->
           ch = null
-          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), ModelProcessor.INORDER).then(
             (m,f)->
               ch = f
           )
@@ -169,7 +153,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/Mo
             check:false
           item3=
             check:true
-          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), ModelProcessor.INORDER).then(
             (m,f)->
               f(item3)
               f(item1)
@@ -184,7 +168,7 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/Mo
         )
         test("Returns CONTINUERECURSION",()->
           ch = null
-          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func()).then(
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), ModelProcessor.INORDER).then(
             (m,f)->
               ch = f
           )
@@ -207,19 +191,11 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/Mo
         )
         test("Calls searchChildren with default function", ()->
           gsm.searchGameStateModels()
-          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func(), undefined)
+          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func())
         )
         test("Checker function set - Calls searchChildren with wrapper function", ()->
           gsm.searchGameStateModels(()->true)
-          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func(), undefined)
-        )
-        test("'Deep' flag set - passes flag to searchChildren", ()->
-          flag = {}
-          gsm.searchGameStateModels(
-            ()->
-              true
-            , flag)
-          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func(), flag)
+          JsMockito.verify(gsm.searchChildren)(JsHamcrest.Matchers.func())
         )
         test("Returns result of searchChildren", ()->
           chai.assert.equal(gsm.searchGameStateModels(), scRet)

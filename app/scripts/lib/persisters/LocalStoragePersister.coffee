@@ -1,27 +1,36 @@
 define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factory", "lib/turncoat/GameStateModel", "lib/turncoat/User", "text!data/manOWarGameTemplates.txt", "text!data/config.txt"], (UUID, _, $, Backbone, moment, Factory, GameStateModel, User, templatesListText, configText)->
   CURRENT_GAMES = "current-games"
 
+  globalEventDispatcher = {}
+  _.extend(globalEventDispatcher, Backbone.Events)
+
+  setLocalStorageItem = (key, data)->
+    window.localStorage.setItem(key, data)
+    globalEventDispatcher.trigger("storageUpdated", key, data)
+
+
+  $(window).on("storage",(event)=>
+    globalEventDispatcher.trigger("storageUpdated",  event.originalEvent.key, event.originalEvent.newValue)
+  )
+
   class LocalStoragePersister
     constructor:(marshaller)->
       @marshaller = marshaller ? Factory.buildStateMarshaller()
       _.extend(@, Backbone.Events)
-      $(window).on("storage",(event)=>
-        onLocalStorageUpdated(@, event.originalEvent.key, event.originalEvent.newValue)
-
+      @listenTo(globalEventDispatcher, "storageUpdated", (key, newValue)->
+        keyParts = key.split("::")
+        switch keyParts[0]
+          when CURRENT_GAMES
+            if keyParts.length is 2 then @trigger("gameListUpdated",
+              userId:keyParts[1]
+              list:@marshaller.unmarshalState(newValue)
+            )
+            else if keyParts.length is 3 then @trigger("gameUpdated",
+              userId:keyParts[1]
+              gameId:keyParts[2]
+              game:@marshaller.unmarshalState(newValue)
+            )
       )
-
-    onLocalStorageUpdated = (context, key, newValue)->
-      keyParts = key.split("::")
-      switch keyParts[0]
-        when CURRENT_GAMES
-          if keyParts.length is 2 then context.trigger("gameListUpdated",
-            userId:keyParts[1]
-            list:context.marshaller.unmarshalState(newValue)
-          )
-
-    setLocalStorageItem = (context, key, data)->
-      window.localStorage.setItem(key, data)
-      onLocalStorageUpdated(context, key, data)
 
     loadUser:(id)->
       if !id? then throw new Error("Must specify a player id.")
@@ -82,8 +91,8 @@ define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factor
       ,
         merge:true
       )
-      setLocalStorageItem(@, CURRENT_GAMES+"::"+user,@marshaller.marshalState(list))
-      setLocalStorageItem(@, CURRENT_GAMES+"::"+user+"::"+state.get("id"), state.toString())
+      setLocalStorageItem(CURRENT_GAMES+"::"+user,@marshaller.marshalState(list))
+      setLocalStorageItem(CURRENT_GAMES+"::"+user+"::"+state.get("id"), state.toString())
 
     loadPendingGamesList:(user, filter)->
       if (!user?) then throw new Error("User must be specified")

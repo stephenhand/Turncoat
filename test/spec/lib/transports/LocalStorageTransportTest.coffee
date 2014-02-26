@@ -23,9 +23,16 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       Events:
         on:()->
-          dispatcher = @
         off:()->
+        trigger:()->
       Model:actual.Model
+    )
+  )
+  Isolate.mapAsFactory("underscore", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      extend:(extendee, extender)->
+        extendee.trigger = extender.trigger
+        if !extendee.marshaller? then dispatcher = extendee
     )
   )
   Isolate.mapAsFactory("uuid", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
@@ -110,6 +117,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       JsMockito.when(mocks["lib/turncoat/Factory"].buildStateMarshaller)().then(()->
         fakeBuiltMarshaller
       )
+      mocks["backbone"].Events.trigger = JsMockito.mockFunction()
       lst = new LocalStorageTransport(userId:"MOCK_USER")
       data[MESSAGE_QUEUE+"::MOCK_USER::MOCK_GAME"] = mockGameQueue
 
@@ -151,7 +159,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
     )
     suite("startListening", ()->
       setup(()->
-        #set dispatcher
+        dispatcher.on = JsMockito.mockFunction()
         new LocalStorageTransport().startListening()
         dispatcher.on = JsMockito.mockFunction()
         data[MESSAGE_QUEUE+"::MOCK_USER"] = mockUserSingleItemQueue
@@ -935,6 +943,9 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       )
     )
     suite("sendChallenge", ()->
+      setup(()->
+        dispatcher.trigger = JsMockito.mockFunction()
+      )
       test("No existing target user queue - creates queue in mutex",()->
         delete data[MESSAGE_QUEUE+"::MOCK_USER"]
         lst.sendChallenge("MOCK_USER", {})
@@ -1027,6 +1038,25 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
           )
           chai.assert.equal("SOMETHING", JSON.parse(data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"]).payload.propA)
         )
+        test("Triggers queueModified event with userId and gameId as nothing.", ()->
+          lst.sendChallenge("MOCK_USER",
+            propA:"SOMETHING"
+          )
+          JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+            new JsHamcrest.SimpleMatcher(
+              matches:(o)->
+                o.criticalSection()
+                try
+                  JsMockito.verify(dispatcher.trigger)("queueModified", JsHamcrest.Matchers.allOf(
+                    JsHamcrest.Matchers.hasMember("userId","MOCK_USER")
+                    JsHamcrest.Matchers.hasMember("gameId",JsHamcrest.Matchers.nil())
+                  ))
+                  true
+                catch e
+                  false
+            )
+          )
+        )
         test("Game not defined - does nothing", ()->
           delete data[MESSAGE_ITEM+"::MOCK_GENERATED_ID"]
           lst.sendChallenge("MOCK_USER")
@@ -1040,6 +1070,7 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
       recipients = null
       counter = 0
       setup(()->
+        dispatcher.trigger = JsMockito.mockFunction()
         lst.gameId = "GAME_ID"
         counter = 0
         mocks["uuid"].func = ()->
@@ -1134,6 +1165,35 @@ define(["isolate!lib/transports/LocalStorageTransport", "backbone"], (LocalStora
                     JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3::GAME_ID"]).length is 1 and JSON.parse(data[MESSAGE_QUEUE+"::RECIPIENT_3::GAME_ID"])[0].id is "MOCK_GENERATED_ID_2"
             )
 
+          )
+        )
+        test("Triggers queueModified event with userId and gameId for each recipient.", ()->
+          mocks["backbone"].Events.trigger = JsMockito.mockFunction()
+          lst.broadcastGameEvent(recipients, messagedata)
+
+          JsMockito.verify(mocks["lib/concurrency/Mutex"].lock)(
+            new JsHamcrest.SimpleMatcher(
+              describeTo:(d)->
+                d.append("mutex lock")
+              matches:(o)->
+                o.criticalSection()
+                try
+                  JsMockito.verify(dispatcher.trigger)("queueModified", JsHamcrest.Matchers.allOf(
+                    JsHamcrest.Matchers.hasMember("userId","RECIPIENT_1")
+                    JsHamcrest.Matchers.hasMember("gameId","GAME_ID")
+                  ))
+                  JsMockito.verify(dispatcher.trigger)("queueModified", JsHamcrest.Matchers.allOf(
+                    JsHamcrest.Matchers.hasMember("userId","RECIPIENT_2")
+                    JsHamcrest.Matchers.hasMember("gameId","GAME_ID")
+                  ))
+                  JsMockito.verify(dispatcher.trigger)("queueModified", JsHamcrest.Matchers.allOf(
+                    JsHamcrest.Matchers.hasMember("userId","RECIPIENT_3")
+                    JsHamcrest.Matchers.hasMember("gameId","GAME_ID")
+                  ))
+                  true
+                catch e
+                  false
+            )
           )
         )
       )

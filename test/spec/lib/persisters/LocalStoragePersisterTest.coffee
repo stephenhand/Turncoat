@@ -139,6 +139,7 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
     origSet = Storage.prototype.setItem
     origRemove = Storage.prototype.removeItem
     origClear = Storage.prototype.clear
+    lps = null
 
     setup(()->
       mocks.jqueryObjects
@@ -162,8 +163,11 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
       data["current-games::mock_user"] = mockStoredGames
       data["mock_user::pending-games"] = mockInvites
     )
+    teardown(()->
+      if lps? then lps.stopListening()
+    )
     suite("constructor", ()->
-      test("noMarshallerSupplied_usesDefaultFromMarshallerFactory",()->
+      test("No marshaller supplied - Uses default from marshaller factory",()->
         lps = new LocalStoragePersister()
         chai.assert.equal(fakeBuiltMarshaller,lps.marshaller)
       )
@@ -172,7 +176,7 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
         lps = new LocalStoragePersister(m)
         chai.assert.equal(m,lps.marshaller)
       )
-      test("setsStorageEventHandler",()->
+      test("Sets StorageEventHandler",()->
         new LocalStoragePersister()
         JsMockito.verify(mocks.jqueryObjects.getSelectorResult(window).on("storage", JsHamcrest.Matchers.func()))
       )
@@ -552,7 +556,7 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
             JSON.stringify(a)
         )
       )
-      test("noParameters_throws", ()->
+      test("No parameters - throws", ()->
         lps=new LocalStoragePersister()
         chai.assert.throws(()->
           lps.saveGameState()
@@ -573,102 +577,116 @@ define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"]
         )
 
       )
-      test("validUserAndValidState_storesGameAtCorrectLocation", ()->
-        lps=new LocalStoragePersister()
-        state =new Backbone.Model(
-          id:"MOCK_SAVED_ID"
-          players:new Backbone.Collection()
+      suite("Valid user and valid state", ()->
+        state = null
+        setup(()->
+          lps=new LocalStoragePersister()
+          lps.trigger = JsMockito.mockFunction()
+          state =new Backbone.Model(
+            id:"MOCK_SAVED_ID"
+            label:"MOCK GAME TO SAVE"
+            _type:"MOCK_TYPE"
+            players:new Backbone.Collection()
+          )
+          state.getHeaderForUser = JsMockito.mockFunction()
+          JsMockito.when(state.getHeaderForUser)(JsHamcrest.Matchers.anything()).then((usr)->HEADER_FOR:usr+"::"+state.get("id"))
+          state.toString=()->
+            JSON.stringify(@)
         )
-        state.getHeaderForUser = JsMockito.mockFunction()
-        JsMockito.when(state.getHeaderForUser)(JsHamcrest.Matchers.anything()).then(()->HEADER_FOR:state.get("id"))
-        state.toString=()->
-          JSON.stringify(@)
-        lps.saveGameState("mock_user",state)
-        game=JSON.parse(window.localStorage.getItem("current-games::mock_user::MOCK_SAVED_ID"))
-        chai.assert.equal(game.id, "MOCK_SAVED_ID")
-      )
-
-      test("validUserAndValidState_addsGameHeaderCalledWithSuppliedUserToPlayerList", ()->
-        lps=new LocalStoragePersister()
-        state =new Backbone.Model(
-          id:"MOCK_SAVED_ID"
-          label:"MOCK GAME TO SAVE"
-          _type:"MOCK_TYPE"
-          players:new Backbone.Collection()
+        test("Stores game at correct location", ()->
+          lps.saveGameState("mock_user",state)
+          game=JSON.parse(window.localStorage.getItem("current-games::mock_user::MOCK_SAVED_ID"))
+          chai.assert.equal(game.id, "MOCK_SAVED_ID")
         )
-        state.getHeaderForUser = JsMockito.mockFunction()
-        JsMockito.when(state.getHeaderForUser)(JsHamcrest.Matchers.anything()).then((usr)->HEADER_FOR:usr+"::"+state.get("id"))
-        state.toString=()->
-          JSON.stringify(@)
 
-        lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
-        chai.assert(_.find(
-          games,
-          (game)->
-            game.HEADER_FOR is "mock_user::MOCK_SAVED_ID"
+        test("Adds GameHeader called with supplied user to player list", ()->
+
+          lps.saveGameState("mock_user",state)
+          games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
+          chai.assert(_.find(
+            games,
+            (game)->
+              game.HEADER_FOR is "mock_user::MOCK_SAVED_ID"
+            )
           )
         )
-      )
-      test("validUserAndValidState_leavesOtherGamesInList", ()->
-        lps=new LocalStoragePersister()
-        state =new Backbone.Model(
-          id:"MOCK_SAVED_ID"
-          label:"MOCK GAME TO SAVE"
-          _type:"MOCK_TYPE"
-          players:new Backbone.Collection()
-        )
-        state.getHeaderForUser = JsMockito.mockFunction()
-        JsMockito.when(state.getHeaderForUser)(JsHamcrest.Matchers.anything()).then(()->HEADER_FOR:state.get("id"))
-        state.toString=()->
-          JSON.stringify(@)
-
-        lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
-        chai.assert(_.find(
-          games,
-          (game)->
-            (game.id is "MOCK_ID1") &&
-            (game.label is "MOCK_GAME1")
+        test("Leaves other games in iist", ()->
+          lps.saveGameState("mock_user",state)
+          games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
+          chai.assert(_.find(
+            games,
+            (game)->
+              (game.id is "MOCK_ID1") &&
+              (game.label is "MOCK_GAME1")
+            )
           )
-        )
-        chai.assert(_.find(
-          games,
+          chai.assert(_.find(
+            games,
           (game)->
             (game.id is "MOCK_ID2") &&
             (game.label is "MOCK_GAME2")
           )
-        )
-        chai.assert(_.find(
-          games,
-          (game)->
-            (game.id is "MOCK_ID3") &&
-            (game.label is "MOCK_GAME3")
+          )
+          chai.assert(_.find(
+            games,
+            (game)->
+              (game.id is "MOCK_ID3") &&
+              (game.label is "MOCK_GAME3")
+            )
           )
         )
-      )
-      test("validUserAndValidState_triggersGameListUpdatedEvent", ()->
-        lps=new LocalStoragePersister()
-        lps.trigger = JsMockito.mockFunction()
-        state =new Backbone.Model(
-          id:"MOCK_SAVED_ID"
-          label:"MOCK GAME TO SAVE"
-          _type:"MOCK_TYPE"
-          players:new Backbone.Collection()
+        test("Triggers GameListUpdated Event", ()->
+
+          lps.saveGameState("mock_user",state)
+          games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
+          JsMockito.verify(lps.trigger)(
+            "gameListUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(gl)->
+                gl.userId is "mock_user"
+
+            )
+          )
         )
-        state.getHeaderForUser = JsMockito.mockFunction()
-        JsMockito.when(state.getHeaderForUser)(JsHamcrest.Matchers.anything()).then((usr)->HEADER_FOR:usr+"::"+state.get("id"))
-        state.toString=()->
-          JSON.stringify(@)
+        test("Triggers GameListUpdated event on other persisters", ()->
+          otherlps=new LocalStoragePersister()
+          otherlps.trigger = JsMockito.mockFunction()
+          lps.saveGameState("mock_user",state)
+          games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
+          JsMockito.verify(otherlps.trigger)(
+            "gameListUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(gl)->
+                gl.userId is "mock_user"
 
-        lps.saveGameState("mock_user",state)
-        games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
-        JsMockito.verify(lps.trigger)(
-          "gameListUpdated",
-          new JsHamcrest.SimpleMatcher(
-            matches:(gl)->
-              gl.userId is "mock_user"
+            )
+          )
+        )
+        test("Triggers GameUpdated Event", ()->
 
+          lps.saveGameState("mock_user",state)
+          games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
+          JsMockito.verify(lps.trigger)(
+            "gameUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(g)->
+                g.userId is "mock_user" and g.gameId is "MOCK_SAVED_ID" and g.game?
+
+            )
+          )
+        )
+        test("Triggers GameUpdated event on other persisters", ()->
+          otherlps=new LocalStoragePersister()
+          otherlps.trigger = JsMockito.mockFunction()
+          lps.saveGameState("mock_user",state)
+          games=JSON.parse(window.localStorage.getItem("current-games::mock_user"))
+          JsMockito.verify(otherlps.trigger)(
+            "gameUpdated",
+            new JsHamcrest.SimpleMatcher(
+              matches:(g)->
+                g.userId is "mock_user" and g.gameId is "MOCK_SAVED_ID" and g.game?
+
+            )
           )
         )
       )

@@ -14,6 +14,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       {}
     )
   )
+
+  Isolate.mapAsFactory("lib/backboneTools/ModelProcessor", "lib/turncoat/Game", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      {}
+    )
+  )
 )
 define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants)->
   m = JsHamcrest.Matchers
@@ -35,6 +41,8 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         off:jm.mockFunction()
       persister =
         saveGameState:jm.mockFunction()
+        stopListening:jm.mockFunction()
+        on:jm.mockFunction()
       mocks["lib/turncoat/Factory"].buildTransport = jm.mockFunction()
       jm.when(mocks["lib/turncoat/Factory"].buildTransport)(m.anything()).then((opts)->
         transport
@@ -43,6 +51,8 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
       jm.when(mocks["lib/turncoat/Factory"].buildPersister)().then((opts)->
         persister
       )
+      mocks["lib/backboneTools/ModelProcessor"].deepUpdate = jm.mockFunction()
+
     )
     suite("initialize", ()->
       test("Calls super initialize with same parameters", ()->
@@ -54,21 +64,17 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         jm.verify(GSMConstructor.prototype.initialize)(att, opt)
         GSMConstructor.prototype.initialize = origGSMInit
       )
-      test("Builds transport using game Id", ()->
+      test("Doesnt build transport before activation", ()->
         new Game(
           id:"A GAME ID"
         ,{})
-        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(
-          m.allOf(
-            m.hasMember("gameId","A GAME ID")
-          )
-        )
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport, v.never())(m.anything())
       )
-      test("Builds persister", ()->
+      test("Doesnt build persister before activation", ()->
         new Game(
           id:"A GAME ID"
         ,{})
-        jm.verify(mocks["lib/turncoat/Factory"].buildPersister)()
+        jm.verify(mocks["lib/turncoat/Factory"].buildPersister, v.never())()
       )
     )
 
@@ -86,9 +92,18 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           game.activate()
         )
       )
-      test("Sets transport's userId to  supplied parameter", ()->
+      test("Builds transport with game id and supplied owner id", ()->
         game.activate("A USER ID")
-        a.equal(transport.userId, "A USER ID")
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(
+          m.allOf(
+            m.hasMember("gameId","A GAME ID")
+            m.hasMember("userId","A USER ID")
+          )
+        )
+      )
+      test("Builds persister", ()->
+        game.activate("A USER ID")
+        jm.verify(mocks["lib/turncoat/Factory"].buildPersister)()
       )
       test("Calls transport's 'startListening'", ()->
         game.activate("A USER ID")
@@ -110,7 +125,8 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         game.activate("A USER ID")
         game.activate("ANOTHER USER ID")
         jm.verify(transport.startListening, v.once())()
-        a.equal(transport.userId, "A USER ID")
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(m.hasMember("userId","A USER ID"))
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport, v.never())(m.hasMember("userId","ANOTHER USER ID"))
       )
       suite("eventReceived handler", ()->
         handler = null
@@ -184,7 +200,79 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           )
         )
       )
+
+      test("Listens to persister's 'gameUpdated' handler", ()->
+        game.listenTo = jm.mockFunction()
+        game.activate("A USER ID")
+        jm.verify(game.listenTo)(persister, "gameUpdated", m.func())
+      )
+      suite("gameUpdated handler", ()->
+        handler = null
+        event = null
+        setup(()->
+          game.listenTo = jm.mockFunction()
+          jm.when(game.listenTo)(persister, "gameUpdated", m.func()).then((t, e, f)=>
+            handler = f
+          )
+          game.activate("A USER ID")
+          game.logEvent = jm.mockFunction()
+          event = new Backbone.Model()
+        )
+        test("Event userId not set - does nothing", ()->
+          handler.call(game,
+            gameId:"A GAME ID"
+            game:{}
+          )
+          jm.verify(mocks["lib/backboneTools/ModelProcessor"].deepUpdate, v.never())(m.anything(), m.anything())
+        )
+        test("Event userId not owner id - does nothing", ()->
+          handler.call(game,
+            gameId:"A GAME ID"
+            userId:"ANOTHER USER ID"
+            game:{}
+          )
+          jm.verify(mocks["lib/backboneTools/ModelProcessor"].deepUpdate, v.never())(m.anything(), m.anything())
+        )
+        test("Event gameId not set - does nothing", ()->
+          handler.call(game,
+            userId:"A USER ID"
+            game:{}
+          )
+          jm.verify(mocks["lib/backboneTools/ModelProcessor"].deepUpdate, v.never())(m.anything(), m.anything())
+        )
+        test("Event gameId not game id - does nothing", ()->
+          handler.call(game,
+            gameId:"ANOTHER GAME ID"
+            userId:"A USER ID"
+            game:{}
+          )
+          jm.verify(mocks["lib/backboneTools/ModelProcessor"].deepUpdate, v.never())(m.anything(), m.anything())
+        )
+        test("Game not set - throws", ()->
+          a.throws(()->
+            handler.call(game,
+              gameId:"A GAME ID"
+              userId:"A USER ID"
+            )
+          )
+        )
+        test("Event gameId matches game id, Event userId matches owner id and event game set - deepUpdates game with event", ()->
+          g = {}
+          handler.call(game,
+            gameId:"A GAME ID"
+            userId:"A USER ID"
+            game:g
+          )
+
+          jm.verify(mocks["lib/backboneTools/ModelProcessor"].deepUpdate)(game, g)
+        )
+      )
       suite("deactivate", ()->
+        test("Calls persister's 'stopListening'", ()->
+          game.activate("A USER ID")
+          game.deactivate()
+          jm.verify(persister.stopListening)()
+        )
         test("Calls transport's 'stopListening'", ()->
           game.activate("A USER ID")
           game.deactivate()
@@ -254,7 +342,7 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         game.deactivate()
         game.activate("ANOTHER USER ID")
         game.deactivate()
-        a.equal(transport.userId, "ANOTHER USER ID")
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(m.hasMember("userId","ANOTHER USER ID"))
 
       )
     )
@@ -264,8 +352,6 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
       setup(()->
         game = new Game(
           id:"A GAME ID"
-        ,
-          userId:"A USER ID"
         )
         game.set("users",new Backbone.Collection([
             id:"MOCK_USER"
@@ -279,72 +365,83 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         jm.when(game.generateEvent)(m.anything(), m.anything()).then((ev, data)->
           event
         )
-      )
-      test("User currently has no status - Generates USERSTATUSCHANGED event using userId and status", ()->
-        game.updateUserStatus("MOCK_USER", "TEST STATUS")
-        jm.verify(game.generateEvent)(
-          Constants.LogEvents.USERSTATUSCHANGED,
-          m.hasMember("attributes"
-            m.allOf(
-              m.hasMember("userId","MOCK_USER"),
-              m.hasMember("status","TEST STATUS")
-            )
-          )
 
+      )
+      test("Game not activated - throws", ()->
+        a.throws(()->
+          game.updateUserStatus("MOCK_USER", "TEST STATUS")
         )
       )
-      suite("User currently has other status", ()->
+      suite("Game activated", ()->
         setup(()->
-          game.get("users").get("MOCK_USER").set("status", "SOMETHING ELSE")
+          game.activate("A USER ID")
         )
-        test("Generates event with status and user id.",()->
+        test("User currently has no status - Generates USERSTATUSCHANGED event using userId and status", ()->
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(game.generateEvent)(m.string(), m.hasMember("attributes", m.allOf(m.hasMember("userId","MOCK_USER"),m.hasMember("status", "TEST STATUS"))))
-        )
-        test("Broadcasts event via transport", ()->
-          game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastGameEvent)(m.anything(), event)
-        )
-        test("Broadcasts with all users including the current one as recipients", ()->
-          game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastGameEvent)(m.hasItems("MOCK_USER","OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
-        )
-        test("Current user is only user - still broadcast.", ()->
-          g = new Backbone.Model(
-            users:new Backbone.Collection([
-              id:"MOCK_USER"
-            ])
+          jm.verify(game.generateEvent)(
+            Constants.LogEvents.USERSTATUSCHANGED,
+            m.hasMember("attributes"
+              m.allOf(
+                m.hasMember("userId","MOCK_USER"),
+                m.hasMember("status","TEST STATUS")
+              )
+            )
+
           )
-          game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastGameEvent)(m.hasItems("MOCK_USER"), m.anything())
         )
-        test("Users have CREATED status are omitted,", ()->
-          game.get("users").get("OTHER_CHALLENGED_USER").set("status", Constants.CREATED_STATE)
-          game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastGameEvent)(m.allOf(m.not(m.hasItem("OTHER_CHALLENGED_USER")),m.hasItems("MOCK_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
+        suite("User currently has other status", ()->
+          setup(()->
+            game.get("users").get("MOCK_USER").set("status", "SOMETHING ELSE")
+          )
+          test("Generates event with status and user id.",()->
+            game.updateUserStatus("MOCK_USER", "TEST STATUS")
+            jm.verify(game.generateEvent)(m.string(), m.hasMember("attributes", m.allOf(m.hasMember("userId","MOCK_USER"),m.hasMember("status", "TEST STATUS"))))
+          )
+          test("Broadcasts event via transport", ()->
+            game.updateUserStatus("MOCK_USER", "TEST STATUS")
+            jm.verify(transport.broadcastGameEvent)(m.anything(), event)
+          )
+          test("Broadcasts with all users including the current one as recipients", ()->
+            game.updateUserStatus("MOCK_USER", "TEST STATUS")
+            jm.verify(transport.broadcastGameEvent)(m.hasItems("MOCK_USER","OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER"), m.anything())
+          )
+          test("Current user is only user - still broadcast.", ()->
+            g = new Backbone.Model(
+              users:new Backbone.Collection([
+                id:"MOCK_USER"
+              ])
+            )
+            game.updateUserStatus("MOCK_USER", "TEST STATUS")
+            jm.verify(transport.broadcastGameEvent)(m.hasItems("MOCK_USER"), m.anything())
+          )
+          test("Users have CREATED status are omitted,", ()->
+            game.get("users").get("OTHER_CHALLENGED_USER").set("status", Constants.CREATED_STATE)
+            game.updateUserStatus("MOCK_USER", "TEST STATUS")
+            jm.verify(transport.broadcastGameEvent)(m.allOf(m.not(m.hasItem("OTHER_CHALLENGED_USER")),m.hasItems("MOCK_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
+          )
+          test("User whose status is updated set to CREATED - doesnt broadcast to self, but does to other users without CREATED status", ()->
+            game.get("users").get("MOCK_USER").set("status", Constants.CREATED_STATE)
+            game.updateUserStatus("MOCK_USER", "TEST STATUS")
+            jm.verify(transport.broadcastGameEvent)(m.allOf(m.not(m.hasItem("MOCK_USER")),m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
+          )
         )
-        test("User whose status is updated set to CREATED - doesnt broadcast to self, but does to other users without CREATED status", ()->
-          game.get("users").get("MOCK_USER").set("status", Constants.CREATED_STATE)
+        test("Game has no users - does nothing",()->
+          game.unset("users")
           game.updateUserStatus("MOCK_USER", "TEST STATUS")
-          jm.verify(transport.broadcastGameEvent)(m.allOf(m.not(m.hasItem("MOCK_USER")),m.hasItems("OTHER_CHALLENGED_USER","OTHER_OTHER_CHALLENGED_USER")), m.anything())
+          jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything(), m.anything())
+
         )
-      )
-      test("Game has no users - does nothing",()->
-        game.unset("users")
-        game.updateUserStatus("MOCK_USER", "TEST STATUS")
-        jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything(), m.anything())
+        test("Specified user ID isnt part of game - does nothing",()->
+          game.updateUserStatus("NOT_MOCK_USER", "TEST STATUS")
+          jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything(), m.anything())
 
-      )
-      test("Specified user ID isnt part of game - does nothing",()->
-        game.updateUserStatus("NOT_MOCK_USER", "TEST STATUS")
-        jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything(), m.anything())
+        )
+        test("User currently has same status - does nothing",()->
+          game.get("users").get("MOCK_USER").set("status", "TEST STATUS")
+          game.updateUserStatus("MOCK_USER", "TEST STATUS")
+          jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything())
 
-      )
-      test("User currently has same status - does nothing",()->
-        game.get("users").get("MOCK_USER").set("status", "TEST STATUS")
-        game.updateUserStatus("MOCK_USER", "TEST STATUS")
-        jm.verify(transport.broadcastGameEvent, v.never())(m.anything(), m.anything())
-
+        )
       )
     )
   )

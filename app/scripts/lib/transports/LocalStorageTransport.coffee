@@ -62,6 +62,10 @@ define(["underscore", "backbone", "jquery","uuid", "lib/concurrency/Mutex", "lib
             queue = transport.marshaller.unmarshalModel(json)
             queue.push(id:id)
             window.localStorage.setItem(MESSAGE_QUEUE+"::"+destination, transport.marshaller.marshalModel(queue))
+            destParts =  destination.split("::")
+            transportEventDispatcher.trigger("queueModified",
+              userId:destParts[0]
+              gameId:destParts[1])
           success:()->
         )
 
