@@ -46,6 +46,7 @@ define(["underscore", "backbone", "moment", "uuid", "lib/turncoat/Constants", "l
           persister.saveGameState(@get("id"), game)
           game.activate(@get("id"))
           game.updateUserStatus(@get("id"), Constants.CHALLENGED_STATE)
+          game.deactivate()
         )
 
         @deactivate = ()->

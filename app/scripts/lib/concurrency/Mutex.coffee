@@ -28,9 +28,9 @@ define(["uuid"], (UUID)->
   getter = (lskey) ->
     ()->
       value = localStorage[lskey]
-      return null  unless value
+      return null unless value
       splitted = value.split(/\|/)
-      return null  if parseInt(splitted[1]) < now()
+      return null if parseInt(splitted[1]) < now()
       splitted[0]
 
   _mutexTransaction = (key, callback, synchronous) ->
@@ -69,6 +69,7 @@ define(["uuid"], (UUID)->
 
   lockImpl = (key, callback, maxDuration, synchronous) ->
     unhandledError = null
+    keyParam = key
     if key.key?
       callback = key.criticalSection
       maxDuration = key.maxDuration
@@ -78,7 +79,7 @@ define(["uuid"], (UUID)->
 
     restart = ()->
       setTimeout (()->
-        lockImpl key, callback, maxDuration
+        lockImpl keyParam, callback, maxDuration
       ), 10
 
     mutexAquired = ()->
@@ -94,7 +95,8 @@ define(["uuid"], (UUID)->
         )
         if unhandledError?
           if error? then error(unhandledError)
-        else if success then success()
+        else
+          if success then success()
 
     maxDuration = maxDuration or 5000
     mutexKey = key + "__MUTEX"

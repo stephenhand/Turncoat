@@ -2,6 +2,7 @@
     "defaultMarshaller": "JSONMarshaller",
     "defaultPersister":"LocalStoragePersister",
     "defaultTransport":"LocalStorageTransport",
+    "logLevel":"TRACE",
     "gameTypes":[
         {
             "id":"local",

@@ -20,6 +20,7 @@ require.config({
         hm: 'vendor/hm',
         esprima: 'vendor/esprima',
         jquery: 'vendor/jquery.min',
+
         jqModal: 'vendor/jqModal',
         underscore: 'vendor/underscore',
         backbone: 'vendor/backbone',
@@ -28,6 +29,7 @@ require.config({
         moment:'vendor/moment',
         templates:'../templates',
         data:'../data',
+        log4JavaScript: 'vendor/log4JavaScript_uncompressed',
         sprintf: 'vendor/sprintf',
         setTimeout: 'lib/nativeShims/setTimeout',
         setInterval : 'lib/nativeShims/setInterval'
@@ -57,6 +59,9 @@ require.config({
         },
         'jsMockito':{
             exports:'JsMockito'
+        },
+        'log4JavaScript':{
+            exports:"log4javascript"
         }
     }
 });
@@ -68,11 +73,11 @@ require(['jquery','backbone'], function($,Backbone){
 );
 require(["isolate","configureIsolate"], function(Isolate){
     window.isolate = Isolate;
-    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jqModal','component/BaseView',/text!.+/,/spec\/.*/])
+    isolate.passthru(['bootstrap','configureIsolate','underscore','backbone','jqModal','vendor/log4javascript_uncompressed','component/BaseView',/text!.+/,/spec\/.*/])
 });
 
 
-require(['spec/AppHostTest',
+require(['vendor/log4javascript_uncompressed','spec/AppHostTest',
     'spec/AppStateTest',
     'spec/UI/RivetsExtensionsTest',
     'spec/UI/rivets/binders/FeedItemTest',
@@ -104,6 +109,7 @@ require(['spec/AppHostTest',
     'spec/lib/turncoat/GameHeaderTest',
     'spec/lib/turncoat/GameTest',
     'spec/lib/turncoat/UserTest',
+    'spec/lib/logging/LoggerFactoryTest',
     'spec/lib/marshallers/JSONMarshallerTest',
     'spec/lib/persisters/LocalStoragePersisterTest',
     'spec/lib/transports/LocalStorageTransportTest'], function(){

@@ -15,6 +15,7 @@ require.config({
     moment:'vendor/moment',
     templates : '../templates',
     data : '../data',
+    log4JavaScript: 'vendor/log4javascript_uncompressed',
     setTimeout : 'lib/nativeShims/setTimeout',
     setInterval : 'lib/nativeShims/setInterval',
     SharedWorker : 'lib/nativeShims/SharedWorker'
@@ -38,16 +39,21 @@ require.config({
       },
       'setTimeout':{
           exports:"setTimeout"
+      },
+      'log4JavaScript':{
+          exports:"log4javascript"
       }
   }
 
 });
-require(['lib/turncoat/Factory',
-         'lib/marshallers/JSONMarshaller',
+require([
+    'log4JavaScript',
+    'lib/turncoat/Factory',
+    'lib/marshallers/JSONMarshaller',
     'lib/persisters/LocalStoragePersister',
     'lib/transports/LocalStorageTransport',
-         'text!data/config.txt'
-], function(Factory, jsonMarshaller, persister, transport, configText){
+    'text!data/config.txt'
+], function(log4JavaScript, Factory, jsonMarshaller, persister, transport, configText){
   config = JSON.parse(configText)
   Factory.setDefaultMarshaller(config.defaultMarshaller);
   Factory.setDefaultPersister(config.defaultPersister);

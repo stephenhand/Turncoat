@@ -327,19 +327,34 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
           game =
             updateUserStatus:()->
             activate:()->
+            deactivate:()->
         )
         test("Saves challenge to persister", ()->
-
           handler(game)
           jm.verify(persister.saveGameState)("MOCK_USER",game)
         )
-        test("Calls updateUserStatus on game to set challenged player status to 'challenged'",()->
-
+        test("Activates saved game with this user's id after saving", ()->
           jm.when(persister.saveGameState)("MOCK_USER",game).then(()->
+            game.activate = jm.mockFunction()
+          )
+          handler(game)
+          jm.verify(game.activate)("MOCK_USER")
+        )
+        test("Calls updateUserStatus on game to set challenged player status to 'challenged' after activation",()->
+          game.activate = jm.mockFunction()
+          jm.when(game.activate)("MOCK_USER").then(()->
             game.updateUserStatus = jm.mockFunction()
           )
           handler(game)
           jm.verify(game.updateUserStatus)("MOCK_USER",Constants.CHALLENGED_STATE)
+        )
+        test("Deactivates saved game after updating status", ()->
+          game.updateUserStatus = jm.mockFunction()
+          jm.when(game.updateUserStatus)("MOCK_USER",Constants.CHALLENGED_STATE).then(()->
+            game.deactivate = jm.mockFunction()
+          )
+          handler(game)
+          jm.verify(game.deactivate)()
         )
       )
       suite("gameListUpdated Handler", ()->

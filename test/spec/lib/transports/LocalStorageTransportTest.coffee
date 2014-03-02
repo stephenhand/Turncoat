@@ -2,6 +2,15 @@ fakeBuiltMarshaller = {}
 dispatcher = null
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
+  Isolate.mapAsFactory("lib/logging/LoggerFactory", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      l=
+        getLogger:()->
+          trace:()->
+
+      l
+    )
+  )
   Isolate.mapAsFactory("lib/concurrency/Mutex", "lib/transports/LocalStorageTransport", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       m=
