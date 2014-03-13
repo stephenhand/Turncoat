@@ -1,67 +1,23 @@
 
 
-define(["setTimeout", "underscore", "backbone", "lib/turncoat/Constants", "lib/turncoat/Game", "lib/turncoat/User", "UI/component/ObservingViewModelItem", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, Constants, Game, User, ObservingViewModelItem, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
-  GetStatusText = (userStatus)->
-    switch userStatus
-      when Constants.READY_STATE
-        "Waiting on other players to respond to the challenge."
-      when Constants.CHALLENGED_STATE
-        "A challenge awaiting your response."
+define(["underscore", "backbone", "lib/turncoat/Constants", "lib/turncoat/Game", "lib/turncoat/User", "UI/component/ObservingViewModelItem", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "UI/widgets/GameListViewModel", "AppState"], (_, Backbone, Constants, Game, User, ObservingViewModelItem, ObservingViewModelCollection, ObservableOrderCollection, GameListViewModel, AppState)->
+
 
   ReviewChallengesViewModel = Backbone.Model.extend(
     initialize:()->
-      @set("challenges", new ObservingViewModelCollection())
+      @set("challenges", new GameListViewModel())
       @set("challengePlayerList", new ObservingViewModelCollection())
-      _.extend(@get("challenges"), ObservableOrderCollection)
-      @get("challenges").setOrderAttribute("ordinal")
-      @get("challenges").comparator=(a, b)->
-        switch
-          when !a.get("created")?.unix? && !b.get("created")?.unix? then 0
-          when !a.get("created")?.unix? then 1
-          when !b.get("created")?.unix? then -1
-          when a.get("created").unix() > b.get("created").unix() then -1
-          when a.get("created").unix() < b.get("created").unix() then 1
-          else 0
 
-      @get("challenges").watch([AppState.get("currentUser").get("games")])
-      @listenTo(AppState, "change::currentUser", ()->
-        @get("challenges").unwatch()
-        @get("challenges").watch([AppState.get("currentUser").get("games")])
-      ,@)
-      @get("challenges").onSourceUpdated=()->
-        @updateFromWatchedCollections(
-          (item, watched)->
-            item.get("id")? and (item.get("id") is watched.get("id"))
-        ,
-          (input)->
-            newItem = new Backbone.Model(
-              created:input.get("created")
-              createdText:input.get("created")?.format?('MMMM Do YYYY, h:mm:ss a') ? "--"
-              id:input.get("id")
-              label:input.get("label")
-              statusText: GetStatusText(input.get("userStatus"))
-              new:true
-            )
-            setTimeout(()->
-              newItem.unset("new")
-            )
-            newItem
-        ,
-          (item)->
-            item.get("userStatus")? && item.get("userStatus") isnt Constants.PLAYING_STATE
-        )
-
-      @get("challenges").onSourceUpdated()
       @get("tab")?.on("change:active", (model)=>
-        if !model.get("active") then @selectChallenge()
+        if !model.get("active") then @get("challenges").selectGame()
       )
-      @on("change:selectedChallengeId", ()=>
+      @get("challenges").on("selectedChallengeChanged", (id)=>
         challengePlayers = @get("challengePlayerList")
         if @get("selectedChallenge")?.get("users")?
           challengePlayers.stopListening(@get("selectedChallenge").get("users"))
         challengePlayers.unwatch(true)
-        if @get("selectedChallengeId")?
-          @set("selectedChallenge",AppState.loadGame(@get("selectedChallengeId")))
+        if id?
+          @set("selectedChallenge",AppState.loadGame(id))
           selectedChallenge = @get("selectedChallenge")
           if selectedChallenge?
             challengePlayers.watch([selectedChallenge.get("players")])
@@ -154,15 +110,8 @@ define(["setTimeout", "underscore", "backbone", "lib/turncoat/Constants", "lib/t
         else
           @unset("selectedChallenge")
       )
-
-    selectChallenge:(id)->
-      for challenge in @get("challenges").models
-        if challenge.get("id") is id
-          @set("selectedChallengeId", id)
-          challenge.set("selected", true)
-        else
-          challenge.unset("selected")
-      if @get("selectedChallengeId") isnt id then @unset("selectedChallengeId")
+    selectChallenge:(gameId)->
+      @get("challenges").selectGame(gameId)
 
     issueChallenge:(id)->
       if (!id?) then throw new Error("Cannot send challenge, user identifier missing.")

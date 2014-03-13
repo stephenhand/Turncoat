@@ -22,6 +22,13 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     )
 
   )
+  Isolate.mapAsFactory("UI/administration/CurrentGamesView","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ()->
+        render:JsMockito.mockFunction()
+        setTab:JsMockito.mockFunction()
+    )
+  )
   Isolate.mapAsFactory("UI/administration/CreateGameView","UI/administration/AdministrationDialogueView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ()->
@@ -59,6 +66,8 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
               new Backbone.Collection([
                 name:"createGame"
               ,
+                name:"currentGames"
+              ,
                 name:"reviewChallenges"
               ])
         )
@@ -78,12 +87,38 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
               new Backbone.Collection([
                 name:"not createGame"
               ,
+                name:"currentGames"
+              ,
                 name:"reviewChallenges"
               ])
         )
         adv=new AdministrationDialogueView()
         adv.render()
         JsMockito.verify(adv.subViews.get("createGameView").setTab)(JsHamcrest.Matchers.nil())
+      )
+      test("modelHasCurrentGamesTab_setsTabOnCurrentGamesTabView", ()->
+        adv=new AdministrationDialogueView()
+        adv.render()
+        JsMockito.verify(adv.subViews.get("currentGamesView").setTab)(new JsHamcrest.SimpleMatcher(
+          matches:(t)=>
+            adv.model.get("tabs").at(0)
+        ))
+      )
+      test("modelHasNoCurrentGamesTab_unsetsTabOnCurrentGamesTabView", ()->
+        JsMockito.when(advModel.get)(JsHamcrest.Matchers.anything()).then(
+          (key)->
+            if key is "tabs"
+              new Backbone.Collection([
+                name:"createGame"
+              ,
+                name:"not currentGames"
+              ,
+                name:"reviewChallenges"
+              ])
+        )
+        adv=new AdministrationDialogueView()
+        adv.render()
+        JsMockito.verify(adv.subViews.get("currentGamesView").setTab)(JsHamcrest.Matchers.nil())
       )
       test("modelHasReviewChallengesTab_setsTabOnReviewChallengesTabView", ()->
         adv=new AdministrationDialogueView()
@@ -100,6 +135,8 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
               new Backbone.Collection([
                 name:"createGame"
               ,
+                name:"currentGames"
+              ,
                 name:"not reviewChallenges"
               ])
         )
@@ -111,6 +148,11 @@ define(['isolate!UI/administration/AdministrationDialogueView'], (Administration
         adv=new AdministrationDialogueView()
         adv.render()
         JsMockito.verify(adv.subViews.get("createGameView").render)()
+      )
+      test("rendersCurrentGamesTab", ()->
+        adv=new AdministrationDialogueView()
+        adv.render()
+        JsMockito.verify(adv.subViews.get("currentGamesView").render)()
       )
       test("rendersReviewChallengesTab", ()->
         adv=new AdministrationDialogueView()

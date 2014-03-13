@@ -1,5 +1,5 @@
-define(['underscore', 'backbone', "jquery", "UI/routing/Router", "UI/component/BaseView", "UI/administration/AdministrationDialogueViewModel", "UI/administration/CreateGameView", "UI/administration/ReviewChallengesView", "text!templates/AdministrationDialogue.html"],
-  (_, Backbone, $, Router, BaseView, AdministrationDialogueViewModel, CreateGameView,ReviewChallengesView, templateText)->
+define(['underscore', 'backbone', "jquery", "UI/routing/Router", "UI/component/BaseView", "UI/administration/AdministrationDialogueViewModel", "UI/administration/CreateGameView", "UI/administration/CurrentGamesView", "UI/administration/ReviewChallengesView", "text!templates/AdministrationDialogue.html"],
+  (_, Backbone, $, Router, BaseView, AdministrationDialogueViewModel, CreateGameView, CurrentGamesView, ReviewChallengesView, templateText)->
     class AdministrationDialogueView extends BaseView
       initialize:(options)->
         options ?={}
@@ -8,7 +8,7 @@ define(['underscore', 'backbone', "jquery", "UI/routing/Router", "UI/component/B
         super(options)
         @createCreateGameTabView()
         @createChallengesTabView()
-
+        @createCurrentGamesTabView()
       events:
         "click .tab-header" : "tabClicked"
 
@@ -33,12 +33,16 @@ define(['underscore', 'backbone', "jquery", "UI/routing/Router", "UI/component/B
       render:()->
         super()
         @subViews.get("createGameView").setTab(@model.get("tabs").findWhere(name:"createGame"))
+        @subViews.get("currentGamesView").setTab(@model.get("tabs").findWhere(name:"currentGames"))
         @subViews.get("reviewChallengesView").setTab(@model.get("tabs").findWhere(name:"reviewChallenges"))
         @subViews.get("createGameView").render()
+        @subViews.get("currentGamesView").render()
         @subViews.get("reviewChallengesView").render()
 
       createCreateGameTabView:()->
         @subViews.set("createGameView", new CreateGameView($("#createGame")))
+      createCurrentGamesTabView:()->
+        @subViews.set("currentGamesView", new CurrentGamesView($("#currentGames")))
 
       createChallengesTabView:()->
         @subViews.set("reviewChallengesView", new ReviewChallengesView($("#reviewChallenges")))

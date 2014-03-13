@@ -32,36 +32,45 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("UI/component/ObservingViewModelItem","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      mockObservingViewModelItem = (data)->
-        mockObservingViewModelItem.ovmiConstructor(data)
-      mockObservingViewModelItem.ovmiConstructor =  (data)->
-      mockObservingViewModelItem.set = (func)->
-        mockObservingViewModelItem.ovmiConstructor = func
-      mockObservingViewModelItem
+      Backbone.Model.extend(
+        initialize:()->
+          @watch=JsMockito.mockFunction()
+      )
     )
   )
+  Isolate.mapAsFactory("UI/widgets/GameListViewModel","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      Backbone.Collection.extend(
+        initialize:()->
+          @selectGame=JsMockito.mockFunction()
+      )
+    )
+  )
+
 )
 
-define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Constants"], (ReviewChallengesViewModel, Constants)->
-  mocks = window.mockLibrary['UI/administration/ReviewChallengesViewModel']
+define(["isolate!UI/administration/ReviewChallengesViewModel", "jsMockito", "jsHamcrest", "chai"], (ReviewChallengesViewModel, jm, h, c)->
+  mocks = window.mockLibrary["UI/administration/ReviewChallengesViewModel"]
+  m = h.Matchers
+  a = c.assert
+  v = jm.Verifiers
   suite("ReviewChallengesViewModel", ()->
     setup(()->
-      mocks["UI/component/ObservingViewModelItem"].set((data)->
-        mockConstructedOVMI = new Backbone.Model(data)
-        mockConstructedOVMI.watch = JsMockito.mockFunction()
-        mockConstructedOVMI.unwatch = JsMockito.mockFunction()
-        mockConstructedOVMI
-      )
+      mocks["UI/component/ObservingViewModelItem"].watch = jm.mockFunction()
+      mocks["UI/component/ObservingViewModelItem"].unwatch = jm.mockFunction()
+      mocks["UI/widgets/GameListViewModel"].prototype.selectChallenge = jm.mockFunction()
+      mocks["UI/widgets/GameListViewModel"].watch = jm.mockFunction()
+      mocks["UI/widgets/GameListViewModel"].unwatch = jm.mockFunction()
     )
     suite("initialize", ()->
       mockGameList = new Backbone.Collection([])
       setup(()->
-        mocks['AppState'].on = JsMockito.mockFunction()
-        mocks['AppState'].get = JsMockito.mockFunction()
-        mocks['AppState'].issueChallenge = JsMockito.mockFunction()
-        mocks['AppState'].acceptChallenge = JsMockito.mockFunction()
-        mocks["UI/component/ObservableOrderCollection"].setOrderAttribute = JsMockito.mockFunction()
-        JsMockito.when(mocks['AppState'].get)(JsHamcrest.Matchers.anything()).then(
+        mocks['AppState'].on = jm.mockFunction()
+        mocks['AppState'].get = jm.mockFunction()
+        mocks['AppState'].issueChallenge = jm.mockFunction()
+        mocks['AppState'].acceptChallenge = jm.mockFunction()
+        mocks["UI/component/ObservableOrderCollection"].setOrderAttribute = jm.mockFunction()
+        jm.when(mocks['AppState'].get)(m.anything()).then(
           (key)->
             switch key
               when "currentUser"
@@ -74,492 +83,52 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
       )
       test("creates empty challengePlayerList", ()->
         rcvm = new ReviewChallengesViewModel()
-        chai.assert.instanceOf(rcvm.get("challengePlayerList"), Backbone.Collection)
-        chai.assert.equal(rcvm.get("challengePlayerList").length, 0)
+        a.instanceOf(rcvm.get("challengePlayerList"), Backbone.Collection)
+        a.equal(rcvm.get("challengePlayerList").length, 0)
 
       )
 
       test("createsChallenges", ()->
         rcvm = new ReviewChallengesViewModel()
-        chai.assert.instanceOf(rcvm.get("challenges"), Backbone.Collection)
+        a.instanceOf(rcvm.get("challenges"), Backbone.Collection)
       )
 
-      test("setsUpObservableOrderingOnChallenges", ()->
-        rcvm = new ReviewChallengesViewModel()
-        JsMockito.verify(rcvm.get("challenges").setOrderAttribute)(JsHamcrest.Matchers.string())
+      test("Has Tab attribute - binds Tab ActiveChanged", ()->
+        rcvm = new ReviewChallengesViewModel(
+          tab:
+            on:jm.mockFunction()
+        )
+        jm.verify(rcvm.get("tab").on)("change:active", m.func())
       )
-      test("Challenges watches current user's games", ()->
-        rcvm = new ReviewChallengesViewModel()
-        JsMockito.verify(rcvm.get("challenges").watch)(JsHamcrest.Matchers.hasItem(mockGameList))
-      )
-      test("Listens to AppState for changes in current user",()->
-        new ReviewChallengesViewModel()
-        JsMockito.verify(mocks['AppState'].on)("change::currentUser", JsHamcrest.Matchers.func())
-      )
-      suite("AppState current user changed event handler", ()->
+      suite("tabActiveHandler", ()->
+        rcvm = null
+        mockGet = jm.mockFunction()
+        mockOn = jm.mockFunction()
         handler = null
-        currentUser = null
-        rcvm = null
         setup(()->
-          JsMockito.when(mocks['AppState'].on)("change::currentUser", JsHamcrest.Matchers.func()).then(
-            (n, h)->
-              handler = h
-          )
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").watch = JsMockito.mockFunction()
-
-        )
-        test("Challenges unwatches everything", ()->
-          handler.call(rcvm)
-          JsMockito.verify(rcvm.get("challenges").unwatch)()
-        )
-        test("Challenges watches current user's games", ()->
-          handler.call(rcvm)
-          JsMockito.verify(rcvm.get("challenges").watch)(JsHamcrest.Matchers.hasItem(mockGameList))
-        )
-      )
-      test("Sets Challenges OnSourceUpdated", ()->
-        rcvm = new ReviewChallengesViewModel()
-        chai.assert.isFunction(rcvm.get("challenges").onSourceUpdated)
-      )
-      test("Calls Challenges UpdateFromWatchedCollections", ()->
-        rcvm = new ReviewChallengesViewModel()
-        JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-          JsHamcrest.Matchers.anything(),
-          JsHamcrest.Matchers.anything(),
-          JsHamcrest.Matchers.anything()
-        )
-      )
-      suite("challenges sort", ()->
-        rcvm = null
-        setup(()->
-
-          rcvm = new ReviewChallengesViewModel()
-        )
-        test("Created as valid moments - descending order",()->
-          rcvm.get("challenges").add(
-            created:
-              unix:()->5
-          )
-          rcvm.get("challenges").add(
-            created:
-              unix:()->1
-          )
-          rcvm.get("challenges").add(
-            created:
-              unix:()->3
-          )
-          chai.assert.equal(rcvm.get("challenges").at(0).get("created").unix(), 5)
-          chai.assert.equal(rcvm.get("challenges").at(1).get("created").unix(), 3)
-          chai.assert.equal(rcvm.get("challenges").at(2).get("created").unix(), 1)
-        )
-        test("missingCreatedAndValidCreated_prioritisesValidMoments",()->
-          rcvm.get("challenges").add(
-            created:
-              unix:()->5
-          )
-          rcvm.get("challenges").add({})
-          rcvm.get("challenges").add(
-            created:
-              unix:()->1
-          )
-          chai.assert.equal(rcvm.get("challenges").at(0).get("created").unix(), 5)
-          chai.assert.equal(rcvm.get("challenges").at(1).get("created").unix(), 1)
-        )
-        test("invalidCreatedAndValidCreated_prioritisesValidMoments",()->
-          rcvm.get("challenges").add(created:"INVALID MOMENT")
-          rcvm.get("challenges").add(
-            created:
-              unix:()->2
-          )
-          rcvm.get("challenges").add(
-            created:
-              unix:()->6
-          )
-          chai.assert.equal(rcvm.get("challenges").at(0).get("created").unix(), 6)
-          chai.assert.equal(rcvm.get("challenges").at(1).get("created").unix(), 2)
-          chai.assert.equal(rcvm.get("challenges").at(2).get("created"), "INVALID MOMENT")
-        )
-      )
-      suite("onSourceUpdated", ()->
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutPLAYINGUserStatus", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.get("challenges").onSourceUpdated()
-          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-            JsHamcrest.Matchers.anything(),
-            JsHamcrest.Matchers.anything(),
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                !input(new Backbone.Model({userStatus:"PLAYING"}))
-            )
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutMissingUserStatus", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.get("challenges").onSourceUpdated()
-          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-            JsHamcrest.Matchers.anything(),
-            JsHamcrest.Matchers.anything(),
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                !input(new Backbone.Model({}))
-            )
-          )
-
-        )
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatRetainsOtherUserStatus", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.get("challenges").onSourceUpdated()
-          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-            JsHamcrest.Matchers.anything(),
-            JsHamcrest.Matchers.anything(),
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                input(new Backbone.Model({userStatus:"ANYTHING_ELSE"}))
-            )
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatThrowsIfNonModel", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.get("challenges").onSourceUpdated()
-          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-            JsHamcrest.Matchers.anything(),
-            JsHamcrest.Matchers.anything(),
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                try
-                  input({userStatus:"ANYTHING_ELSE"})
-                  false
-                catch ex
-                  true
-            )
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithMatcherThatMatchesSameId", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.get("challenges").onSourceUpdated()
-          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                input(
-                  get:(key)->
-                    if key is "id" then "MOCK_ID"
-                ,
-                  get:(key)->
-                    if key is "id" then "MOCK_ID"
-                )
-            ),
-            JsHamcrest.Matchers.anything(),
-            JsHamcrest.Matchers.anything()
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithMatcherThatDoesntMatchesDifferentId", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.get("challenges").onSourceUpdated()
-          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                !input(
-                  get:(key)->
-                    if key is "id" then "MOCK_ID"
-                ,
-                  get:(key)->
-                    if key is "id" then "OTHER_ID"
-                )
-            ),
-            JsHamcrest.Matchers.anything(),
-            JsHamcrest.Matchers.anything()
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithMatcherThatDoesntMatchesBothUndefinedId", ()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-          rcvm.get("challenges").onSourceUpdated()
-          JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-            new JsHamcrest.SimpleMatcher(
-              matches:(input)->
-                !input(
-                  get:(key)->
-                ,
-                  get:(key)->
-                )
-            ),
-            JsHamcrest.Matchers.anything(),
-            JsHamcrest.Matchers.anything()
-          )
-        )
-        suite("adder", ()->
-          setup(()->
-            mocks["setTimeout"].func = JsMockito.mockFunction()
-          )
-          test("CopiesId", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    getLatestEvent:(key)->
-                      get:()->
-                        format:()->
-                    get:(key)->
-                      if key is "id" then return "MOCK_ID"
-                  )
-                  "MOCK_ID" is ret.get("id")
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("SetsCreatedTextUsingCreatedMoment", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                      if key is "created"
-                        format:(pattern)->
-                          "STRING FROM MOMENT: "+pattern
-                  )
-                  "STRING FROM MOMENT" is ret.get("createdText").substr(0,18)
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("SetsCreatedAsCreatedMoment", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  moment = {}
-                  ret=input(
-                    get:(key)->
-                      if key is "created"
-                        moment
-                  )
-                  moment is ret.get("created")
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-
-          test("CreatedNotMoment_UsesPlaceholder", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:()->
-                      "NOT_MOMENT"
-                  )
-                  typeof ret.get("createdText") is "string"
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("CreatedUnavailable_UsesPlaceholder", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:()->
-                      undefined
-                  )
-                  typeof ret.get("createdText") is "string"
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("CopiesLabel", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    getLatestEvent:(key)->
-                      get:()->
-                        format:()->
-                    get:(key)->
-                      if key is "label" then return "MOCK_LABEL"
-                  )
-                  "MOCK_LABEL" is ret.get("label")
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("UserStatusCHALLENGED_SetsStatusText", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    getLatestEvent:(key)->
-                      get:()->
-                        format:()->
-                    get:(key)->
-                      if key is "userStatus" then return Constants.CHALLENGED_STATE
-                  )
-                  _.isString(ret.get("statusText"))
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("UserStatusREADY_SetsStatusText", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    getLatestEvent:(key)->
-                      get:()->
-                        format:()->
-                    get:(key)->
-                      if key is "userStatus" then return Constants.READY_STATE
-                  )
-                  _.isString(ret.get("statusText"))
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("SetsNewTrue", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    getLatestEvent:(key)->
-                      get:()->
-                        format:()->
-                    get:(key)->
-                  )
-                  ret.get("new") is true
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-          test("SetsTimeoutToUnsetNew", ()->
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.get("challenges").updateFromWatchedCollections=JsMockito.mockFunction()
-            rcvm.get("challenges").onSourceUpdated()
-            JsMockito.verify(rcvm.get("challenges").updateFromWatchedCollections)(
-              JsHamcrest.Matchers.anything(),
-              new JsHamcrest.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    getLatestEvent:(key)->
-                      get:()->
-                        format:()->
-                    get:(key)->
-                  )
-                  try
-                    JsMockito.verify(mocks["setTimeout"].func)(new JsHamcrest.SimpleMatcher(
-                      matches:(to)->
-                        to()
-                        !ret.get("new")?
-                    ))
-                    true
-                  catch e
-                    false
-
-              ),
-              JsHamcrest.Matchers.anything()
-            )
-          )
-        )
-        test("hasTabAttribute_bindsTabActiveChanged", ()->
+          jm.when(mockOn)("change:active", m.func()).then((e, h)->handler = h)
           rcvm = new ReviewChallengesViewModel(
             tab:
-              on:JsMockito.mockFunction()
-          )
-          JsMockito.verify(rcvm.get("tab").on)("change:active", JsHamcrest.Matchers.func())
-        )
-        suite("tabActiveHandler", ()->
-          rcvm = null
-          mockOn = JsMockito.mockFunction()
-          mockGet = JsMockito.mockFunction()
-          setup(()->
-          )
-          test("tabBecomesActive_DoesNothing", ()->
-            JsMockito.when(mockGet)("active").then(()->true)
-            rcvm = new ReviewChallengesViewModel(
-              tab:
-                on:mockOn
-                get:mockGet
-            )
-            rcvm.selectChallenge = JsMockito.mockFunction()
-            JsMockito.verify(mockOn)("change:active",new JsHamcrest.SimpleMatcher(
-              describeTo:()->"tab handler"
-              matches:(handler)->
-                handler(rcvm.get("tab"))
-                try
-                  JsMockito.verify(rcvm.selectChallenge, JsMockito.Verifiers.never())()
-                  true
-                catch e
-                  false
-            ))
-          )
-          test("tabBecomesInactive_UnselectsChallenge", ()->
-            JsMockito.when(mockGet)("active").then(()->false)
-            rcvm = new ReviewChallengesViewModel(
-              tab:
-                on:mockOn
-                get:mockGet
-            )
-            rcvm.selectChallenge = JsMockito.mockFunction()
-            JsMockito.verify(mockOn)("change:active",new JsHamcrest.SimpleMatcher(
-              describeTo:()->"tab handler"
-              matches:(handler)->
-                handler(rcvm.get("tab"))
-                try
-                  JsMockito.verify(rcvm.selectChallenge)()
-                  true
-                catch e
-                  false
-            ))
+              on:mockOn
+              get:mockGet
           )
         )
-        suite("change:selectedChallengeId Handler", ()->
+        test("Tab becomes active - does nothing", ()->
+          jm.when(mockGet)("active").then(()->true)
+          handler(rcvm.get("tab"))
+          jm.verify(rcvm.get("challenges").selectGame, v.never())()
+        )
+        test("Tab becomes inactive - unselects challenge", ()->
+          jm.when(mockGet)("active").then(()->false)
+          handler(rcvm.get("tab"))
+          jm.verify(rcvm.get("challenges").selectGame)()
+        )
+
+        suite("Challenges selectedChallengeChanged Handler", ()->
           rcvm = undefined
           setup(()->
-            mocks["AppState"].loadGame = JsMockito.mockFunction()
-            JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->
+            mocks["AppState"].loadGame = jm.mockFunction()
+            jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
               new Backbone.Model(
                 label:"GAME FROM ID: "+a
                 players:new Backbone.Collection([
@@ -582,80 +151,79 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                 ])
               )
             )
-
             rcvm = new ReviewChallengesViewModel()
-          )
-          test("Valid Identifier - Loads Game State Using Identifier", ()->
-            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-            JsMockito.verify(mocks["AppState"].loadGame)("AN IDENTIFIER")
-          )
-          test("validIdentifier_setsSelectedChallengeAttributeToResult", ()->
-            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-            chai.assert.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge").get("label"))
-          )
-          test("validIdentifier_unsetsSelectedChallengeAttributeIfResultUndefined", ()->
-            JsMockito.when(mocks["AppState"].loadGame)(JsHamcrest.Matchers.anything()).then((a)->)
             rcvm.set("selectedChallenge", get:()->)
-            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-            chai.assert.isUndefined(rcvm.get("selectedChallenge"))
           )
-          test("No identifier - unsets SelectedChallenge", ()->
-            rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
-            rcvm.set("selectedChallenge", get:()->)
-            rcvm.unset("selectedChallengeId")
-            chai.assert.isUndefined(rcvm.get("selectedChallenge"))
-          )
-          test("Valid identifier - challengePlayerList unwatches", ()->
-            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-            JsMockito.verify(rcvm.get("challengePlayerList").unwatch)(true)
-          )
-          test("No identifier - challengePlayerList unwatches", ()->
-            rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
-            rcvm.set("selectedChallenge", get:()->)
-            rcvm.unset("selectedChallengeId")
-            JsMockito.verify(rcvm.get("challengePlayerList").unwatch)(true)
-          )
-          test("Valid identifier - challengePlayerList watches player list for challenge", ()->
-            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-            JsMockito.verify(rcvm.get("challengePlayerList").watch)(JsHamcrest.Matchers.equivalentArray([rcvm.get("selectedChallenge").get("players")]))
+          suite("Valid Identifier", ()->
+            setup(()->
+            )
+            test("Loads Game State Using Identifier", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              jm.verify(mocks["AppState"].loadGame)("AN IDENTIFIER")
+            )
+            test("Sets selectedChallenge attribute to result", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              a.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge").get("label"))
+            )
+            test("Unsets selectedChallenge attribute if result undefined", ()->
+              jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->)
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              a.isUndefined(rcvm.get("selectedChallenge"))
+            )
+            test("challengePlayerList unwatches", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              jm.verify(rcvm.get("challengePlayerList").unwatch)(true)
+            )
+            test("challengePlayerList watches player list for challenge", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              jm.verify(rcvm.get("challengePlayerList").watch)(m.equivalentArray([rcvm.get("selectedChallenge").get("players")]))
 
+            )
+            test("Calls updateFromWatchedCollection", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              jm.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(m.func(), m.func())
+            )
           )
-          test("Valid identifier - Calls updateFromWatchedCollection", ()->
-            rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-            JsMockito.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func())
-          )
-          test("No identifier - mockWatchDataDupAttribute doesn't watch anything", ()->
-            rcvm = new ReviewChallengesViewModel(selectedChallengeId:"SOMETHING")
-            rcvm.set("selectedChallenge", get:()->)
-            rcvm.unset("selectedChallengeId")
-            JsMockito.verify(rcvm.get("challengePlayerList").watch, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+          suite("No identifier", ()->
+            test("Unsets SelectedChallenge", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged")
+              a.isUndefined(rcvm.get("selectedChallenge"))
+            )
+            test("challengePlayerList unwatches", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged")
+              jm.verify(rcvm.get("challengePlayerList").unwatch)(true)
+            )
+            test("mockWatchDataDupAttribute doesn't watch anything", ()->
+              rcvm.get("challenges").trigger("selectedChallengeChanged")
+              jm.verify(rcvm.get("challengePlayerList").watch, v.never())(m.anything())
+            )
           )
           suite("OnSourceUpdated handler for challengePlayerList", ()->
             setup(()->
-              rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
             )
             test("Calls updateFromWatchedCollection", ()->
-              rcvm.get("challengePlayerList").updateFromWatchedCollections = JsMockito.mockFunction()
+              rcvm.get("challengePlayerList").updateFromWatchedCollections = jm.mockFunction()
               rcvm.get("challengePlayerList").onSourceUpdated()
-              JsMockito.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func())
+              jm.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(m.func(), m.func())
             )
-            test("Calls updateFromWatchedCollection with same handlers as when selectedChallengeId first changed", ()->
-              rcvm.unset("selectedChallengeId")
+            test("Calls updateFromWatchedCollection with same handlers as when selectedChallengeChangeds first fired", ()->
+
               comparer = undefined
               adder = undefined
-              JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)().then((c, a)->
+              jm.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)().then((c, a)->
                 comparer = c
                 adder = a
               )
-              rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-              rcvm.get("challengePlayerList").updateFromWatchedCollections = JsMockito.mockFunction()
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              rcvm.get("challengePlayerList").updateFromWatchedCollections = jm.mockFunction()
               rcvm.get("challengePlayerList").onSourceUpdated()
-              JsMockito.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(
-                new JsHamcrest.SimpleMatcher(
+              jm.verify(rcvm.get("challengePlayerList").updateFromWatchedCollections)(
+                new h.SimpleMatcher(
                   matches:(cc)->
                     cc.toString() is comparer.toString()
                 ),
-                new JsHamcrest.SimpleMatcher(
+                new h.SimpleMatcher(
                   matches:(aa)->
                     aa.toString() is adder.toString()
                 )
@@ -679,7 +247,7 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                 )
               )
               rcvm.get("challengePlayerList").onSourceUpdated()
-              chai.assert.equal("MOCK_USER_STATUS", rcvm.get("selectedChallengeUserStatus"))
+              a.equal("MOCK_USER_STATUS", rcvm.get("selectedChallengeUserStatus"))
             )
             test("Contains no players with user matching current user - unsets selectedChallengeUserStatus", ()->
               rcvm.set("selectedChallengeUserStatus", "SOMETHING")
@@ -700,7 +268,7 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                 )
               )
               rcvm.get("challengePlayerList").onSourceUpdated()
-              chai.assert.isUndefined(rcvm.get("selectedChallengeUserStatus"))
+              a.isUndefined(rcvm.get("selectedChallengeUserStatus"))
             )
             test("Player with matching user id - sets selected for user only on player with User Id matching current user", ()->
               rcvm.set("selectedChallengeUserStatus", "SOMETHING")
@@ -721,8 +289,8 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                 )
               )
               rcvm.get("challengePlayerList").onSourceUpdated()
-              chai.assert(rcvm.get("challengePlayerList").at(0).get("selectedForUser"))
-              chai.assert.isUndefined(rcvm.get("challengePlayerList").at(1).get("selectedForUser"))
+              a(rcvm.get("challengePlayerList").at(0).get("selectedForUser"))
+              a.isUndefined(rcvm.get("challengePlayerList").at(1).get("selectedForUser"))
 
             )
             test("validIdentifierNoPlayerWithCurrentUserId_doesntSetSelectedForUserOnAnything", ()->
@@ -744,28 +312,28 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                 )
               )
               rcvm.get("challengePlayerList").onSourceUpdated()
-              chai.assert.isUndefined(rcvm.get("challengePlayerList").findWhere(selectedForUser:true))
+              a.isUndefined(rcvm.get("challengePlayerList").findWhere(selectedForUser:true))
 
             )
             suite("updateFromWatchedCollection comparer", ()->
               comparer = undefined;
               setup(()->
-                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func(), JsHamcrest.Matchers.nil(), JsHamcrest.Matchers.func()).then((c, a)->
+                jm.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(m.func(), m.func(), m.nil(), m.func()).then((c, a)->
                   comparer = c
                 )
                 rcvm.get("challengePlayerList").onSourceUpdated()
               )
               test("Matches when ids match", ()->
-                chai.assert(comparer(new Backbone.Model(id:"MATCHING_ID"),new Backbone.Model(id:"MATCHING_ID")))
+                a(comparer(new Backbone.Model(id:"MATCHING_ID"),new Backbone.Model(id:"MATCHING_ID")))
               )
               test("No match when ids don't match", ()->
-                chai.assert.isFalse(comparer(new Backbone.Model(id:"MATCHING_ID"),new Backbone.Model(id:"NOT MATCHING_ID")))
+                a.isFalse(comparer(new Backbone.Model(id:"MATCHING_ID"),new Backbone.Model(id:"NOT MATCHING_ID")))
               )
               test("No match when one id is missing", ()->
-                chai.assert.isFalse(comparer(new Backbone.Model(id:"MATCHING_ID"),new Backbone.Model()))
+                a.isFalse(comparer(new Backbone.Model(id:"MATCHING_ID"),new Backbone.Model()))
               )
               test("No match when both ids are missing", ()->
-                chai.assert.isFalse(comparer(new Backbone.Model(),new Backbone.Model()))
+                a.isFalse(comparer(new Backbone.Model(),new Backbone.Model()))
               )
             )
             suite("updateFromWatchedCollection adder", ()->
@@ -777,15 +345,15 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                   id:"ADDED USER ID"
                   status:"ADDED USER STATUS"
                   playerId:"ADDED ID"
-                  watch:JsMockito.mockFunction()
-                  unwatch:JsMockito.mockFunction()
+                  watch:jm.mockFunction()
+                  unwatch:jm.mockFunction()
                 )
                 addedSource = new Backbone.Model(
                   id:"ADDED ID"
                   name:"ADDED NAME"
                   description:"ADDED DESCRIPTION"
                 )
-                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func(), JsHamcrest.Matchers.nil(), JsHamcrest.Matchers.func()).then((c, a)->
+                jm.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(m.func(), m.func(), m.nil(), m.func()).then((c, a)->
                   adder = a
                 )
                 rcvm.get("selectedChallenge").get("users").push(addedSourceUser)
@@ -797,11 +365,11 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                   name:"ADDED NAME"
                   description:"ADDED DESCRIPTION"
                 ))
-                chai.assert.equal(added.get("id"),"ADDED ID")
-                chai.assert.equal(added.get("name"),"ADDED NAME")
-                chai.assert.equal(added.get("user").get("id"),"ADDED USER ID")
-                chai.assert.equal(added.get("user").get("status"),"ADDED USER STATUS")
-                chai.assert.equal(added.get("description"),"ADDED DESCRIPTION")
+                a.equal(added.get("id"),"ADDED ID")
+                a.equal(added.get("name"),"ADDED NAME")
+                a.equal(added.get("user").get("id"),"ADDED USER ID")
+                a.equal(added.get("user").get("status"),"ADDED USER STATUS")
+                a.equal(added.get("description"),"ADDED DESCRIPTION")
               )
               test("Id not in selectedChallenge user collection - leaves user unset", ()->
                 added = adder(new Backbone.Model(
@@ -809,7 +377,7 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                   name:"ADDED NAME"
                   description:"ADDED DESCRIPTION"
                 ))
-                chai.assert.isUndefined(added.get("user"))
+                a.isUndefined(added.get("user"))
               )
               test("Ignores additional attributes on player or user", ()->
                 added = adder(new Backbone.Model(
@@ -823,20 +391,20 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                   )
                   description:"ADDED DESCRIPTION"
                 ))
-                chai.assert.isUndefined(added.get("prop1"))
-                chai.assert.isUndefined(added.get("user").get("prop1"))
+                a.isUndefined(added.get("prop1"))
+                a.isUndefined(added.get("user").get("prop1"))
               )
               test("Watches added item's name and description, user's status attributes", ()->
                 added = adder(addedSource)
-                JsMockito.verify(added.watch)(
-                  JsHamcrest.Matchers.hasItem(
-                      JsHamcrest.Matchers.allOf(
-                        JsHamcrest.Matchers.hasMember("model", addedSource)
+                jm.verify(added.watch)(
+                  m.hasItem(
+                      m.allOf(
+                        m.hasMember("model", addedSource)
                       ,
-                        JsHamcrest.Matchers.hasMember(
+                        m.hasMember(
                           "attributes"
                         ,
-                          JsHamcrest.Matchers.equivalentArray([
+                          m.equivalentArray([
                             "name",
                             "description"
                           ])
@@ -847,15 +415,15 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
               )
               test("User attribute watches matched user from challenge", ()->
                 added = adder(addedSource)
-                JsMockito.verify(added.get("user").watch)(
-                  JsHamcrest.Matchers.hasItem(
-                    JsHamcrest.Matchers.allOf(
-                      JsHamcrest.Matchers.hasMember("model", addedSourceUser)
+                jm.verify(added.get("user").watch)(
+                  m.hasItem(
+                    m.allOf(
+                      m.hasMember("model", addedSourceUser)
                     ,
-                      JsHamcrest.Matchers.hasMember(
+                      m.hasMember(
                         "attributes"
                       ,
-                        JsHamcrest.Matchers.equivalentArray([
+                        m.equivalentArray([
                           "id"
                           "status"
                         ])
@@ -868,21 +436,24 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                 added = undefined
                 modelUpdated = undefined
                 userModelUpdated = undefined
+                origInit = null
                 setup(()->
-                  mocks["UI/component/ObservingViewModelItem"].set(
-                    (data)->
-                      ret = new Backbone.Model(data)
-                      ret.watch=JsMockito.mockFunction()
-                      ret.unwatch=JsMockito.mockFunction()
-                      JsMockito.when(ret.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model", addedSource))).then((d)->
-                        modelUpdated=ret.onModelUpdated
+                  origInit = mocks["UI/component/ObservingViewModelItem"].prototype.initialize
+                  mocks["UI/component/ObservingViewModelItem"].prototype.initialize =
+                    ()->
+                      @watch=jm.mockFunction()
+                      @unwatch=jm.mockFunction()
+                      jm.when(@watch)(m.hasItem(m.hasMember("model", addedSource))).then((d)->
+                        modelUpdated=@onModelUpdated
                       )
-                      JsMockito.when(ret.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model", addedSourceUser))).then((d)->
-                        userModelUpdated=ret.onModelUpdated
+                      jm.when(@watch)(m.hasItem(m.hasMember("model", addedSourceUser))).then((d)->
+                        userModelUpdated=@onModelUpdated
                       )
-                      ret
-                  )
+
                   added = adder(addedSource)
+                )
+                teardown(()->
+                  mocks["UI/component/ObservingViewModelItem"].prototype.initialize = origInit
                 )
                 suite("Player attributes other than user modified", ()->
                   test("Sets name & description attributes on item", ()->
@@ -891,8 +462,8 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                       description: "NEW DESCRIPTION"
                     )
                     modelUpdated(addedSource)
-                    chai.assert.equal(added.get("name"), "NEW NAME")
-                    chai.assert.equal(added.get("description"), "NEW DESCRIPTION")
+                    a.equal(added.get("name"), "NEW NAME")
+                    a.equal(added.get("description"), "NEW DESCRIPTION")
 
                   )
                   test("Leaves other player attributes unmodified", ()->
@@ -902,7 +473,7 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                       description: "NEW DESCRIPTION"
                     )
                     modelUpdated(addedSource)
-                    chai.assert.equal(added.get("id"), "ADDED ID")
+                    a.equal(added.get("id"), "ADDED ID")
 
                   )
                 )
@@ -912,13 +483,13 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                       status:"NEW STATUS"
                     )
                     userModelUpdated(addedSourceUser)
-                    chai.assert.equal(added.get("user").get("status"), "NEW STATUS")
+                    a.equal(added.get("user").get("status"), "NEW STATUS")
 
                   )
                   test("Unsets these attributes if not present on new model", ()->
                     addedSourceUser.unset("status")
                     userModelUpdated(addedSourceUser)
-                    chai.assert.isUndefined(added.get("user").get("status"))
+                    a.isUndefined(added.get("user").get("status"))
 
                   )
                   test("Leaves other existing attributes on user unmodified", ()->
@@ -927,7 +498,7 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                       status:"NEW STATUS"
                     )
                     userModelUpdated(addedSourceUser)
-                    chai.assert.equal(added.get("user").get("propA"), "A")
+                    a.equal(added.get("user").get("propA"), "A")
 
                   )
                 )
@@ -939,32 +510,32 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
               remover = undefined
               setup(()->
                 removed = new Backbone.Model()
-                removed.watch=JsMockito.mockFunction()
-                removed.unwatch=JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").updateFromWatchedCollections = JsMockito.mockFunction()
-                JsMockito.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(JsHamcrest.Matchers.func(), JsHamcrest.Matchers.func(), JsHamcrest.Matchers.nil(), JsHamcrest.Matchers.func()).then((c, a, f, r)->
+                removed.watch=jm.mockFunction()
+                removed.unwatch=jm.mockFunction()
+                rcvm.get("challengePlayerList").updateFromWatchedCollections = jm.mockFunction()
+                jm.when(rcvm.get("challengePlayerList").updateFromWatchedCollections)(m.func(), m.func(), m.nil(), m.func()).then((c, a, f, r)->
                   remover = r
                 )
                 rcvm.get("challengePlayerList").onSourceUpdated()
               )
               test("Unwatches removed item", ()->
                 remover(removed)
-                JsMockito.verify(removed.unwatch)()
+                jm.verify(removed.unwatch)()
               )
               test("Has user - Unwatches user as well", ()->
                 user = new Backbone.Model()
-                user.watch=JsMockito.mockFunction()
-                user.unwatch=JsMockito.mockFunction()
+                user.watch=jm.mockFunction()
+                user.unwatch=jm.mockFunction()
                 removed.set("user", user)
                 remover(removed)
-                JsMockito.verify(user.unwatch)()
+                jm.verify(user.unwatch)()
               )
 
             )
           )
           suite("Selected challenge user collection", ()->
             setup(()->
-              rcvm.get("challengePlayerList").stopListening = JsMockito.mockFunction()
+              rcvm.get("challengePlayerList").stopListening = jm.mockFunction()
             )
             test("Challenge already selected but that challenge had no users - challengePlayerList stops listening to nothing", ()->
               rcvm.set("selectedChallenge", new Backbone.Model(
@@ -978,8 +549,8 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
 
                 ])
               ))
-              rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-              JsMockito.verify(rcvm.get("challengePlayerList").stopListening, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              jm.verify(rcvm.get("challengePlayerList").stopListening, v.never())(m.anything())
             )
             test("Challenge already selected and that challenge has users - challengePlayerList stops listening to those users", ()->
               oldUsers =  new Backbone.Model()
@@ -996,35 +567,35 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                 users:oldUsers
               ))
               cl = rcvm.get("challengePlayerList")
-              rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-              JsMockito.verify(cl.stopListening)(oldUsers)
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              jm.verify(cl.stopListening)(oldUsers)
             )
             test("New challenge has users - challengePlayerList listens to user collection's add, remove and reset methods using same handler", ()->
               handler = null
-              rcvm.get("challengePlayerList").listenTo = JsMockito.mockFunction()
-              JsMockito.when(rcvm.get("challengePlayerList").listenTo)(
-                JsHamcrest.Matchers.anything(),
-                JsHamcrest.Matchers.anything(),
-                JsHamcrest.Matchers.anything(),
-                JsHamcrest.Matchers.anything()
+              rcvm.get("challengePlayerList").listenTo = jm.mockFunction()
+              jm.when(rcvm.get("challengePlayerList").listenTo)(
+                m.anything(),
+                m.anything(),
+                m.anything(),
+                m.anything()
               ).then((a,b,h, d)->
                 handler = h
               )
-              rcvm.set("selectedChallengeId", "AN IDENTIFIER")
-              JsMockito.verify(rcvm.get("challengePlayerList").listenTo)(rcvm.get("selectedChallenge").get("users"), "add", handler, rcvm)
-              JsMockito.verify(rcvm.get("challengePlayerList").listenTo)(rcvm.get("selectedChallenge").get("users"), "remove", handler, rcvm)
-              JsMockito.verify(rcvm.get("challengePlayerList").listenTo)(rcvm.get("selectedChallenge").get("users"), "reset", handler, rcvm)
+              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
+              jm.verify(rcvm.get("challengePlayerList").listenTo)(rcvm.get("selectedChallenge").get("users"), "add", handler, rcvm)
+              jm.verify(rcvm.get("challengePlayerList").listenTo)(rcvm.get("selectedChallenge").get("users"), "remove", handler, rcvm)
+              jm.verify(rcvm.get("challengePlayerList").listenTo)(rcvm.get("selectedChallenge").get("users"), "reset", handler, rcvm)
             )
             suite("Update handlers", ()->
               handler = null
+              origInit = null
               setup(()->
-                mocks["UI/component/ObservingViewModelItem"].set(
-                  (data)->
-                    ret = new Backbone.Model(data)
-                    ret.watch=JsMockito.mockFunction()
-                    ret.unwatch=JsMockito.mockFunction()
-                    ret
-                )
+                origInit = mocks["UI/component/ObservingViewModelItem"].prototype.initialize
+                mocks["UI/component/ObservingViewModelItem"].prototype.initialize =
+                  ()->
+                    @watch=jm.mockFunction()
+                    @unwatch=jm.mockFunction()
+
                 rcvm.get("challengePlayerList").push(
                   id:"SELECTED_PLAYER"
                   name:"SELECTED_PLAYER_NAME"
@@ -1033,10 +604,10 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                     status:"MOCK_USER_STATUS"
                   )
                 )
-                rcvm.get("challengePlayerList").last().watch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").last().unwatch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").last().get("user").watch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").last().get("user").unwatch = JsMockito.mockFunction()
+                rcvm.get("challengePlayerList").last().watch = jm.mockFunction()
+                rcvm.get("challengePlayerList").last().unwatch = jm.mockFunction()
+                rcvm.get("challengePlayerList").last().get("user").watch = jm.mockFunction()
+                rcvm.get("challengePlayerList").last().get("user").unwatch = jm.mockFunction()
                 rcvm.get("challengePlayerList").push(
                   id:"NOT_SELECTED_PLAYER"
                   name:"NOT_SELECTED_PLAYER_NAME"
@@ -1045,27 +616,31 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                     status:"OTHER_USER_STATUS"
                   )
                 )
-                rcvm.get("challengePlayerList").last().watch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").last().unwatch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").last().get("user").watch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").last().get("user").unwatch = JsMockito.mockFunction()
+                rcvm.get("challengePlayerList").last().watch = jm.mockFunction()
+                rcvm.get("challengePlayerList").last().unwatch = jm.mockFunction()
+                rcvm.get("challengePlayerList").last().get("user").watch = jm.mockFunction()
+                rcvm.get("challengePlayerList").last().get("user").unwatch = jm.mockFunction()
                 rcvm.get("challengePlayerList").push(
                   id:"USERLESS_PLAYER"
                   name:"USERLESS_PLAYER_NAME"
                 )
-                rcvm.get("challengePlayerList").last().watch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").last().unwatch = JsMockito.mockFunction()
-                rcvm.get("challengePlayerList").listenTo = JsMockito.mockFunction()
-                JsMockito.when(rcvm.get("challengePlayerList").listenTo)(
-                  JsHamcrest.Matchers.anything(),
-                  JsHamcrest.Matchers.anything(),
-                  JsHamcrest.Matchers.anything(),
-                  JsHamcrest.Matchers.anything()
+                rcvm.get("challengePlayerList").last().watch = jm.mockFunction()
+                rcvm.get("challengePlayerList").last().unwatch = jm.mockFunction()
+                rcvm.get("challengePlayerList").listenTo = jm.mockFunction()
+                jm.when(rcvm.get("challengePlayerList").listenTo)(
+                  m.anything(),
+                  m.anything(),
+                  m.anything(),
+                  m.anything()
                 ).then((a,b,h, d)->
                   handler = h
                 )
-                rcvm.set("selectedChallengeId", "AN IDENTIFIER")
+                rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
               )
+              teardown(()->
+                mocks["UI/component/ObservingViewModelItem"].prototype.initialize = origInit
+              )
+
               test("User mapped to player changes id to invalid - removes user from player, unwatches user, leaving others in place.", ()->
                 oldUser = rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user")
                 rcvm.get("selectedChallenge").get("users").reset([
@@ -1079,11 +654,11 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
 
                 ])
                 handler()
-                JsMockito.verify(oldUser.unwatch)()
-                chai.assert.isUndefined(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user"))
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"OTHER_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
-                chai.assert.isUndefined(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user"))
+                jm.verify(oldUser.unwatch)()
+                a.isUndefined(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user"))
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"OTHER_USER")
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
+                a.isUndefined(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user"))
               )
               test("User mapped to player changes removed - removes user from player, unwatches user, leaving others in place.", ()->
                 oldUser = rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user")
@@ -1094,11 +669,11 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
 
                 ])
                 handler()
-                chai.assert.isUndefined(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user"))
-                JsMockito.verify(oldUser.unwatch)()
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"OTHER_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
-                chai.assert.isUndefined(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user"))
+                a.isUndefined(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user"))
+                jm.verify(oldUser.unwatch)()
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"OTHER_USER")
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
+                a.isUndefined(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user"))
               )
               test("New user added mapped to player that currently has no user - maps new user to player and watches user", ()->
                 rcvm.get("selectedChallenge").get("users").reset([
@@ -1116,13 +691,13 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
 
                 ])
                 handler()
-                chai.assert.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").id,"MOCK_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").get("status"),"MOCK_USER_STATUS")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"OTHER_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").id,"USERLESS_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").get("status"),"USERLESS_STATUS")
-                JsMockito.verify(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model",rcvm.get("selectedChallenge").get("users").last())))
+                a.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").id,"MOCK_USER")
+                a.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").get("status"),"MOCK_USER_STATUS")
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"OTHER_USER")
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
+                a.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").id,"USERLESS_USER")
+                a.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").get("status"),"USERLESS_STATUS")
+                jm.verify(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").watch)(m.hasItem(m.hasMember("model",rcvm.get("selectedChallenge").get("users").last())))
               )
               test("Users remapped to different players - unwatches all, reassigns, then watches again", ()->
 
@@ -1143,17 +718,17 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
 
                 ])
                 handler()
-                JsMockito.verify(oldUser1.unwatch)()
-                JsMockito.verify(oldUser2.unwatch)()
-                chai.assert.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").id,"MOCK_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").get("status"),"MOCK_USER_STATUS")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").id,"OTHER_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"USERLESS_USER")
-                chai.assert.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"USERLESS_STATUS")
-                JsMockito.verify(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model",rcvm.get("selectedChallenge").get("users").first())))
-                JsMockito.verify(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model",rcvm.get("selectedChallenge").get("users").at(1))))
-                JsMockito.verify(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.hasMember("model",rcvm.get("selectedChallenge").get("users").last())))
+                jm.verify(oldUser1.unwatch)()
+                jm.verify(oldUser2.unwatch)()
+                a.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").id,"MOCK_USER")
+                a.equal(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").get("status"),"MOCK_USER_STATUS")
+                a.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").id,"OTHER_USER")
+                a.equal(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").get("status"),"OTHER_USER_STATUS")
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").id,"USERLESS_USER")
+                a.equal(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").get("status"),"USERLESS_STATUS")
+                jm.verify(rcvm.get("challengePlayerList").get("USERLESS_PLAYER").get("user").watch)(m.hasItem(m.hasMember("model",rcvm.get("selectedChallenge").get("users").first())))
+                jm.verify(rcvm.get("challengePlayerList").get("SELECTED_PLAYER").get("user").watch)(m.hasItem(m.hasMember("model",rcvm.get("selectedChallenge").get("users").at(1))))
+                jm.verify(rcvm.get("challengePlayerList").get("NOT_SELECTED_PLAYER").get("user").watch)(m.hasItem(m.hasMember("model",rcvm.get("selectedChallenge").get("users").last())))
               )
               test("Multiple users mapped to same player - throws", ()->
 
@@ -1173,7 +748,7 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
                   status:"USERLESS_STATUS"
 
                 ])
-                chai.assert.throw(()->handler())
+                a.throw(()->handler())
               )
             )
           )
@@ -1181,63 +756,15 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
       )
       suite("selectChallenge", ()->
         rcvm = null
-        setup(()->
-          rcvm = new ReviewChallengesViewModel()
-          rcvm.set("challenges", new Backbone.Collection([
-            id:"MOCK_GAME_ID1"
-            userStatus:"MOCK_OTHER_STATUS"
-          ,
-            id:"MOCK_GAME_ID2"
-            userStatus:"PLAYING"
-          ,
-            id:"MOCK_GAME_ID3"
-            userStatus:"MOCK_OTHER_STATUS"
-          ]))
+        setup(()-> rcvm=new ReviewChallengesViewModel())
+        test("Calls selectGame on challenges gameList", ()->
+          rcvm.selectChallenge("A GAME ID")
+          jm.verify(rcvm.get("challenges").selectGame)("A GAME ID")
         )
-        test("inputMatchesIdInChallengesList_setsSelectedChallengeIdToInput", ()->
-          rcvm.selectChallenge("MOCK_GAME_ID2")
-          chai.assert.equal("MOCK_GAME_ID2",rcvm.get("selectedChallengeId"))
+        test("Challenges not set - throws", ()->
+          rcvm.unset("challenges")
+          a.throw(()->rcvm.selectGame("A GAME ID"))
         )
-
-        test("inputIdNotInChallengesList_unsetsSelectedChallengeId", ()->
-          rcvm.set("selectedChallengeId","SOMETHING",silent:true)
-          rcvm.selectChallenge("NOT AN ID")
-          chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
-        )
-
-        test("noInput_setsSelectedChallengeIdToInput", ()->
-          rcvm.set("selectedChallengeId","SOMETHING",silent:true)
-          rcvm.selectChallenge()
-          chai.assert.isUndefined(rcvm.get("selectedChallengeId"))
-        )
-
-        test("inputMatchesIdInChallengesList_setsSelectedFlagOnMatchedItem", ()->
-          rcvm.selectChallenge("MOCK_GAME_ID2")
-          chai.assert(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
-        )
-
-        test("inputMatchesIdInChallengesList_unsetsSelectedFlagOnNotMatchedItem", ()->
-          c.set("selected", true) for c in rcvm.get("challenges").models
-          rcvm.selectChallenge("MOCK_GAME_ID2")
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
-        )
-        test("inputIdNotInChallengesList_unsetsSelectedFlagOnAll", ()->
-          c.set("selected", true) for c in rcvm.get("challenges").models
-          rcvm.selectChallenge("NOT AN ID")
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
-        )
-
-        test("noInput_unsetsSelectedFlagOnAll", ()->
-          c.set("selected", true) for c in rcvm.get("challenges").models
-          rcvm.selectChallenge("NOT AN ID")
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID1").get("selected"))
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID2").get("selected"))
-          chai.assert.isUndefined(rcvm.get("challenges").find((c)->c.get("id") is "MOCK_GAME_ID3").get("selected"))
-        )
-
       )
       suite("issueChallenge", ()->
         rcvm = null
@@ -1247,16 +774,16 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
         test("Valid identifier and challenge selected - calls AppState issueChallenge with identifier and selected game", ()->
           rcvm.set("selectedChallenge", "SOMETHING")
           rcvm.issueChallenge("ANOTHER USER")
-          JsMockito.verify(mocks.AppState.issueChallenge)("ANOTHER USER", "SOMETHING")
+          jm.verify(mocks.AppState.issueChallenge)("ANOTHER USER", "SOMETHING")
         )
         test("Valid identifier and no challenge selected - calls AppState issueChallenge with no game", ()->
           rcvm.unset("selectedChallenge")
           rcvm.issueChallenge("ANOTHER USER")
-          JsMockito.verify(mocks.AppState.issueChallenge)("ANOTHER USER", JsHamcrest.Matchers.nil())
+          jm.verify(mocks.AppState.issueChallenge)("ANOTHER USER", m.nil())
         )
         test("No identifier - throws", ()->
           rcvm.set("selectedChallenge", "SOMETHING")
-          chai.assert.throw(()->rcvm.issueChallenge())
+          a.throw(()->rcvm.issueChallenge())
         )
       )
       suite("acceptChallenge", ()->
@@ -1267,12 +794,12 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "lib/turncoat/Con
         test("Valid identifier and challenge selected - calls AppState issueChallenge with identifier and selected game", ()->
           rcvm.set("selectedChallenge", "SOMETHING")
           rcvm.acceptChallenge()
-          JsMockito.verify(mocks.AppState.acceptChallenge)("SOMETHING")
+          jm.verify(mocks.AppState.acceptChallenge)("SOMETHING")
         )
         test("Valid identifier and no challenge selected - calls AppState issueChallenge with no game", ()->
           rcvm.unset("selectedChallenge")
           rcvm.acceptChallenge()
-          JsMockito.verify(mocks.AppState.acceptChallenge)(JsHamcrest.Matchers.nil())
+          jm.verify(mocks.AppState.acceptChallenge)(m.nil())
         )
       )
     )
