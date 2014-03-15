@@ -41,7 +41,8 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("UI/widgets/GameListViewModel","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       Backbone.Collection.extend(
-        initialize:()->
+        initialize:(m, opts)->
+          @opts = opts
           @selectGame=JsMockito.mockFunction()
       )
     )
@@ -88,11 +89,33 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "jsMockito", "jsH
 
       )
 
-      test("createsChallenges", ()->
+      test("Creates challenges as gameList widget", ()->
         rcvm = new ReviewChallengesViewModel()
-        a.instanceOf(rcvm.get("challenges"), Backbone.Collection)
+        a.instanceOf(rcvm.get("challenges"),  mocks["UI/widgets/GameListViewModel"])
       )
+      test("creates challenges with filter specified", ()->
+        rcvm = new ReviewChallengesViewModel()
+        a.isFunction(rcvm.get("challenges").opts.filter)
+      )
+      suite("Challenges filter", ()->
+        filter = null
+        setup(()->
+          filter = new ReviewChallengesViewModel().get("challenges").opts.filter
+        )
+        test("PLAYING UserStatus - returns false", ()->
+          a.isFalse(filter(new Backbone.Model({userStatus:"PLAYING"})))
+        )
+        test("Missing UserStatus - returns false", ()->
+          a.isFalse(filter(new Backbone.Model({})))
 
+        )
+        test("Other UserStatus - returns true", ()->
+          a(filter(new Backbone.Model({userStatus:"ANYTHING_ELSE"})))
+        )
+        test("Invalid backbone model - throws", ()->
+          a.throw(()->filter({userStatus:"ANYTHING_ELSE"}))
+        )
+      )
       test("Has Tab attribute - binds Tab ActiveChanged", ()->
         rcvm = new ReviewChallengesViewModel(
           tab:

@@ -153,63 +153,6 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
         )
       )
       suite("onSourceUpdated", ()->
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutPLAYINGUserStatus", ()->
-          glvm = new GameListViewModel()
-          glvm.updateFromWatchedCollections=jm.mockFunction()
-          glvm.onSourceUpdated()
-          jm.verify(glvm.updateFromWatchedCollections)(
-            m.anything(),
-            m.anything(),
-            new h.SimpleMatcher(
-              matches:(input)->
-                !input(new Backbone.Model({userStatus:"PLAYING"}))
-            )
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatFiltersOutMissingUserStatus", ()->
-          glvm = new GameListViewModel()
-          glvm.updateFromWatchedCollections=jm.mockFunction()
-          glvm.onSourceUpdated()
-          jm.verify(glvm.updateFromWatchedCollections)(
-            m.anything(),
-            m.anything(),
-            new h.SimpleMatcher(
-              matches:(input)->
-                !input(new Backbone.Model({}))
-            )
-          )
-
-        )
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatRetainsOtherUserStatus", ()->
-          glvm = new GameListViewModel()
-          glvm.updateFromWatchedCollections=jm.mockFunction()
-          glvm.onSourceUpdated()
-          jm.verify(glvm.updateFromWatchedCollections)(
-            m.anything(),
-            m.anything(),
-            new h.SimpleMatcher(
-              matches:(input)->
-                input(new Backbone.Model({userStatus:"ANYTHING_ELSE"}))
-            )
-          )
-        )
-        test("callsUpdateFromWatchedCollectionsWithSelectorThatThrowsIfNonModel", ()->
-          glvm = new GameListViewModel()
-          glvm.updateFromWatchedCollections=jm.mockFunction()
-          glvm.onSourceUpdated()
-          jm.verify(glvm.updateFromWatchedCollections)(
-            m.anything(),
-            m.anything(),
-            new h.SimpleMatcher(
-              matches:(input)->
-                try
-                  input({userStatus:"ANYTHING_ELSE"})
-                  false
-                catch ex
-                  true
-            )
-          )
-        )
         test("callsUpdateFromWatchedCollectionsWithMatcherThatMatchesSameId", ()->
           glvm = new GameListViewModel()
           glvm.updateFromWatchedCollections=jm.mockFunction()
@@ -380,7 +323,7 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
               m.anything()
             )
           )
-          test("UserStatusCHALLENGED_SetsStatusText", ()->
+          test("User status CHALLENGED - Sets Status Text", ()->
             glvm = new GameListViewModel()
             glvm.updateFromWatchedCollections=jm.mockFunction()
             glvm.onSourceUpdated()
@@ -397,7 +340,7 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
               m.anything()
             )
           )
-          test("UserStatusREADY_SetsStatusText", ()->
+          test("User status READY - Sets status text", ()->
             glvm = new GameListViewModel()
             glvm.updateFromWatchedCollections=jm.mockFunction()
             glvm.onSourceUpdated()
@@ -454,6 +397,41 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
               ),
               m.anything()
             )
+          )
+
+        )
+        suite("filter",()->
+          test("Set in options - calls specified filter with input and returns result", ()->
+            optionFilter = jm.mockFunction()
+            jm.when(optionFilter)(m.anything()).then((a)->"OPTION FILTER RESULT")
+            glvm = new GameListViewModel(undefined, filter:optionFilter)
+            glvm.updateFromWatchedCollections=jm.mockFunction()
+            calledFilter = null
+            jm.when(glvm.updateFromWatchedCollections)(
+              m.anything(),
+              m.anything(),
+              m.func()
+            ).then((a,r,f)->calledFilter = f)
+            glvm.onSourceUpdated()
+            a.equal(calledFilter("INPUT"), "OPTION FILTER RESULT")
+            jm.verify(optionFilter)("INPUT")
+          )
+          test("Not set in options - always returns true", ()->
+            glvm = new GameListViewModel()
+            glvm.updateFromWatchedCollections=jm.mockFunction()
+            calledFilter = null
+            jm.when(glvm.updateFromWatchedCollections)(
+              m.anything(),
+              m.anything(),
+              m.func()
+            ).then((a,r,f)->calledFilter = f)
+            glvm.onSourceUpdated()
+            a(calledFilter("INPUT"))
+            a(calledFilter(12))
+            a(calledFilter({}))
+            a(calledFilter(null))
+            a(calledFilter(undefined))
+            a(calledFilter(false))
           )
         )
       )

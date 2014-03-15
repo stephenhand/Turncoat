@@ -2,7 +2,8 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("UI/widgets/GameListViewModel","UI/administration/CurrentGamesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       Backbone.Collection.extend(
-        initialize:()->
+        initialize:(m, opts)->
+          @opts = opts
           @selectGame=JsMockito.mockFunction()
       )
     )
@@ -33,6 +34,29 @@ define(["isolate!UI/administration/CurrentGamesViewModel", "jsMockito", "jsHamcr
       test("Games not set - throws", ()->
         cgvm.unset("games")
         a.throw(()->cgvm.selectGame("A GAME ID"))
+      )
+      test("creates games with filter specified", ()->
+        cgvm = new CurrentGamesViewModel()
+        a.isFunction(cgvm.get("games").opts.filter)
+      )
+      suite("Challenges filter", ()->
+        filter = null
+        setup(()->
+          filter = new CurrentGamesViewModel().get("games").opts.filter
+        )
+        test("PLAYING UserStatus - returns true", ()->
+          a(filter(new Backbone.Model({userStatus:"PLAYING"})))
+        )
+        test("Missing UserStatus - returns false", ()->
+          a.isFalse(filter(new Backbone.Model({})))
+
+        )
+        test("Other UserStatus - returns false", ()->
+          a.isFalse(filter(new Backbone.Model({userStatus:"ANYTHING_ELSE"})))
+        )
+        test("Invalid backbone model - throws", ()->
+          a.throw(()->filter({userStatus:"ANYTHING_ELSE"}))
+        )
       )
     )
   )

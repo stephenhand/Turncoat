@@ -5,7 +5,10 @@ define(["underscore", "backbone", "lib/turncoat/Constants", "lib/turncoat/Game",
 
   ReviewChallengesViewModel = Backbone.Model.extend(
     initialize:()->
-      @set("challenges", new GameListViewModel())
+      @set("challenges", new GameListViewModel(null,
+        filter:(item)->
+          item.get("userStatus")? && item.get("userStatus") isnt Constants.PLAYING_STATE
+      ))
       @set("challengePlayerList", new ObservingViewModelCollection())
 
       @get("tab")?.on("change:active", (model)=>

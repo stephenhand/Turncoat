@@ -7,7 +7,7 @@ define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/com
         "A challenge awaiting your response."
 
   class GameListViewModel extends ObservingViewModelCollection
-    initialize:()->
+    initialize:(m, opts)->
       super()
       _.extend(@, ObservableOrderCollection)
       @setOrderAttribute("ordinal")
@@ -44,8 +44,7 @@ define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/com
             )
             newItem
         ,
-          (item)->
-            item.get("userStatus")? && item.get("userStatus") isnt Constants.PLAYING_STATE
+          opts?.filter ? ()->true
         )
 
       @onSourceUpdated()
