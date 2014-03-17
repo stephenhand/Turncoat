@@ -57,10 +57,10 @@ define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/com
           set = true
           if !challenge.get("selected")
             challenge.set("selected", true)
-            @trigger("selectedChallengeChanged", id)
+            @trigger("selectedGameChanged", id)
         else
           challenge.unset("selected")
-      if !set then @trigger("selectedChallengeChanged")
+      if !set then @trigger("selectedGameChanged")
 
   GameListViewModel
 )

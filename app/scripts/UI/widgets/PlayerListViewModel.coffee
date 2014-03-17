@@ -84,8 +84,10 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
         else
           @trigger("currentUserStatusUpdate")
       @onSourceUpdated()
+
       remapAllUsers = ()=>
         remapUsers(@)
+
       @listenTo(game.get("users"), "add", remapAllUsers, @)
       @listenTo(game.get("users"), "remove", remapAllUsers, @)
       @listenTo(game.get("users"), "reset", remapAllUsers, @)

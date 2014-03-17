@@ -1,11 +1,4 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
-  Isolate.mapAsFactory("setTimeout","UI/widgets/PlayerListViewModel", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      ret = ()->
-        ret.func.apply(ret, arguments)
-    )
-
-  )
   Isolate.mapAsFactory("UI/component/ObservingViewModelCollection","UI/widgets/PlayerListViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       Backbone.Collection.extend(

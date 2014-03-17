@@ -1,11 +1,4 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
-  Isolate.mapAsFactory("setTimeout","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      ret = ()->
-        ret.func.apply(ret, arguments)
-    )
-
-  )
   Isolate.mapAsFactory("AppState","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
@@ -156,76 +149,76 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "jsMockito", "jsH
           handler(rcvm.get("tab"))
           jm.verify(rcvm.get("challenges").selectGame)()
         )
+      )
+      suite("Challenges selectedGameChanged Handler", ()->
+        rcvm = undefined
+        setup(()->
+          mocks["AppState"].loadGame = jm.mockFunction()
+          jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
+            new Backbone.Model(
+              label:"GAME FROM ID: "+a
+              players:new Backbone.Collection([
+                id:"SELECTED_PLAYER"
+                name:"SELECTED_PLAYER_NAME"
+              ,
+                id:"NOT_SELECTED_PLAYER"
+                name:"NOT_SELECTED_PLAYER_NAME"
 
-        suite("Challenges selectedChallengeChanged Handler", ()->
-          rcvm = undefined
+              ])
+              users:new Backbone.Collection([
+                id:"MOCK_USER"
+                playerId:"SELECTED_PLAYER"
+                status:"MOCK_USER_STATUS"
+              ,
+                id:"OTHER_USER"
+                playerId:"NOT_SELECTED_PLAYER"
+                status:"OTHER_USER_STATUS"
+
+              ])
+            )
+          )
+          rcvm = new ReviewChallengesViewModel()
+          rcvm.set("selectedChallenge", get:()->)
+        )
+        suite("Valid Identifier", ()->
           setup(()->
-            mocks["AppState"].loadGame = jm.mockFunction()
-            jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
-              new Backbone.Model(
-                label:"GAME FROM ID: "+a
-                players:new Backbone.Collection([
-                  id:"SELECTED_PLAYER"
-                  name:"SELECTED_PLAYER_NAME"
-                ,
-                  id:"NOT_SELECTED_PLAYER"
-                  name:"NOT_SELECTED_PLAYER_NAME"
-
-                ])
-                users:new Backbone.Collection([
-                  id:"MOCK_USER"
-                  playerId:"SELECTED_PLAYER"
-                  status:"MOCK_USER_STATUS"
-                ,
-                  id:"OTHER_USER"
-                  playerId:"NOT_SELECTED_PLAYER"
-                  status:"OTHER_USER_STATUS"
-
-                ])
-              )
-            )
-            rcvm = new ReviewChallengesViewModel()
-            rcvm.set("selectedChallenge", get:()->)
           )
-          suite("Valid Identifier", ()->
-            setup(()->
-            )
-            test("Loads Game State Using Identifier", ()->
-              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
-              jm.verify(mocks["AppState"].loadGame)("AN IDENTIFIER")
-            )
-            test("Sets selectedChallenge attribute to result", ()->
-              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
-              a.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge").get("label"))
-            )
-            test("Unsets selectedChallenge attribute if result undefined", ()->
-              jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->)
-              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
-              a.isUndefined(rcvm.get("selectedChallenge"))
-            )
-            test("challengePlayerList unwatches", ()->
-              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
-              jm.verify(rcvm.get("challengePlayerList").unwatch)()
-            )
-            test("challengePlayerList watches challenge", ()->
-              rcvm.get("challenges").trigger("selectedChallengeChanged", "AN IDENTIFIER")
-              jm.verify(rcvm.get("challengePlayerList").watch)(rcvm.get("selectedChallenge"))
-
-            )
+          test("Loads Game State Using Identifier", ()->
+            rcvm.get("challenges").trigger("selectedGameChanged", "AN IDENTIFIER")
+            jm.verify(mocks["AppState"].loadGame)("AN IDENTIFIER")
           )
-          suite("No identifier", ()->
-            test("Unsets SelectedChallenge", ()->
-              rcvm.get("challenges").trigger("selectedChallengeChanged")
-              a.isUndefined(rcvm.get("selectedChallenge"))
-            )
-            test("challengePlayerList unwatches", ()->
-              rcvm.get("challenges").trigger("selectedChallengeChanged")
-              jm.verify(rcvm.get("challengePlayerList").unwatch)()
-            )
+          test("Sets selectedChallenge attribute to result", ()->
+            rcvm.get("challenges").trigger("selectedGameChanged", "AN IDENTIFIER")
+            a.equal("GAME FROM ID: AN IDENTIFIER", rcvm.get("selectedChallenge").get("label"))
+          )
+          test("Unsets selectedChallenge attribute if result undefined", ()->
+            jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->)
+            rcvm.get("challenges").trigger("selectedGameChanged", "AN IDENTIFIER")
+            a.isUndefined(rcvm.get("selectedChallenge"))
+          )
+          test("challengePlayerList unwatches", ()->
+            rcvm.get("challenges").trigger("selectedGameChanged", "AN IDENTIFIER")
+            jm.verify(rcvm.get("challengePlayerList").unwatch)()
+          )
+          test("challengePlayerList watches challenge", ()->
+            rcvm.get("challenges").trigger("selectedGameChanged", "AN IDENTIFIER")
+            jm.verify(rcvm.get("challengePlayerList").watch)(rcvm.get("selectedChallenge"))
 
           )
         )
+        suite("No identifier", ()->
+          test("Unsets SelectedChallenge", ()->
+            rcvm.get("challenges").trigger("selectedGameChanged")
+            a.isUndefined(rcvm.get("selectedChallenge"))
+          )
+          test("challengePlayerList unwatches", ()->
+            rcvm.get("challenges").trigger("selectedGameChanged")
+            jm.verify(rcvm.get("challengePlayerList").unwatch)()
+          )
+
+        )
       )
+
       suite("selectChallenge", ()->
         rcvm = null
         setup(()-> rcvm=new ReviewChallengesViewModel())

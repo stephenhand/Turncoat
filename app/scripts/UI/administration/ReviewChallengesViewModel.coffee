@@ -1,6 +1,6 @@
 
 
-define(["underscore", "backbone", "lib/turncoat/Constants", "lib/turncoat/Game", "lib/turncoat/User", "UI/widgets/GameListViewModel", "UI/widgets/PlayerListViewModel", "AppState"], (_, Backbone, Constants, Game, User, GameListViewModel, PlayerListViewModel, AppState)->
+define(["underscore", "backbone", "lib/turncoat/Constants", "UI/widgets/GameListViewModel", "UI/widgets/PlayerListViewModel", "AppState"], (_, Backbone, Constants, GameListViewModel, PlayerListViewModel, AppState)->
 
 
   ReviewChallengesViewModel = Backbone.Model.extend(
@@ -14,7 +14,7 @@ define(["underscore", "backbone", "lib/turncoat/Constants", "lib/turncoat/Game",
       @get("tab")?.on("change:active", (model)=>
         if !model.get("active") then @get("challenges").selectGame()
       )
-      @get("challenges").on("selectedChallengeChanged", (id)=>
+      @get("challenges").on("selectedGameChanged", (id)=>
         if id?
           @set("selectedChallenge",AppState.loadGame(id))
           if @get("selectedChallenge")?

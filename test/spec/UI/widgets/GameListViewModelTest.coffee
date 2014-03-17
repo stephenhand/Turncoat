@@ -452,21 +452,21 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
         ])
         glvm.trigger = jm.mockFunction()
       )
-      test("Input matches id in list - triggers selectedChallengeChanged with id", ()->
+      test("Input matches id in list - triggers selectedGameChanged with id", ()->
         glvm.selectGame("MOCK_GAME_ID2")
-        jm.verify(glvm.trigger)("selectedChallengeChanged","MOCK_GAME_ID2")
+        jm.verify(glvm.trigger)("selectedGameChanged","MOCK_GAME_ID2")
       )
 
-      test("Input id not in list - triggers selectedChallengeChanged with nothing", ()->
+      test("Input id not in list - triggers selectedGameChanged with nothing", ()->
         glvm.selectGame("NOT AN ID")
-        jm.verify(glvm.trigger)("selectedChallengeChanged")
-        jm.verify(glvm.trigger, v.never())("selectedChallengeChanged",m.anything())
+        jm.verify(glvm.trigger)("selectedGameChanged")
+        jm.verify(glvm.trigger, v.never())("selectedGameChanged",m.anything())
       )
 
-      test("No input - triggers selectedChallengeChanged with nothing", ()->
+      test("No input - triggers selectedGameChanged with nothing", ()->
         glvm.selectGame()
-        jm.verify(glvm.trigger)("selectedChallengeChanged")
-        jm.verify(glvm.trigger, v.never())("selectedChallengeChanged",m.anything())
+        jm.verify(glvm.trigger)("selectedGameChanged")
+        jm.verify(glvm.trigger, v.never())("selectedGameChanged",m.anything())
       )
 
       test("Input matches id in list - sets selected flag on matched item", ()->
