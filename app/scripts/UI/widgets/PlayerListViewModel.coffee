@@ -24,7 +24,7 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
                   status:listUser.get("status")
                 )
               )
-              player.get("user").onModelUpdated = (m)->
+              player.get("user").onModelUpdated = (m)=>
                 if m.get("id") isnt player.get("user").get("id")
                   remapUsers(@)
                 else
