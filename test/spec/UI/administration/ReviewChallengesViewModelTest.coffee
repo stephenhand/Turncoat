@@ -6,37 +6,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     )
 
   )
-  Isolate.mapAsFactory("UI/component/ObservableOrderCollection","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      setOrderAttribute:JsMockito.mockFunction()
-    )
-
-  )
   Isolate.mapAsFactory("AppState","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
       loadGame:()->
     )
 
-  )
-  Isolate.mapAsFactory("UI/component/ObservingViewModelCollection","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      mockBaseViewModelCollection = (data)->
-        mockConstructedBVMC = new Backbone.Collection(data)
-        mockConstructedBVMC.watch = JsMockito.mockFunction()
-        mockConstructedBVMC.unwatch = JsMockito.mockFunction()
-        mockConstructedBVMC.updateFromWatchedCollections = JsMockito.mockFunction()
-        mockConstructedBVMC
-      mockBaseViewModelCollection
-    )
-  )
-  Isolate.mapAsFactory("UI/component/ObservingViewModelItem","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      Backbone.Model.extend(
-        initialize:()->
-          @watch=JsMockito.mockFunction()
-      )
-    )
   )
   Isolate.mapAsFactory("UI/widgets/GameListViewModel","UI/administration/ReviewChallengesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
@@ -67,8 +42,6 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "jsMockito", "jsH
   v = jm.Verifiers
   suite("ReviewChallengesViewModel", ()->
     setup(()->
-      mocks["UI/component/ObservingViewModelItem"].watch = jm.mockFunction()
-      mocks["UI/component/ObservingViewModelItem"].unwatch = jm.mockFunction()
       mocks["UI/widgets/GameListViewModel"].prototype.selectChallenge = jm.mockFunction()
       mocks["UI/widgets/GameListViewModel"].watch = jm.mockFunction()
       mocks["UI/widgets/GameListViewModel"].unwatch = jm.mockFunction()
@@ -80,7 +53,6 @@ define(["isolate!UI/administration/ReviewChallengesViewModel", "jsMockito", "jsH
         mocks['AppState'].get = jm.mockFunction()
         mocks['AppState'].issueChallenge = jm.mockFunction()
         mocks['AppState'].acceptChallenge = jm.mockFunction()
-        mocks["UI/component/ObservableOrderCollection"].setOrderAttribute = jm.mockFunction()
         jm.when(mocks['AppState'].get)(m.anything()).then(
           (key)->
             switch key

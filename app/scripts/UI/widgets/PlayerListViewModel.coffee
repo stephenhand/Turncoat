@@ -6,7 +6,6 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
     watch:(game)->
       super([game.get("players")])
       superUnwatch = @unwatch
-      @currentGame = game
       remapUsers = (players)=>
         for player in players.models
           listUsers = game.get("users").where(playerId:player.get("id"))
@@ -92,13 +91,11 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
       @listenTo(game.get("users"), "reset", remapAllUsers, @)
 
       @unwatch= ()->
-        if @currentGame?.get("users")?
-          @stopListening(@currentGame.get("users"))
-        @currentGame = null
-        superUnwatch(true)
+        if game?.get("users")?
+          @stopListening(game.get("users"))
+        game = null
+        superUnwatch.call(@, true)
 
-
-    unwatch:()->
 
 
 
