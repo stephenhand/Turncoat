@@ -1,4 +1,4 @@
-define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "AppState"], (setTimeout, _, Backbone, Constants, ObservingViewModelCollection, ObservableOrderCollection, AppState)->
+define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/component/ObservingViewModelCollection", "UI/component/ObservableOrderCollection", "UI/component/ObservingViewModelItem", "AppState"], (setTimeout, _, Backbone, Constants, ObservingViewModelCollection, ObservableOrderCollection, ObservingViewModelItem, AppState)->
   GetStatusText = (userStatus)->
     switch userStatus
       when Constants.READY_STATE
@@ -30,21 +30,41 @@ define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/com
           (item, watched)->
             item.get("id")? and (item.get("id") is watched.get("id"))
         ,
-          (input)->
-            newItem = new Backbone.Model(
+          (input)=>
+            newItem = new ObservingViewModelItem(
               created:input.get("created")
               createdText:input.get("created")?.format?('MMMM Do YYYY, h:mm:ss a') ? "--"
               id:input.get("id")
               label:input.get("label")
               statusText: GetStatusText(input.get("userStatus"))
+              status: input.get("userStatus")
               new:true
             )
+            newItem.onModelUpdated = (model)=>
+              newItem.set(
+                created:model.get("created")
+                createdText:model.get("created")?.format?('MMMM Do YYYY, h:mm:ss a') ? "--"
+                label:model.get("label")
+                statusText: GetStatusText(model.get("userStatus"))
+              )
+              @onSourceUpdated()
+            newItem.watch([
+              model:input
+              attributes:[
+                "created",
+                "label",
+                "userStatus"
+              ]
+            ])
             setTimeout(()->
               newItem.unset("new")
             )
             newItem
         ,
           opts?.filter ? ()->true
+        ,
+          (removed)->
+            removed.unwatch()
         )
 
       @onSourceUpdated()

@@ -30,6 +30,16 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       mockViewModelCollection
     )
   )
+  Isolate.mapAsFactory("UI/component/ObservingViewModelItem","UI/widgets/GameListViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockViewModelCollection = Backbone.Model.extend(
+        initialize:()->
+          @watch = JsMockito.mockFunction()
+          @unwatch = JsMockito.mockFunction()
+      )
+      mockViewModelCollection
+    )
+  )
 )
 
 define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMockito", "jsHamcrest", "chai"], (GameListViewModel, Constants, jm, h, c)->
@@ -209,193 +219,158 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
           )
         )
         suite("adder", ()->
+          adder = null
+          glvm = null
           setup(()->
             mocks["setTimeout"].func = jm.mockFunction()
+            glvm = new GameListViewModel()
+            glvm.updateFromWatchedCollections=jm.mockFunction()
+            jm.when(glvm.updateFromWatchedCollections)(
+              m.anything(),
+              m.func(),
+              m.anything(),
+              m.anything()).then((a,b,c,d)->
+                adder = b
+            )
+            glvm.onSourceUpdated()
           )
           test("Copies Id", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                      if key is "id" then return "MOCK_ID"
-                  )
-                  "MOCK_ID" is ret.get("id")
-              ),
-              m.anything()
-            )
+            a.equal(adder(new Backbone.Model(
+              id:"MOCK_ID"
+            )).get("id"),"MOCK_ID")
           )
           test("Sets created text using created moment", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                      if key is "created"
-                        format:(pattern)->
-                          "STRING FROM MOMENT: "+pattern
-                  )
-                  "STRING FROM MOMENT" is ret.get("createdText").substr(0,18)
-              ),
-              m.anything()
-            )
+            a.equal(adder(
+              get:(key)->
+                if key is "created"
+                  format:(pattern)->
+                    "STRING FROM MOMENT: "+pattern).get("createdText").substr(0,18),"STRING FROM MOMENT")
           )
           test("Sets Created as created moment", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  moment = {}
-                  ret=input(
-                    get:(key)->
-                      if key is "created"
-                        moment
-                  )
-                  moment is ret.get("created")
-              ),
-              m.anything()
-            )
+            a.equal(adder(
+              get:(key)->
+                if key is "created"
+                  moment
+            ).get("created"), moment)
           )
 
           test("Created isn't moment - uses placeholder", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:()->
-                      "NOT_MOMENT"
-                  )
-                  typeof ret.get("createdText") is "string"
-              ),
-              m.anything()
-            )
+            a.isString(adder(
+              get:()->
+                "NOT_MOMENT"
+            ).get("createdText"))
           )
           test("Created unavailable - uses placeholder", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:()->
-                      undefined
-                  )
-                  typeof ret.get("createdText") is "string"
-              ),
-              m.anything()
-            )
+            a.isString(adder(
+              get:()->
+                undefined
+            ).get("createdText"))
           )
           test("Copies label", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                      if key is "label" then return "MOCK_LABEL"
-                  )
-                  "MOCK_LABEL" is ret.get("label")
-              ),
-              m.anything()
-            )
+            a.equal(adder(
+              get:(key)->
+                if key is "label" then return "MOCK_LABEL"
+            ).get("label"), "MOCK_LABEL")
           )
           test("User status CHALLENGED - Sets Status Text", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                      if key is "userStatus" then return Constants.CHALLENGED_STATE
-                  )
-                  _.isString(ret.get("statusText"))
-              ),
-              m.anything()
-            )
+            a.isString(adder(
+              get:(key)->
+                if key is "userStatus" then return Constants.CHALLENGED_STATE
+            ).get("statusText"))
           )
           test("User status READY - Sets status text", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                      if key is "userStatus" then return Constants.READY_STATE
-                  )
-                  _.isString(ret.get("statusText"))
-              ),
-              m.anything()
-            )
+            a.isString(adder(
+              get:(key)->
+                if key is "userStatus" then return Constants.READY_STATE
+            ).get("statusText"))
           )
           test("SetsNewTrue", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                  )
-                  ret.get("new") is true
-              ),
-              m.anything()
-            )
+            a.isTrue(adder(
+              get:(key)->
+            ).get("new"))
           )
           test("Sets timeout to unset new", ()->
-            glvm = new GameListViewModel()
-            glvm.updateFromWatchedCollections=jm.mockFunction()
-            glvm.onSourceUpdated()
-            jm.verify(glvm.updateFromWatchedCollections)(
-              m.anything(),
-              new h.SimpleMatcher(
-                matches:(input)->
-                  ret=input(
-                    get:(key)->
-                  )
-                  try
-                    jm.verify(mocks["setTimeout"].func)(new h.SimpleMatcher(
-                      matches:(to)->
-                        to()
-                        !ret.get("new")?
-                    ))
-                    true
-                  catch e
-                    false
+            model =
+              get:(key)->
+            adder(model)
+            jm.verify(mocks["setTimeout"].func)(new h.SimpleMatcher(
+              matches:(to)->
+                to()
+                !model.get("new")?
+            ))
+          )
+          test("Sets modelUpdated on new item", ()->
+            a.isFunction(adder(
+              get:(key)->
+            ).onModelUpdated)
+          )
+          suite("modelUpdated handler", ()->
+            handler = null
+            outModel = null
+            setup(()->
 
-              ),
-              m.anything()
+              model = new Backbone.Model()
+              outModel = adder(model)
+              handler = outModel.onModelUpdated
+            )
+            test("Sets created text using created moment", ()->
+              handler(
+                get:(key)->
+                  if key is "created"
+                    format:(pattern)->
+                      "STRING FROM MOMENT: "+pattern)
+              a.equal(outModel.get("createdText").substr(0,18),"STRING FROM MOMENT")
+            )
+            test("Sets Created as created moment", ()->
+              handler(
+                get:(key)->
+                  if key is "created"
+                    moment
+              )
+              a.equal(outModel.get("created"), moment)
+            )
+
+            test("Created isn't moment - uses placeholder", ()->
+              handler(
+                get:()->
+                  "NOT_MOMENT"
+              )
+              a.isString(outModel.get("createdText"))
+            )
+            test("Created unavailable - uses placeholder", ()->
+              handler(
+                get:()->
+                  undefined
+              )
+              a.isString(outModel.get("createdText"))
+            )
+            test("Copies label", ()->
+             handler(
+                get:(key)->
+                  if key is "label" then return "MOCK_LABEL"
+              )
+              a.equal(outModel.get("label"), "MOCK_LABEL")
+            )
+            test("User status CHALLENGED - Sets Status Text", ()->
+              handler(
+                get:(key)->
+                  if key is "userStatus" then return Constants.CHALLENGED_STATE
+              )
+              a.isString(outModel.get("statusText"))
+            )
+            test("User status READY - Sets status text", ()->
+              handler(
+                get:(key)->
+                  if key is "userStatus" then return Constants.READY_STATE
+              )
+              a.isString(outModel.get("statusText"))
+            )
+            test("Fires game lists's onSuorceUpdated", ()->
+              glvm.onSourceUpdated = jm.mockFunction()
+              handler(
+                get:(key)->
+              )
+              jm.verify(glvm.onSourceUpdated)()
             )
           )
 
@@ -432,6 +407,32 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
             a(calledFilter(null))
             a(calledFilter(undefined))
             a(calledFilter(false))
+          )
+        )
+        suite("onRemove", ()->
+          onremove = null
+          setup(()->
+            mocks["setTimeout"].func = jm.mockFunction()
+            glvm = new GameListViewModel()
+            glvm.updateFromWatchedCollections=jm.mockFunction()
+            jm.when(glvm.updateFromWatchedCollections)(
+              m.anything(),
+              m.func(),
+              m.anything(),
+              m.anything()).then((a,b,c,d)->
+              onremove = d
+            )
+            glvm.onSourceUpdated()
+          )
+          test("Unwatches item", ()->
+
+            deleted =
+              unwatch:jm.mockFunction()
+            onremove(deleted)
+            jm.verify(deleted.unwatch)()
+          )
+          test("No item - throws", ()->
+            a.throw(()->onremove())
           )
         )
       )
