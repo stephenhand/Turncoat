@@ -20,10 +20,10 @@ define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/com
           when a.get("created").unix() < b.get("created").unix() then 1
           else 0
 
-      @watch([AppState.get("currentUser").get("games")])
+      @watch([AppState.get("currentUser").get("games")], ["userStatus"])
       @listenTo(AppState, "change::currentUser", ()->
         @unwatch()
-        @watch([AppState.get("currentUser").get("games")])
+        @watch([AppState.get("currentUser").get("games")], ["userStatus"])
       ,@)
       @onSourceUpdated=()->
         @updateFromWatchedCollections(
@@ -47,7 +47,6 @@ define(["setTimeout","underscore", "backbone", "lib/turncoat/Constants", "UI/com
                 label:model.get("label")
                 statusText: GetStatusText(model.get("userStatus"))
               )
-              @onSourceUpdated()
             newItem.watch([
               model:input
               attributes:[

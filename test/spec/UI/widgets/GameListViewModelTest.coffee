@@ -71,7 +71,11 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
       )
       test("Challenges watches current user's games", ()->
         glvm = new GameListViewModel()
-        jm.verify(glvm.watch)(m.hasItem(mockGameList))
+        jm.verify(glvm.watch)(m.hasItem(mockGameList),m.anything())
+      )
+      test("Challenges watches current user's game's userStatus attribute", ()->
+        glvm = new GameListViewModel()
+        jm.verify(glvm.watch)(m.anything(), m.equivalentArray(["userStatus"]))
       )
       test("Listens to AppState for changes in current user",()->
         new GameListViewModel()
@@ -96,7 +100,11 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
         )
         test("Challenges watches current user's games", ()->
           handler.call(glvm)
-          jm.verify(glvm.watch)(m.hasItem(mockGameList))
+          jm.verify(glvm.watch)(m.hasItem(mockGameList),m.anything())
+        )
+        test("Challenges watches current user's game's userStatus attribute", ()->
+          handler.call(glvm)
+          jm.verify(glvm.watch)(m.anything(), m.equivalentArray(["userStatus"]))
         )
       )
       test("Sets Challenges OnSourceUpdated", ()->
@@ -364,13 +372,6 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
                   if key is "userStatus" then return Constants.READY_STATE
               )
               a.isString(outModel.get("statusText"))
-            )
-            test("Fires game lists's onSuorceUpdated", ()->
-              glvm.onSourceUpdated = jm.mockFunction()
-              handler(
-                get:(key)->
-              )
-              jm.verify(glvm.onSourceUpdated)()
             )
           )
 
