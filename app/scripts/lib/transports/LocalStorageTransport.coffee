@@ -129,7 +129,7 @@ define(["underscore", "backbone", "jquery","uuid", "lib/logging/LoggerFactory", 
           )
           enqueueMessage(recipient, messageId)
 
-      @broadcastGameEvent=(recipients, data, onComplete)->
+      @broadcastGameEvent=(recipients, data)->
         log.trace("BROADCASTING "+@gameId+" TO "+recipients)
         if (!@gameId?) then throw new Error("Only game level transports can broadcast game events.")
         if data? and recipients?

@@ -221,6 +221,13 @@ define(["isolate!lib/turncoat/User", "lib/turncoat/Constants"], (User, Constants
         )
       )
       suite("Valid input", ()->
+        setup(()->
+          transport.broadcastEvent = jm.mockFunction()
+        )
+        test("Updates userStatus of challenged user to CHALLENGESENT",()->
+          challenger.issueChallenge("CHALLENGED_USER", game)
+          jm.verify(game.updateUserStatus)("CHALLENGED_USER",Constants.CHALLENGESENT_STATE)
+        )
         test("Calls transport sendChallenge with same user & game",()->
           challenger.issueChallenge("CHALLENGED_USER", game)
           jm.verify(transport.sendChallenge)("CHALLENGED_USER",game)
