@@ -11,6 +11,7 @@ define(["underscore", "backbone", "moment", "uuid", "lib/turncoat/Constants", "l
         if !user? then throw new Error("Sending user must be part of game to issue a challenge")
         user = game.get("users").get(userId)
         if !user? then throw new Error("Target user must be part of game to issue a challenge")
+        game.updateUserStatus(userId, Constants.CHALLENGESENT_STATE)
         transport.sendChallenge(userId, game)
 
       @acceptChallenge = (game)->
