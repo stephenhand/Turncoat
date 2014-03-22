@@ -74,6 +74,23 @@ define(["isolate!UI/administration/CurrentGamesView", "jsMockito", "jsHamcrest",
         )
       )
     )
+    suite("launchGame_clicked", ()->
+      test("Model created - calls launchGame on model", ()->
+        cgv = new CurrentGamesView()
+        cgv.createModel()
+        cgv.model.launchGame = jm.mockFunction()
+        cgv.launchGame_clicked()
+        jm.verify(cgv.model.launchGame)()
+
+      )
+      test("Model not created - throws", ()->
+        cgv = new CurrentGamesView()
+        a.throw(()->
+          cgv.launchGame_clicked()
+        )
+
+      )
+    )
 
   )
 )

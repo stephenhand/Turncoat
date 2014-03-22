@@ -29,6 +29,9 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
     getCurrentRoute:()->
       new Route(Backbone.history.getFragment())
 
+    setRoute:(route)->
+      globalRouter.navigate(route.toString(),trigger:true)
+
   _.extend(Router, Backbone.Events)
   globalRouter.on("route:navigate", (path)->
     Router.trigger("navigate", new Route(path))

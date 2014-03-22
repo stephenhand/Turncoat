@@ -36,7 +36,7 @@ define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route",
         if !@rootView? then @launch()
         if (!user? && !gameIdentifier?)
           AppState.trigger("userDataRequired")
-        else #if (gameIdentifier? || route?.subRoutes?.administrationDialogue?)
+        else
           @rootView.routeChanged(route)
 
       ,@)

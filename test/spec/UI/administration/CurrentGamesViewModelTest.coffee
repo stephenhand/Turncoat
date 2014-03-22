@@ -18,6 +18,21 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       )
     )
   )
+  Isolate.mapAsFactory("UI/routing/Router","UI/administration/CurrentGamesViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      setRoute:()->
+    )
+
+  )
+  Isolate.mapAsFactory("UI/routing/Route","UI/administration/CurrentGamesViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      class ret
+        constructor:(route)->
+          @route=route
+      ret
+    )
+
+  )
   Isolate.mapAsFactory("AppState","UI/administration/CurrentGamesViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       get:(key)->
@@ -215,6 +230,30 @@ define(["isolate!UI/administration/CurrentGamesViewModel", "jsMockito", "jsHamcr
         test("Invalid backbone model - throws", ()->
           a.throw(()->filter({userStatus:"ANYTHING_ELSE"}))
         )
+      )
+    )
+    suite("launchGame", ()->
+      router = mocks["UI/routing/Router"]
+      cgvm = null
+      setup(()->
+        cgvm = new CurrentGamesViewModel()
+        cgvm.set("selectedGame",new Backbone.Model(id:"A_GAME_ID"))
+        jm.when(mocks['AppState'].get)("currentUser").then(()->
+          new Backbone.Model(id:"A_USER_ID")
+        )
+        router.setRoute = jm.mockFunction()
+      )
+      test("Game selected and currentUser set in AppState - assigns location path using currentUser id and selectedGame id", ()->
+        cgvm.launchGame()
+        jm.verify(router.setRoute)(m.hasMember("route",m.endsWith("A_USER_ID/A_GAME_ID")))
+      )
+      test("currentUser not set in AppState - throws", ()->
+        jm.when(mocks['AppState'].get)(m.anything()).then(()->)
+        a.throw(()=>cgvm.launchGame())
+      )
+      test("currentUser not set in AppState - throws", ()->
+        cgvm.unset("selectedGame")
+        a.throw(()=>cgvm.launchGame())
       )
     )
   )

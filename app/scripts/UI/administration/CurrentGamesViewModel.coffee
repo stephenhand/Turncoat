@@ -1,4 +1,4 @@
-define(["underscore", "backbone", "lib/turncoat/Constants", "UI/widgets/GameListViewModel", "UI/widgets/PlayerListViewModel", "AppState"], (_, Backbone, Constants, GameListViewModel, PlayerListViewModel, AppState)->
+define(["underscore", "backbone","sprintf", "lib/turncoat/Constants","UI/routing/Route","UI/routing/Router", "UI/widgets/GameListViewModel", "UI/widgets/PlayerListViewModel", "AppState"], (_, Backbone, sprintf, Constants, Route, Router, GameListViewModel, PlayerListViewModel, AppState)->
   CurrentGamesViewModel = Backbone.Model.extend(
     initialize:()->
       @set("games", new GameListViewModel(undefined,
@@ -23,6 +23,10 @@ define(["underscore", "backbone", "lib/turncoat/Constants", "UI/widgets/GameList
 
     selectGame:(gameId)->
       @get("games").selectGame(gameId)
+
+    launchGame:()->
+      Router.setRoute(new Route(sprintf("/#%s/%s",AppState.get("currentUser").get("id"), @get("selectedGame").get("id"))))
+
   )
   CurrentGamesViewModel
 )

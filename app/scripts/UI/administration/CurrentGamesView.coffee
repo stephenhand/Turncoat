@@ -13,9 +13,13 @@ define(["underscore", "backbone", "UI/component/BaseView", "UI/administration/Cu
 
     events:
       'click .left-panel .list-item':'gameListItem_clicked'
+      'click input.launch-game':'launchGame_clicked'
 
     gameListItem_clicked:(event)->
       @model.selectGame(event.currentTarget.id)
+    launchGame_clicked:()->
+      @model.launchGame()
+
 
   CurrentGamesView
 
