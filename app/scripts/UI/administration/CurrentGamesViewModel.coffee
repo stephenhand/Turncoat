@@ -25,7 +25,7 @@ define(["underscore", "backbone","sprintf", "lib/turncoat/Constants","UI/routing
       @get("games").selectGame(gameId)
 
     launchGame:()->
-      Router.setRoute(new Route(sprintf("/#%s/%s",AppState.get("currentUser").get("id"), @get("selectedGame").get("id"))))
+      Router.setRoute(new Route(sprintf("/%s/%s",AppState.get("currentUser").get("id"), @get("selectedGame").get("id"))))
 
   )
   CurrentGamesViewModel

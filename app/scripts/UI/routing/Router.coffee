@@ -2,7 +2,7 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
   globalRouter = new Backbone.Router(
     routes:
       "":"navigate"
-      ":user":"navigate"
+      "*user":"navigate"
   )
 
   Router =
