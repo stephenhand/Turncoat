@@ -18,22 +18,18 @@ define(['underscore', 'backbone', 'AppState', 'UI/component/ObservingViewModelIt
         ])
         @set("modelId", options.model.id)
         @set("classList", @get("classList")+" fleet-asset-2d")
-        @updateFromFleetAsset()
+        @updateFromFleetAsset(options.model)
 
 
-    updateFromFleetAsset:()->
-      models = AppState.get("game").state.searchGameStateModels((model)=>
-        @get("modelId") is model.id
-      )
-      if (models.length)
-        pos = models[0].get("position")
-        @set("xpx",pos.get("x")+"px")
-        @set("ypx",pos.get("y")+"px")
-        @set("transformDegrees",pos.get("bearing"))
+    updateFromFleetAsset:(model)->
+      pos = model.get("position")
+      @set("xpx",pos.get("x")+"px")
+      @set("ypx",pos.get("y")+"px")
+      @set("transformDegrees",pos.get("bearing"))
 
     #Executed in owner object context
     onModelUpdated:(model)->
-      @updateFromFleetAsset()
+      @updateFromFleetAsset(model)
 
 
   FleetAsset2DViewModel
