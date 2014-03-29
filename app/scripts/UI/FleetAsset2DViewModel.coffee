@@ -18,13 +18,16 @@ define(['underscore', 'backbone', 'AppState', 'UI/component/ObservingViewModelIt
         ])
         @set("modelId", options.model.id)
         @set("classList", @get("classList")+" fleet-asset-2d")
+        dim = options.model.get("dimensions")
+        @set("length", dim.get("length"))
+        @set("width", dim.get("width"))
         @updateFromFleetAsset(options.model)
 
 
     updateFromFleetAsset:(model)->
       pos = model.get("position")
-      @set("xpx",pos.get("x")+"px")
-      @set("ypx",pos.get("y")+"px")
+      @set("xpx",pos.get("x"))
+      @set("ypx",pos.get("y"))
       @set("transformDegrees",pos.get("bearing"))
 
     #Executed in owner object context

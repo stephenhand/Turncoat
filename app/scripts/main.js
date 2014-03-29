@@ -16,6 +16,7 @@ require.config({
     templates : '../templates',
     data : '../data',
     log4JavaScript: 'vendor/log4javascript_uncompressed',
+    openlayers: 'vendor/openlayers',
     setTimeout : 'lib/nativeShims/setTimeout',
     setInterval : 'lib/nativeShims/setInterval',
     SharedWorker : 'lib/nativeShims/SharedWorker'
@@ -42,6 +43,9 @@ require.config({
       },
       'log4JavaScript':{
           exports:"log4javascript"
+      }       ,
+      'openlayers':{
+          exports:"OpenLayers"
       }
   }
 

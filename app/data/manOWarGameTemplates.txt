@@ -15,9 +15,13 @@
                     ],
                     "position":{
                         "_type":"AssetPosition",
-                        "x":100,
+                        "x":400,
                         "y":100,
                         "bearing":45
+                    },
+                    "dimensions":{
+                        "length":60,
+                        "width":30
                     }
                 },
                 {
@@ -26,9 +30,13 @@
                     ],
                     "position":{
                         "_type":"AssetPosition",
-                        "x":155,
+                        "x":455,
                         "y":110,
                         "bearing":45
+                    },
+                    "dimensions":{
+                        "length":60,
+                        "width":30
                     }
                 }
             ]
@@ -53,9 +61,13 @@
                       ],
                       "position":{
                           "_type":"AssetPosition",
-                          "x":100,
+                          "x":400,
                           "y":100,
                           "bearing":45
+                      },
+                      "dimensions":{
+                        "length":60,
+                        "width":30
                       }
                   }
               ]
@@ -72,9 +84,13 @@
                       ],
                       "position":{
                           "_type":"AssetPosition",
-                          "x":155,
+                          "x":455,
                           "y":110,
                           "bearing":45
+                      },
+                      "dimensions":{
+                        "length":60,
+                        "width":30
                       }
                   }
               ]

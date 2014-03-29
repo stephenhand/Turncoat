@@ -1,6 +1,7 @@
 define(["underscore","backbone"],(_, Backbone)->
-    Move = Backbone.Collection.extend(
+    Move = Backbone.Model.extend(
       initialize: (options)->
+        @set("actions", @get("actions") ? new Backbone.Collection())
 
 
 

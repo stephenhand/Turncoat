@@ -443,6 +443,97 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
 
         )
       )
+
+      suite("logMove", ()->
+        suite("Move log is valid Backbone Collection", ()->
+          game = null
+          setup(()->
+            game = new Game(
+              moveLog:new Backbone.Collection([
+                userId:"MOCK_MOVER"
+                details:"MOCK_DETAILS"
+                timestamp:{moment:"MOCK_TIME"}
+              ])
+            )
+          )
+          test("Adds new move to start", ()->
+            event = new Backbone.Model()
+            game.logMove(event)
+            a.equal(game.get("moveLog").length, 2)
+
+            a.equal(game.get("moveLog").at(0), event)
+
+          )
+          test("Preserves Existing Events", ()->
+            game.logMove({})
+            a.equal(game.get("moveLog").at(1).get("userId"), "MOCK_MOVER")
+          )
+
+        )
+        test("No existing move log - Creates new log", ()->
+          game = new Game()
+          event = new Backbone.Model()
+          game.logMove(event)
+          a.equal(game.get("moveLog").length, 1)
+          a.equal(game.get("moveLog").at(0), event)
+        )
+        test("Invalid move log - Throws", ()->
+          game = new Game(
+            moveLog:{}
+          )
+          a.throw(()->
+            game.logMove({})
+          )
+        )
+      )
+      suite("getLatestMove", ()->
+        suite("Game without move log", ()->
+          test("No userId - returns undefined", ()->
+            game = new Game()
+            a.isUndefined(game.getLastMove())
+          )
+          test("userId specified - returns undefined", ()->
+            game = new Game()
+            a.isUndefined(game.getLastMove("MOVER_NAME"))
+          )
+        )
+
+        suite("Game with move log", ()->
+          game = null
+          setup(()->
+            game = new Game(
+              moveLog:new Backbone.Collection([
+                userId:"MOCK_MOVER"
+                details:"MOCK_DETAILS"
+                timestamp:{moment:"MOCK_TIME"}
+              ,
+                userId:"MOCK_MOVER_2"
+                details:"MOCK_DETAILS_2"
+                timestamp:{moment:"MOCK_TIME_2"}
+              ,
+                userId:"MOCK_MOVER_2"
+                details:"MOCK_DETAILS_3"
+                timestamp:{moment:"MOCK_TIME_3"}
+              ])
+            )
+          )
+          test("No userId - returns top move", ()->
+            ret= game.getLastMove()
+            a.equal("MOCK_MOVER",ret.get("userId"))
+            a.equal("MOCK_DETAILS",ret.get("details"))
+            a.equal("MOCK_TIME",ret.get("timestamp").moment)
+          )
+          test("UserId that exists in log - returns top move with that userId of that name", ()->
+            ret= game.getLastMove("MOCK_MOVER_2")
+            a.equal("MOCK_MOVER_2",ret.get("userId"))
+            a.equal("MOCK_DETAILS_2",ret.get("details"))
+            a.equal("MOCK_TIME_2",ret.get("timestamp").moment)
+          )
+          test("UserId that doesnt exist in log - returns undefined", ()->
+            a.isUndefined(game.getLastMove("MOCK_MOVER_3"))
+          )
+        )
+      )
     )
   )
 

@@ -3,6 +3,15 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/G
     players:new Backbone.Collection(
       model:Player
     )
+
+    getCurrentControllingUser:()->
+
+    getCurrentControllingPlayer:()->
+      @getLastMove()?.getEndControllingPlayer()
+
+
+    getCurrentTurnPlayer:()->
+
   ManOWarGameState.toString=()->
     "ManOWarGameState"
   StateRegistry.registerType("ManOWarGameState",ManOWarGameState)

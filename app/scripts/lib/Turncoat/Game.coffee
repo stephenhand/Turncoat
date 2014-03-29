@@ -65,8 +65,17 @@ define(["underscore", "backbone", "lib/backboneTools/ModelProcessor", "lib/turnc
       model:User
     )
 
-    logEvent:(moment, eventName, eventDetails)->
-      super(moment, eventName, eventDetails)
+    getCurrentControllingUser:()->
+      @getLastMove()?.get("userId")
+
+    logMove:(move)->
+      GameStateModel.logEvent(@, move, "moveLog")
+
+    getLastMove:(userid)->
+      if @get("moveLog")?
+        @get("moveLog").find((l)->(!userid? || userid is l.get("userId")))
+
+
 
   Game
 )

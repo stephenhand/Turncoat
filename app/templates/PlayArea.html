@@ -1,10 +1,10 @@
-<div>
-    <div class="play-area-layer" id="backgroundLayer">
+<svg>
+    <g class="play-area-layer" id="backgroundLayer">
 
-    </div>
-    <div class="play-area-layer" id="sceneryLayer"></div>
-    <div class="play-area-layer" id="shipsLayer">
-        <div data-rv-each-ship=".gameBoard.ships" data-rv-class="ship.classList" data-rv-style_left="ship.xpx" data-rv-style_top="ship.ypx" data-rv-style_transform="ship.transformDegrees | rotateCss"></div>
-    </div>
-    <div class="play-area-layer" id="flyersLayer"></div>
-</div>
+    </g>
+    <g class="play-area-layer" id="sceneryLayer"></g>
+    <g width="1000" height="1000" class="play-area-layer" id="shipsLayer">
+        <rect data-rv-each-ship=".gameBoard.ships" data-rv-height="ship.length" data-rv-width="ship.width" data-rv-class="ship.classList" data-rv-x="ship.xpx" data-rv-y="ship.ypx" data-rv-style_transform="ship.transformDegrees | rotateCss"></div>
+    </g>
+    <g class="play-area-layer" id="flyersLayer"></g>
+</svg>

@@ -36,30 +36,17 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
       chain
 
     generateEvent:(eventName, eventData)->
-      validation = new Backbone.Model(
-        counter:0
-      )
-      previousTimestamp = null
-      previousId = null
-      if @get("_eventLog")? && !@get("_eventLog").isEmpty()
-        l = @get("_eventLog").at(0)
-        validation.set("counter", @get("_eventLog").length)
-        validation.set("previousTimestamp", l.get("timestamp"))
-        validation.set("previousId", l.get("id"))
-      new LogEntry(
-        id:UUID()
-        timestamp:moment.utc()
-        name:eventName
-        data:eventData
-        validation:validation
-      )
+      generateVerifiable(@, eventName, "name", eventData, "_eventLog")
 
     logEvent:(event)->
-      GameStateModel.logEvent(@, event)
+      GameStateModel.logEvent(@, event, "_eventLog")
 
     getLatestEvent:(name)->
       if @get("_eventLog")?
         @get("_eventLog").find((l)->(!name? || name is l.get("name")))
+
+
+
 
     getHeaderForUser:(@userId)->
       header = new GameHeader(
@@ -78,14 +65,33 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
       header
   )
 
+  generateVerifiable = (game, identifier, field, data, logAttribute)->
+    validation = new Backbone.Model(
+      counter:0
+    )
+    previousTimestamp = null
+    previousId = null
+    if game.get(logAttribute)? && !game.get(logAttribute).isEmpty()
+      l = game.get(logAttribute).at(0)
+      validation.set("counter", game.get(logAttribute).length)
+      validation.set("previousTimestamp", l.get("timestamp"))
+      validation.set("previousId", l.get("id"))
+    le = new LogEntry(
+      id:UUID()
+      timestamp:moment.utc()
+      data:data
+      validation:validation
+    )
+    le.set(field, identifier)
+
   GameStateModel.fromString = (state)->
     GameStateModel.marshaller ?= Factory.buildStateMarshaller()
     GameStateModel.marshaller.unmarshalState(state)
 
-  GameStateModel.logEvent = (gsm, event)->
-    if !gsm.get("_eventLog")?
-      gsm.set("_eventLog", new Backbone.Collection([]))
-    gsm.get("_eventLog").unshift(event)
+  GameStateModel.logEvent = (gsm, event, logAttribute)->
+    if !gsm.get(logAttribute)?
+      gsm.set(logAttribute, new Backbone.Collection([]))
+    gsm.get(logAttribute).unshift(event)
 
   GameStateModel.vivifier = (unvivified, constructor)->
     vivified = new constructor()

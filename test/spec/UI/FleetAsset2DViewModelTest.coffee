@@ -50,6 +50,9 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
   mockPos =
     get:JsMockito.mockFunction()
     on:JsMockito.mockFunction()
+  mockDim =
+    get:JsMockito.mockFunction()
+    on:JsMockito.mockFunction()
 
 
   JsMockito.when(mockModel.get)(JsHamcrest.Matchers.anything()).then(
@@ -57,6 +60,8 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
       switch att
         when "position"
           mockPos
+        when "dimensions"
+          mockDim
   )
 
   JsMockito.when(mockPos.get)(JsHamcrest.Matchers.anything()).then(
@@ -68,6 +73,14 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
           321
         when "bearing"
           45
+  )
+  JsMockito.when(mockDim.get)(JsHamcrest.Matchers.anything()).then(
+    (att)->
+      switch att
+        when "length"
+          1337
+        when "width"
+          666
   )
   suite("FleetAsset2DViewModel", ()->
 
@@ -103,11 +116,19 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
       )
       test("Sets XPos", ()->
         fa2dvm = new FleetAsset2DViewModel(model:mockModel)
-        chai.assert.equal(fa2dvm.get("xpx"),"123px")
+        chai.assert.equal(fa2dvm.get("xpx"),"123")
       )
       test("Sets YPos", ()->
         fa2dvm = new FleetAsset2DViewModel(model:mockModel)
-        chai.assert.equal(fa2dvm.get("ypx"),"321px")
+        chai.assert.equal(fa2dvm.get("ypx"),"321")
+      )
+      test("Sets length", ()->
+        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        chai.assert.equal(fa2dvm.get("length"),"1337")
+      )
+      test("Sets width", ()->
+        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        chai.assert.equal(fa2dvm.get("width"),"666")
       )
       test("Sets transform", ()->
         fa2dvm = new FleetAsset2DViewModel(model:mockModel)
@@ -126,11 +147,11 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
         on:()->
       test("Sets XPos", ()->
         fa2dvm = new FleetAsset2DViewModel(model:mockModel)
-        chai.assert.equal(fa2dvm.get("xpx"),"123px")
+        chai.assert.equal(fa2dvm.get("xpx"),"123")
       )
       test("Sets YPos", ()->
         fa2dvm = new FleetAsset2DViewModel(model:mockModel)
-        chai.assert.equal(fa2dvm.get("ypx"),"321px")
+        chai.assert.equal(fa2dvm.get("ypx"),"321")
       )
       test("Sets transform", ()->
         fa2dvm = new FleetAsset2DViewModel(model:mockModel)

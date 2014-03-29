@@ -1,12 +1,12 @@
 define(['underscore','backbone'], (_,Backbone)->
   Action = Backbone.Model.extend(
-    run:(parameters)->
+    play:(parameters)->
       throw new Error("Not implemented")
 
     replay:(result)->
       throw new Error("Not implemented")
 
-    rollBack:(result)->
+    rewind:(result)->
       throw new Error("Not implemented")
 
     toString:()->

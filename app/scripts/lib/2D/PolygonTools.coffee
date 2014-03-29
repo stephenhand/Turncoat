@@ -1,3 +1,4 @@
+
 define([], ()->
   PolygonTools =
     #original javascript posted at http://www.isogenicengine.com/2010/10/13/spotlight-detecting-polygon-collision-in-javascript/

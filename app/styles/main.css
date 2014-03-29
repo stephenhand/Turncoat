@@ -270,9 +270,7 @@ input[type=button]:active{
 }
 
 .fleet-asset-2d{
-    border:solid 1px black;
-    width:30px;
-    height:60px
+    -webkit-transform-origin:50% 50%
 }
 
 .list-view {
