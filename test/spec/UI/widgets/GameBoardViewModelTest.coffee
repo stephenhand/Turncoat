@@ -153,8 +153,28 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
           )
           gbvm.setGame(gsmWithOneCollection)
         )
-        test("Creates new FleetAsset2DModel", ()->
+        test("No options specified on construction - Creates new FleetAsset2DModel", ()->
           a.instanceOf(adder({}),mocks["UI/FleetAsset2DViewModel"])
+        )
+        test("Option specified without model type - Creates new FleetAsset2DModel", ()->
+          gbvm = new GameBoardViewModel({})
+          jm.when(gbvm.get("ships").updateFromWatchedCollections)(m.func(),m.func(),m.func()).then((c,a,f)->
+            adder = a
+          )
+          gbvm.setGame(gsmWithOneCollection)
+          a.instanceOf(adder({}),mocks["UI/FleetAsset2DViewModel"])
+
+        )
+
+        test("Option specified without model type - Creates new FleetAsset2DModel", ()->
+          class MockModelType
+          gbvm = new GameBoardViewModel(modelType:MockModelType)
+          jm.when(gbvm.get("ships").updateFromWatchedCollections)(m.func(),m.func(),m.func()).then((c,a,f)->
+            adder = a
+          )
+          gbvm.setGame(gsmWithOneCollection)
+          a.instanceOf(adder({}),MockModelType)
+
         )
         test("Creates new model with model option set to input", ()->
           mod = {}

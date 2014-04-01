@@ -5,9 +5,15 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/G
     )
 
     getCurrentControllingUser:()->
+      @get("users").findWhere(playerId:@getCurrentControllingPlayer().get("id")) ? throw new Error("User associated with player not found in user list!")
+
 
     getCurrentControllingPlayer:()->
-      @getLastMove()?.getEndControllingPlayer()
+      id  = @getLastMove()?.getEndControllingPlayerId()
+      if (id?)
+        @get("players").get(id) ? throw new Error("Player identified as current not in player list!")
+      else
+        @get("players").first()
 
 
     getCurrentTurnPlayer:()->

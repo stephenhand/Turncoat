@@ -4,7 +4,7 @@
             <div class="tag" data-rv-text="game.createdText"></div><span class="info-panel large" data-rv-text="game.label"></span><br/> <span class="list-comment" data-rv-text="game.statusText"></span>
         </div>
     </div>
-    <div class="list-view right-panel">
+    <div class="list-view right-panel" data-rv-class-current-user-controlling=".isCurrentUserControlling">
         <div class="current-game">
             <div class="scenario-info">
                 <span class="heading" data-rv-text=".selectedGame.label < .selectedGame"></span><br/>
@@ -25,7 +25,7 @@
         </div>
         <div class="button-row">
             <input type="button" class="launch-game" id="review-game" value="Review"/>
-            <input type="button" class="launch-game player-turn-only" id="play-game" value="Play"/>
+            <input type="button" class="launch-game current-user-controlling-only" id="play-game" value="Play"/>
         </div>
     </div>
 

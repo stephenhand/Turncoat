@@ -1,5 +1,8 @@
 define(['underscore','backbone'], (_,Backbone)->
   Action = Backbone.Model.extend(
+    initialise:()->
+      @set("events", @get("events") ? new Backbone.Collection())
+
     play:(parameters)->
       throw new Error("Not implemented")
 

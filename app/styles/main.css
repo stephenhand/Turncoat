@@ -324,7 +324,15 @@ transition: opacity .5s ease-out;
 -webkit-transition: opacity .5s ease-out;
 -o-transition: opacity .5s ease-out;
 }
-
+.launch-game.current-user-controlling-only{
+    display:none
+}
+.current-user-controlling .launch-game.current-user-controlling-only{
+    display:inherit
+}
+.current-user-controlling .launch-game{
+    display:none
+}
 /*webkit only*/
 ::-webkit-scrollbar {
     width: 12px;

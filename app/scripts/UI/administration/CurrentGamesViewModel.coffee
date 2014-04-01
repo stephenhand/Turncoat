@@ -9,17 +9,23 @@ define(["underscore", "backbone","sprintf", "lib/turncoat/Constants","UI/routing
       @get("tab")?.on("change:active", (model)=>
         if !model.get("active") then @get("games").selectGame()
       )
-      @get("games").on("selectedGameChanged", (id)=>
+
+      @get("games").on("selectedGameChanged", (id)->
+        if @get("selectedGame") then @stopListening(@get("selectedGame"),"movesUpdated")
         if id?
           @set("selectedGame",AppState.loadGame(id))
           if @get("selectedGame")?
             @get("playerList").unwatch()
-            @get("playerList").watch(@get("selectedGame"))
+            isCurrentUserControlling = ()=>
+              @set("isCurrentUserControlling",AppState.get("currentUser").get("id") is @get("selectedGame").getCurrentControllingUser().get("id"))
 
+            @listenTo(@get("selectedGame"),"movesUpdated",isCurrentUserControlling)
+            isCurrentUserControlling()
+            @get("playerList").watch(@get("selectedGame"))
         else
           @unset("selectedGame")
           @get("playerList").unwatch()
-      )
+      ,@)
 
     selectGame:(gameId)->
       @get("games").selectGame(gameId)

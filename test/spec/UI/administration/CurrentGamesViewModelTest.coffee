@@ -132,9 +132,12 @@ define(["isolate!UI/administration/CurrentGamesViewModel", "jsMockito", "jsHamcr
     suite("Games selectedGameChanged Handler", ()->
       cgvm = undefined
       setup(()->
+        jm.when(mocks["AppState"].get)(m.anything()).then((att)->
+          if att is "currentUser" then new Backbone.Model(id:"CURRENT USER")
+        )
         mocks["AppState"].loadGame = jm.mockFunction()
         jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
-          new Backbone.Model(
+          ret = new Backbone.Model(
             label:"GAME FROM ID: "+a
             players:new Backbone.Collection([
               id:"SELECTED_PLAYER"
@@ -154,23 +157,100 @@ define(["isolate!UI/administration/CurrentGamesViewModel", "jsMockito", "jsHamcr
               status:"OTHER_USER_STATUS"
 
             ])
+
           )
+          ret.getCurrentControllingUser=jm.mockFunction()
+          jm.when(ret.getCurrentControllingUser)().then(()->get:()->)
+          ret
         )
         cgvm = new CurrentGamesViewModel()
-        cgvm.set("selectedGame", get:()->)
+        cgvm.set("selectedGame",
+          get:(att)->
+          off:jm.mockFunction()
+        )
+        cgvm.stopListening = jm.mockFunction()
       )
       suite("Valid Identifier", ()->
         setup(()->
+          cgvm.listenTo = jm.mockFunction()
         )
         test("Loads Game State Using Identifier", ()->
           cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
           jm.verify(mocks["AppState"].loadGame)("AN IDENTIFIER")
         )
-        test("Sets selectedChallenge attribute to result", ()->
+        test("Sets selectedGame attribute to result", ()->
           cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
           a.equal("GAME FROM ID: AN IDENTIFIER", cgvm.get("selectedGame").get("label"))
         )
-        test("Unsets selectedChallenge attribute if result undefined", ()->
+        test("Games getCurrentControllingUser returns user with id of current user - Sets isControlling attribute to true", ()->
+          jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
+            ret = new Backbone.Model(
+              label:"GAME FROM ID: "+a
+              players:new Backbone.Collection([])
+              users:new Backbone.Collection([])
+            )
+            ret.getCurrentControllingUser=jm.mockFunction()
+            jm.when(ret.getCurrentControllingUser)().then(()->new Backbone.Model(id:"CURRENT USER"))
+            ret
+          )
+          cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
+          a.isTrue(cgvm.get("isCurrentUserControlling"))
+        )
+        test("Games getCurrentControllingUser returns user with id other than that of current user - Sets isControlling attribute to false", ()->
+          jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
+            ret = new Backbone.Model(
+              label:"GAME FROM ID: "+a
+              players:new Backbone.Collection([])
+              users:new Backbone.Collection([])
+
+            )
+            ret.getCurrentControllingUser=jm.mockFunction()
+            jm.when(ret.getCurrentControllingUser)().then(()->new Backbone.Model(id:"NOT CURRENT USER"))
+            ret
+          )
+          cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
+          a.isFalse( cgvm.get("isCurrentUserControlling"))
+        )
+        test("Games getCurrentControllingUser returns object without get function - throws", ()->
+          jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
+            ret = new Backbone.Model(
+              label:"GAME FROM ID: "+a
+              players:new Backbone.Collection([])
+              users:new Backbone.Collection([])
+
+            )
+            ret.getCurrentControllingUser=jm.mockFunction()
+            jm.when(ret.getCurrentControllingUser)().then(()->{})
+            ret
+          )
+          a.throw(()->cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER"))
+        )
+        test("Games getCurrentControllingUser returns nothing - throws", ()->
+          jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
+            ret = new Backbone.Model(
+              label:"GAME FROM ID: "+a
+              players:new Backbone.Collection([])
+              users:new Backbone.Collection([])
+
+            )
+            ret.getCurrentControllingUser=jm.mockFunction()
+            jm.when(ret.getCurrentControllingUser)().then(()->)
+            ret
+          )
+          a.throw(()->cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER"))
+        )
+        test("Already has game selected - stops listening to that games 'movesUpdated' event.", ()->
+          cgvm.stopListening = jm.mockFunction()
+          g = cgvm.get("selectedGame")
+          cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
+          jm.verify(cgvm.stopListening)(g, "movesUpdated")
+        )
+        test("No game already selected - stops listening to nothing.", ()->
+          cgvm.unset("selectedGame")
+          ()->cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
+          jm.verify(cgvm.stopListening, v.never())(m.anything(), "movesUpdated")
+        )
+        test("Unsets selectedGame attribute if result undefined", ()->
           jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->)
           cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
           a.isUndefined(cgvm.get("selectedGame"))
@@ -184,6 +264,49 @@ define(["isolate!UI/administration/CurrentGamesViewModel", "jsMockito", "jsHamcr
           jm.verify(cgvm.get("playerList").watch)(cgvm.get("selectedGame"))
 
         )
+        test("Listens to new selected game's 'movesUpdated' event", ()->
+          cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
+          jm.verify(cgvm.listenTo)(cgvm.get("selectedGame"), "movesUpdated", m.func())
+        )
+        suite("'movesUpdated' listener", ()->
+          listener = null
+          selectedGame = null
+          setup(()->
+            selectedGame = new Backbone.Model(
+              label:"GAME FROM ID: "+a
+              players:new Backbone.Collection([])
+              users:new Backbone.Collection([])
+            )
+            selectedGame.getCurrentControllingUser=jm.mockFunction()
+            jm.when(selectedGame.getCurrentControllingUser)().then(()->new Backbone.Model(id:"CURRENT USER"))
+            jm.when(mocks["AppState"].loadGame)(m.anything()).then((a)->
+              selectedGame
+            )
+            jm.when(cgvm.listenTo)(m.anything(), "movesUpdated", m.func()).then((o, e, l)->
+              listener = l
+            )
+            cgvm.get("games").trigger("selectedGameChanged", "AN IDENTIFIER")
+            cgvm.unset("isCurrentUserControlling")
+          )
+          test("Games getCurrentControllingUser returns user with id of current user - Sets isControlling attribute to true", ()->
+            jm.when(selectedGame.getCurrentControllingUser)().then(()->new Backbone.Model(id:"CURRENT USER"))
+            listener()
+            a.isTrue(cgvm.get("isCurrentUserControlling"))
+          )
+          test("Games getCurrentControllingUser returns user with id other than that of current user - Sets isControlling attribute to false", ()->
+            jm.when(selectedGame.getCurrentControllingUser)().then(()->new Backbone.Model(id:"NOT CURRENT USER"))
+            listener()
+            a.isFalse( cgvm.get("isCurrentUserControlling"))
+          )
+          test("Games getCurrentControllingUser returns object without get function - throws", ()->
+            jm.when(selectedGame.getCurrentControllingUser)().then(()->{})
+            a.throw(()->listener())
+          )
+          test("Games getCurrentControllingUser returns nothing - throws", ()->
+            jm.when(selectedGame.getCurrentControllingUser)().then(()->)
+            a.throw(()->listener())
+          )
+        )
       )
       suite("No identifier", ()->
         test("Unsets selectedGame", ()->
@@ -193,6 +316,18 @@ define(["isolate!UI/administration/CurrentGamesViewModel", "jsMockito", "jsHamcr
         test("challengePlayerList unwatches", ()->
           cgvm.get("games").trigger("selectedGameChanged")
           jm.verify(cgvm.get("playerList").unwatch)()
+        )
+        test("Already has game selected - stops listening to that games 'movesUpdated' event.", ()->
+          cgvm.stopListening = jm.mockFunction()
+          g = cgvm.get("selectedGame")
+          cgvm.get("games").trigger("selectedGameChanged")
+          jm.verify(cgvm.stopListening)(g, "movesUpdated")
+        )
+        test("No game already selected - stops listening to nothing.", ()->
+          cgvm.stopListening = jm.mockFunction()
+          cgvm.unset("selectedGame")
+          ()->cgvm.get("games").trigger("selectedGameChanged")
+          jm.verify(cgvm.stopListening, v.never())(m.anything(), "movesUpdated")
         )
 
       )
@@ -212,7 +347,7 @@ define(["isolate!UI/administration/CurrentGamesViewModel", "jsMockito", "jsHamcr
         cgvm = new CurrentGamesViewModel()
         a.isFunction(cgvm.get("games").opts.filter)
       )
-      suite("Challenges filter", ()->
+      suite("Games filter", ()->
         filter = null
         setup(()->
           filter = new CurrentGamesViewModel().get("games").opts.filter
