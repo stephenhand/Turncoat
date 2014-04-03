@@ -1,8 +1,9 @@
 define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "UI/FleetAsset2DViewModel", "state/FleetAsset"], (_, Backbone, ObservingViewModelCollection, FleetAsset2DViewModel, FleetAsset)->
   GameBoardViewModel = Backbone.Model.extend(
-    initialize: (options)->
+    initialize: (m, options)->
       @set("ships", new ObservingViewModelCollection())
       @assetType = options?.modelType ? FleetAsset2DViewModel
+      @set("overlays", new Backbone.Collection())
 
     setGame:(game)->
       @get("ships").unwatch()
@@ -21,12 +22,13 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
               item.get("modelId") is watchedItem.id
           ,
             (watchedItem)=>
-              new @assetType(model:watchedItem)
+              new @assetType(null, model:watchedItem)
           ,
             (watchedItem)->
               watchedItem instanceof FleetAsset
           )
         @get("ships").onSourceUpdated()
+        overlay.setGame(game) for overlay in @get("overlays")?.models ? []
   )
 )
 

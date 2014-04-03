@@ -3,8 +3,11 @@
 
     </g>
     <g class="play-area-layer" id="sceneryLayer"></g>
-    <g width="1000" height="1000" class="play-area-layer" id="shipsLayer">
-        <rect data-rv-each-ship=".gameBoard.ships" data-rv-height="ship.length" data-rv-width="ship.width" data-rv-class="ship.classList" data-rv-x="ship.xpx" data-rv-y="ship.ypx" data-rv-style_transform="ship.transformDegrees | rotateCss"></div>
+    <g class="play-area-layer" id="shipsLayer">
+        <rect data-rv-each-ship=".gameBoard.ships" data-rv-height="ship.length" data-rv-width="ship.width" data-rv-class="ship.classList" data-rv-x="ship.xpx" data-rv-y="ship.ypx" data-rv-style_transform="ship.transformDegrees | rotateCss"></rect>
     </g>
     <g class="play-area-layer" id="flyersLayer"></g>
+    <g class="play-area-layer" id="UIOverlayLayer">
+        <g data-rv-each-overlay=".gameBoard.overlays" class="play-area-layer overlay" data-rv-id="overlay.id"></g>
+    </g>
 </svg>

@@ -19,8 +19,8 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("UI/FleetAsset2DViewModel","UI/widgets/GameBoardViewModel", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       class ret
-        constructor:(wm)->
-          @inputModel = wm.model
+        constructor:(wm, opt)->
+          @inputModel = opt.model
       ret
     )
   )
@@ -36,6 +36,10 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
       test("Creates 'ships' attribute as ObservingViewModelCollection", ()->
         gbvm = new GameBoardViewModel()
         a.instanceOf(gbvm.get("ships"), mocks["UI/component/ObservingViewModelCollection"])
+      )
+      test("Creates 'overlays' attribute as Backbone Collection", ()->
+        gbvm = new GameBoardViewModel()
+        a.instanceOf(gbvm.get("overlays"), Backbone.Collection)
       )
     )
     suite("setGame", ()->
@@ -157,7 +161,7 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
           a.instanceOf(adder({}),mocks["UI/FleetAsset2DViewModel"])
         )
         test("Option specified without model type - Creates new FleetAsset2DModel", ()->
-          gbvm = new GameBoardViewModel({})
+          gbvm = new GameBoardViewModel(null,{})
           jm.when(gbvm.get("ships").updateFromWatchedCollections)(m.func(),m.func(),m.func()).then((c,a,f)->
             adder = a
           )
@@ -166,9 +170,9 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
 
         )
 
-        test("Option specified without model type - Creates new FleetAsset2DModel", ()->
+        test("Option specified with model type - Creates new object of specified type", ()->
           class MockModelType
-          gbvm = new GameBoardViewModel(modelType:MockModelType)
+          gbvm = new GameBoardViewModel(null, modelType:MockModelType)
           jm.when(gbvm.get("ships").updateFromWatchedCollections)(m.func(),m.func(),m.func()).then((c,a,f)->
             adder = a
           )

@@ -1,7 +1,7 @@
 define(['underscore', 'backbone', 'AppState', 'UI/component/ObservingViewModelItem'], (_, Backbone, AppState, ObservingViewModelItem)->
   class FleetAsset2DViewModel extends ObservingViewModelItem
-    initialize:(options)->
-      super(options)
+    initialize:(m, options)->
+      super(m, options)
       if (options?.model?)
         @watch([
           model:options.model

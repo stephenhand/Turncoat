@@ -91,7 +91,7 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
         FleetAsset2DViewModel.prototype.watch = JsMockito.mockFunction()
       )
       test("watches model", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         JsMockito.verify(fa2dvm.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.equivalentMap(
           model:mockModel
           attributes:[
@@ -100,7 +100,7 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
         )))
       )
       test("Watches model position", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         JsMockito.verify(fa2dvm.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.equivalentMap(
           model:mockModel.get("position")
           attributes:[
@@ -111,27 +111,27 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
         )))
       )
       test("Sets ClassList", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("classList"),"view-model-item fleet-asset-2d")
       )
       test("Sets XPos", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("xpx"),"123")
       )
       test("Sets YPos", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("ypx"),"321")
       )
       test("Sets length", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("length"),"1337")
       )
       test("Sets width", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("width"),"666")
       )
       test("Sets transform", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("transformDegrees"),"45")
       )
       teardown(()->
@@ -146,19 +146,19 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
           get:()->
         on:()->
       test("Sets XPos", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("xpx"),"123")
       )
       test("Sets YPos", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("ypx"),"321")
       )
       test("Sets transform", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         chai.assert.equal(fa2dvm.get("transformDegrees"),"45")
       )
       test("Different model id - does not update model id", ()->
-        fa2dvm = new FleetAsset2DViewModel(model:mockModel)
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         fa2dvm.onModelUpdated(mockOtherModel)
         chai.assert.equal(fa2dvm.get("classList"),"view-model-item fleet-asset-2d")
       )
