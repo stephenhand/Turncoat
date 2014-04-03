@@ -26,7 +26,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "chai"], (GameBoardViewModel, jm, h, c)->
+define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "chai", "backbone"], (GameBoardViewModel, jm, h, c, Backbone)->
   mocks = window.mockLibrary["UI/widgets/GameBoardViewModel"]
   m = h.Matchers
   a = c.assert
@@ -59,26 +59,62 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
         gbvm.get("ships").watch = jm.mockFunction()
         gbvm.get("ships").unwatch = jm.mockFunction()
       )
-
-      test("Game specified - unwatches", ()->
-        gbvm.setGame(gsm)
-        jm.verify(gbvm.get("ships").unwatch)()
-      )
-      test("Game specified - sets ships to watch new game state after unwatching", ()->
-        gsm.watchCollection = []
-        gbvm.get("ships").watch = null
-        jm.when(gbvm.get("ships").unwatch)().then(()->
-          gbvm.get("ships").watch = jm.mockFunction()
+      suite("Game specified", ()->
+        test("unwatches", ()->
+          gbvm.setGame(gsm)
+          jm.verify(gbvm.get("ships").unwatch)()
         )
-        gbvm.setGame(gsm)
-        jm.verify(gbvm.get("ships").watch)(m.equivalentArray([gsm.watchCollection]))
+        test("sets ships to watch new game state after unwatching", ()->
+          gsm.watchCollection = []
+          gbvm.get("ships").watch = null
+          jm.when(gbvm.get("ships").unwatch)().then(()->
+            gbvm.get("ships").watch = jm.mockFunction()
+          )
+          gbvm.setGame(gsm)
+          jm.verify(gbvm.get("ships").watch)(m.equivalentArray([gsm.watchCollection]))
+
+        )
+        test("Calls setGame on all overlays with same game.", ()->
+          setter = Backbone.Model.extend(
+            initialize:()->
+              @setGame=jm.mockFunction()
+          )
+          gbvm.get("overlays").push(new setter())
+          gbvm.get("overlays").push(new setter())
+          gbvm.get("overlays").push(new setter())
+          gbvm.setGame(gsm)
+          jm.verify(gbvm.get("overlays").at(0).setGame)(gsm)
+          jm.verify(gbvm.get("overlays").at(1).setGame)(gsm)
+          jm.verify(gbvm.get("overlays").at(2).setGame)(gsm)
+        )
       )
-
-
-      test("Game not set - unwatches ships without rewatching anything", ()->
-        gbvm.setGame()
-        jm.verify(gbvm.get("ships").unwatch)()
-        jm.verify(gbvm.get("ships").watch, v.never())(m.anything())
+      suite("Game not specified", ()->
+        test("Unwatches ships without rewatching anything", ()->
+          gbvm.setGame()
+          jm.verify(gbvm.get("ships").unwatch)()
+          jm.verify(gbvm.get("ships").watch, v.never())(m.anything())
+        )
+        test("Calls setGame on all overlays with nothing.", ()->
+          setter = Backbone.Model.extend(
+            initialize:()->
+              @setGame=jm.mockFunction()
+          )
+          gbvm.get("overlays").push(new setter())
+          gbvm.get("overlays").push(new setter())
+          gbvm.get("overlays").push(new setter())
+          gbvm.setGame()
+          jm.verify(gbvm.get("overlays").at(0).setGame)(m.nil())
+          jm.verify(gbvm.get("overlays").at(1).setGame)(m.nil())
+          jm.verify(gbvm.get("overlays").at(2).setGame)(m.nil())
+        )
+      )
+      test("Overlays not set - throws", ()->
+        gbvm.unset("overlays")
+        a.throw(()->gbvm.setGame(gsm))
+      )
+      test("Overlays contains objects with no setGame method - throws", ()->
+        gbvm.get("overlays").push({})
+        a.throw(()->gbvm.setGame(gsm))
       )
     )
     suite("Ships onSourceUpdated", ()->

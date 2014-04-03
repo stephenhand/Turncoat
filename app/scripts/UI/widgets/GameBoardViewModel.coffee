@@ -28,7 +28,7 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
               watchedItem instanceof FleetAsset
           )
         @get("ships").onSourceUpdated()
-        overlay.setGame(game) for overlay in @get("overlays")?.models ? []
+      overlay.setGame(game) for overlay in @get("overlays").models
   )
 )
 
