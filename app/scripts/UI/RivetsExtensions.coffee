@@ -7,8 +7,8 @@ define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbon
     formatters:
       rotateCss:(input)->
         "rotate("+input+"deg)"
-      toggle:(toggleSwitch, toggleValue)->
-        if (toggleSwitch) then toggleValue else undefined
+      toggle:(input, trueVal, falseVal)->
+        if (input) then trueVal else falseVal
       sprintf:(input, mask)->
         sprintf(mask, input)
       multiplier:(input, multiplier, mask)->

@@ -22,7 +22,10 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
               item.get("modelId") is watchedItem.id
           ,
             (watchedItem)=>
-              new @assetType(null, model:watchedItem)
+              new @assetType(null,
+                model:watchedItem
+                game:game
+              )
           ,
             (watchedItem)->
               watchedItem instanceof FleetAsset

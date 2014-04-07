@@ -85,7 +85,6 @@ div{
     top:3px
 }
 .inset{
-
     border:solid 1px black;
     padding:4px;
     margin:4px
@@ -119,8 +118,8 @@ div:nth-child(3)>.tab-header{
 
 }
 .scenario-info{
-padding:4px;
-margin-bottom:30px;
+    padding:4px;
+    margin-bottom:30px;
 }
 .scenario-info .heading {
     font-size: 36px;
@@ -333,6 +332,7 @@ transition: opacity .5s ease-out;
 .current-user-controlling .launch-game{
     display:none
 }
+
 /*webkit only*/
 ::-webkit-scrollbar {
     width: 12px;

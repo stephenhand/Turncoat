@@ -21,6 +21,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       class ret
         constructor:(wm, opt)->
           @inputModel = opt.model
+          @inputGame = opt.game
       ret
     )
   )
@@ -222,6 +223,9 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
         )
         test("Null input - creates new model with model option set to null", ()->
           a.isUndefined(adder().inputModel)
+        )
+        test("Game option set to game set", ()->
+          a.equal(adder({}).inputGame, gsmWithOneCollection)
         )
       )
       suite("updateFromWatchedCollections filter", ()->

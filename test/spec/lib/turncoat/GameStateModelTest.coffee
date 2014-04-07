@@ -177,6 +177,18 @@ define(["isolate!lib/turncoat/GameStateModel", "backbone", "lib/backboneTools/Mo
           )
           chai.assert.equal(ch({check:false}), ModelProcessor.CONTINUERECURSION)
         )
+        test("Sets recurse.type - returns recurse.type",()->
+          ch = null
+          JsMockito.when(mocks["lib/backboneTools/ModelProcessor"].recurse)(gsm, JsHamcrest.Matchers.func(), ModelProcessor.INORDER).then(
+            (m,f)->
+              ch = f
+          )
+          gsm.searchChildren((item, r)->
+            item.check
+            r.type = "MOCK RECURSION TYPE"
+          )
+          chai.assert.equal(ch({check:false}), "MOCK RECURSION TYPE")
+        )
       )
 
       suite("searchGameStateModels", ()->

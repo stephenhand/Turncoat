@@ -2,8 +2,13 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
   class FleetAsset extends GameStateModel
     defaults:
       position:null
+
+    getOwningPlayer:(game)->
+      c = @getOwnershipChain(game)
+      _.find(c, (ci)->ci instanceof StateRegistry["Player"]) ? null
+
   FleetAsset.toString=()->
-      "FleetAsset"
+    "FleetAsset"
 
   StateRegistry.registerType("FleetAsset", FleetAsset)
 

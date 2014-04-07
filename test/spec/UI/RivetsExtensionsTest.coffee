@@ -136,19 +136,19 @@ define(['isolate!UI/RivetsExtensions', "jsMockito", "jsHamcrest", "chai"], (Rive
 
       )
       suite("toggle", ()->
-        test("toggleUndefinedValueUndefinedReturnsUndefined", ()->
+        test("toggle undefined and value undefined returns undefined", ()->
           a.isUndefined(RivetsExtensions.formatters.toggle())
         )
-        test("toggleFalseValueUndefinedReturnsUndefined", ()->
+        test("toggle false value undefined returns undefined", ()->
           a.isUndefined(RivetsExtensions.formatters.toggle(false))
         )
         test("toggleFalseValueDefinedReturnsUndefined", ()->
           a.isUndefined(RivetsExtensions.formatters.toggle(false,"MOCK_VALUE"))
         )
-        test("toggleTrueValueUndefinedReturnsUndefined", ()->
+        test("Input TrueValueUndefinedReturnsUndefined", ()->
           a.isUndefined(RivetsExtensions.formatters.toggle(true))
         )
-        test("toggleTrueValueStringReturnsValue", ()->
+        test("Input TrueValueStringReturnsValue", ()->
           a.equal(RivetsExtensions.formatters.toggle(true,"MOCK_VALUE"),"MOCK_VALUE")
         )
         test("toggleTrueValueObjectReturnsValue", ()->
@@ -164,6 +164,12 @@ define(['isolate!UI/RivetsExtensions', "jsMockito", "jsHamcrest", "chai"], (Rive
         test("toggleObjectValueObjectReturnsValue", ()->
           val={}
           a.equal(RivetsExtensions.formatters.toggle({},val),val)
+        )
+        test("Input false and false value set - returns false value", ()->
+          a.equal(RivetsExtensions.formatters.toggle(false, "MOCK TRUE", "MOCK FALSE"),"MOCK FALSE")
+        )
+        test("Input true and only false value set - returns undefined", ()->
+          a.isUndefined(RivetsExtensions.formatters.toggle(true, undefined,"MOCK_VALUE"))
         )
       )
       suite("sprintf",()->
