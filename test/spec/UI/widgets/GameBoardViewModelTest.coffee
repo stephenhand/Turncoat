@@ -42,6 +42,10 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
         gbvm = new GameBoardViewModel()
         a.instanceOf(gbvm.get("overlays"), Backbone.Collection)
       )
+      test("Creates 'underlays' attribute as Backbone Collection", ()->
+        gbvm = new GameBoardViewModel()
+        a.instanceOf(gbvm.get("underlays"), Backbone.Collection)
+      )
     )
     suite("setGame", ()->
       gbvm = null
@@ -88,6 +92,19 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
           jm.verify(gbvm.get("overlays").at(1).setGame)(gsm)
           jm.verify(gbvm.get("overlays").at(2).setGame)(gsm)
         )
+        test("Calls setGame on all underlays with same game.", ()->
+          setter = Backbone.Model.extend(
+            initialize:()->
+              @setGame=jm.mockFunction()
+          )
+          gbvm.get("underlays").push(new setter())
+          gbvm.get("underlays").push(new setter())
+          gbvm.get("underlays").push(new setter())
+          gbvm.setGame(gsm)
+          jm.verify(gbvm.get("underlays").at(0).setGame)(gsm)
+          jm.verify(gbvm.get("underlays").at(1).setGame)(gsm)
+          jm.verify(gbvm.get("underlays").at(2).setGame)(gsm)
+        )
       )
       suite("Game not specified", ()->
         test("Unwatches ships without rewatching anything", ()->
@@ -108,6 +125,19 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
           jm.verify(gbvm.get("overlays").at(1).setGame)(m.nil())
           jm.verify(gbvm.get("overlays").at(2).setGame)(m.nil())
         )
+        test("Calls setGame on all overlays with nothing.", ()->
+          setter = Backbone.Model.extend(
+            initialize:()->
+              @setGame=jm.mockFunction()
+          )
+          gbvm.get("underlays").push(new setter())
+          gbvm.get("underlays").push(new setter())
+          gbvm.get("underlays").push(new setter())
+          gbvm.setGame()
+          jm.verify(gbvm.get("underlays").at(0).setGame)(m.nil())
+          jm.verify(gbvm.get("underlays").at(1).setGame)(m.nil())
+          jm.verify(gbvm.get("underlays").at(2).setGame)(m.nil())
+        )
       )
       test("Overlays not set - throws", ()->
         gbvm.unset("overlays")
@@ -115,6 +145,14 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
       )
       test("Overlays contains objects with no setGame method - throws", ()->
         gbvm.get("overlays").push({})
+        a.throw(()->gbvm.setGame(gsm))
+      )
+      test("Underlays not set - throws", ()->
+        gbvm.unset("underlays")
+        a.throw(()->gbvm.setGame(gsm))
+      )
+      test("Underlays contains objects with no setGame method - throws", ()->
+        gbvm.get("underlays").push({})
         a.throw(()->gbvm.setGame(gsm))
       )
     )

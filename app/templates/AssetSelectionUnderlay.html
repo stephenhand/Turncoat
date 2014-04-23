@@ -1,0 +1,42 @@
+
+
+<g>
+    <circle class="asset-selection-highlight" data-rv-visibility="ship.friendly | toggle visible hidden"
+            data-rv-each-ship=".ships" data-rv-r="ship.length | multiplier 0.8"
+            data-rv-class="ship.classList" data-rv-cx="ship.xpx"
+            data-rv-cy="ship.ypx" fill="url(#underlight)"
+            stroke="transparent" data-rv-stroke-width="ship.length | multiplier 0.05">
+
+        <animate data-rv-id="ship.UIID | sprintf %s-animateover" data-rv-begin="ship.UIID | sprintf %shotspot.mouseover"
+                 attributeType="XML"
+                 attributeName="stroke"
+                 restart="whenNotActive"
+                 to="black"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate data-rv-id="ship.UIID | sprintf %s-animateover" data-rv-begin="ship.UIID | sprintf %shotspot.mouseout"
+                 attributeType="XML"
+                 attributeName="stroke"
+                 restart="whenNotActive"
+                 to="transparent"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate
+            attributeType="CSS"
+            data-rv-begin="ship.UIID | sprintf %shotspot.mouseover"
+            attributeName="fill-opacity"
+            restart="whenNotActive"
+            dur="0.3s"
+            to="0"
+            fill="freeze"/>
+        <animate
+                attributeType="CSS"
+                data-rv-begin="ship.UIID | sprintf %shotspot.mouseout"
+                attributeName="fill-opacity"
+                restart="whenNotActive"
+                dur="0.3s"
+                to="0.75"
+                fill="freeze"/>
+    </circle>
+
+</g>

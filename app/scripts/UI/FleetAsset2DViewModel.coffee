@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'AppState', 'UI/component/ObservingViewModelItem'], (_, Backbone, AppState, ObservingViewModelItem)->
+define(['underscore', 'backbone', 'crypto', 'AppState', 'UI/component/ObservingViewModelItem'], (_, Backbone, Crypto, AppState, ObservingViewModelItem)->
   class FleetAsset2DViewModel extends ObservingViewModelItem
     initialize:(m, options)->
       super(m, options)
@@ -17,6 +17,7 @@ define(['underscore', 'backbone', 'AppState', 'UI/component/ObservingViewModelIt
           ]
         ])
         @set("modelId", options.model.id)
+        @set("UIID", Crypto.MD5(options.model.id))
         @set("classList", @get("classList")+" fleet-asset-2d")
         dim = options.model.get("dimensions")
         @set("length", dim.get("length"))

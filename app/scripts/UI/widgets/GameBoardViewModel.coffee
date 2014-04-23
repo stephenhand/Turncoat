@@ -4,6 +4,7 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
       @set("ships", new ObservingViewModelCollection())
       @assetType = options?.modelType ? FleetAsset2DViewModel
       @set("overlays", new Backbone.Collection())
+      @set("underlays", new Backbone.Collection())
 
     setGame:(game)->
       @get("ships").unwatch()
@@ -32,6 +33,7 @@ define(["underscore", "backbone", "UI/component/ObservingViewModelCollection", "
           )
         @get("ships").onSourceUpdated()
       overlay.setGame(game) for overlay in @get("overlays").models
+      overlay.setGame(game) for overlay in @get("underlays").models
   )
 )
 

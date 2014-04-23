@@ -32,7 +32,8 @@ require.config({
         log4JavaScript: 'vendor/log4JavaScript_uncompressed',
         sprintf: 'vendor/sprintf',
         setTimeout: 'lib/nativeShims/setTimeout',
-        setInterval : 'lib/nativeShims/setInterval'
+        setInterval : 'lib/nativeShims/setInterval',
+        crypto:"http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5"
     },
     shim:{
         'jquery':{
@@ -62,6 +63,9 @@ require.config({
         },
         'log4JavaScript':{
             exports:"log4javascript"
+        },
+        'crypto':{
+            exports:"CryptoJS"
         }
     }
 });
@@ -104,6 +108,8 @@ require(['vendor/log4javascript_uncompressed','spec/AppHostTest',
     "spec/UI/administration/CurrentGamesViewTest",
     'spec/UI/administration/ReviewChallengesViewTest',
     'spec/UI/administration/ReviewChallengesViewModelTest',
+    'spec/UI/board/GameBoardOverlayViewTest',
+    'spec/UI/board/AssetSelectionUnderlayViewTest',
     'spec/UI/board/AssetSelectionOverlayViewTest',
     'spec/UI/board/FleetAssetSelectionViewModelTest',
     'spec/rules/ManOWarMoveTest',

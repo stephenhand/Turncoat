@@ -20,6 +20,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ret
     )
   )
+  Isolate.mapAsFactory("UI/board/AssetSelectionUnderlayView","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      class ret
+      ret
+    )
+  )
 )
 
 define(["isolate!UI/PlayAreaView", "jsMockito", "jsHamcrest", "chai"], (PlayAreaView, jm, h, c)->
@@ -37,13 +43,11 @@ define(["isolate!UI/PlayAreaView", "jsMockito", "jsHamcrest", "chai"], (PlayArea
         a.isDefined(pav.model)
         a.isFalse(pav.model.constructedWith?)
       )
-      test("Sets Model as new PlayAreaViewModel without option parameter specifying assetSelectionView as AssetSelectionViewObject", ()->
-
+      test("Sets Model as new PlayAreaViewModel without option parameter specifying assetSelectionView as AssetSelectionUnderlayView object", ()->
         pav = new PlayAreaView(gameState:{})
-
         pav.createModel()
         a.isDefined(pav.model)
-        a.instanceOf(pav.model.constructedWithOpts.assetSelectionView, mocks["UI/board/AssetSelectionOverlayView"])
+        a.instanceOf(pav.model.constructedWithOpts.assetSelectionView, mocks["UI/board/AssetSelectionUnderlayView"])
       )
     )
     suite("routeChanged", ()->

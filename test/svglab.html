@@ -1,0 +1,70 @@
+<html>
+<body>
+<svg viewbox="0 0 200 200">
+    <defs>
+        <radialGradient id="underlight">
+            <stop offset="0" style="stop-color:rgb(255,255,255);stop-opacity:0" >
+            </stop>
+            <stop offset="0" style="stop-color:rgb(0,0,0);stop-opacity:0.75" >
+                <animate
+                        attributeType="XML"
+                        begin="animateover.begin"
+                        attributeName="offset"
+                        restart="whenNotActive"
+                        dur="0.3s"
+                        from="0"
+                        to="1"
+                        fill="freeze"/>
+                <animate
+                        attributeType="XML"
+                    begin="animateout.begin"
+                    attributeName="offset"
+                    restart="whenNotActive"
+                    dur="0.3s"
+                    from="1"
+                    to="0"
+                    fill="freeze"/>
+            </stop>
+            <stop offset="1" style="stop-color:rgb(0,0,0);stop-opacity:0" />
+        </radialGradient>
+    </defs>
+    <circle r="20" cx="50" cy="50" fill="url(#underlight)" id="circ"
+            stroke="transparent" pointer-events="all">
+        <animate id="animateover" begin="mouseover"
+                 attributeType="XML"
+                 attributeName="stroke"
+                 restart="whenNotActive"
+                 to="black"
+                 fill="freeze"
+                 dur="0.3s"/>
+       <animate id="animateout" begin="mouseout"
+                 attributeType="XML"
+                 attributeName="stroke"
+                 to="transparent"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate begin="animateover.begin"
+                 attributeType="XML"
+                 attributeName="r"
+                 restart="whenNotActive"
+                 from="20"
+                 to="40"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate begin="animateout.begin"
+                 attributeType="XML"
+                 attributeName="r"
+                 to="20"
+                 dur="0.3s"/>
+        <set begin="animateover.end"
+             attributeType="XML"
+             attributeName="r"
+             to="40"/>
+        <set begin="animateout.end"
+             attributeType="XML"
+             attributeName="r"
+             to="20"/>
+    </circle>
+</svg>
+</body>
+</html>

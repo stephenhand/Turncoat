@@ -1,10 +1,23 @@
 <svg viewbox="0 0 72 48">
+    <defs>
+        <radialGradient id="underlight">
+            <stop offset="0" style="stop-color:rgb(255,255,255);stop-opacity:0" >
+            </stop>
+            <stop offset="0" style="stop-color:rgb(0,0,0);stop-opacity:0.75" >
+
+            </stop>
+            <stop offset="0.5" style="stop-color:rgb(0,0,0);stop-opacity:0" />
+        </radialGradient>
+</defs>
     <g class="play-area-layer" id="backgroundLayer">
 
     </g>
     <g class="play-area-layer" id="sceneryLayer"></g>
+    <g class="play-area-layer" id="UIUnderlayLayer">
+        <g data-rv-each-underlay=".gameBoard.underlays" class="play-area-layer underlay" data-rv-id="underlay.id"></g>
+    </g>
     <g class="play-area-layer" id="shipsLayer">
-        <rect data-rv-each-ship=".gameBoard.ships" data-rv-height="ship.length" data-rv-width="ship.width" data-rv-class="ship.classList" data-rv-x="ship | centroid xpx width" data-rv-y="ship | centroid ypx length" data-rv-style_transform="ship.transformDegrees | rotateCss"></rect>
+        <rect data-rv-each-ship=".gameBoard.ships" data-rv-id="ship.UIID" data-rv-height="ship.length" data-rv-width="ship.width" data-rv-class="ship.classList" data-rv-x="ship | centroid xpx width" data-rv-y="ship | centroid ypx length" data-rv-style_transform="ship.transformDegrees | rotateCss"></rect>
     </g>
     <g class="play-area-layer" id="flyersLayer"></g>
     <g class="play-area-layer" id="UIOverlayLayer">

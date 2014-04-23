@@ -19,7 +19,8 @@ require.config({
     openlayers: 'vendor/openlayers',
     setTimeout : 'lib/nativeShims/setTimeout',
     setInterval : 'lib/nativeShims/setInterval',
-    SharedWorker : 'lib/nativeShims/SharedWorker'
+    SharedWorker : 'lib/nativeShims/SharedWorker',
+    crypto:"http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5"
   },
   shim:{
       'jquery':{
@@ -43,9 +44,12 @@ require.config({
       },
       'log4JavaScript':{
           exports:"log4javascript"
-      }       ,
+      },
       'openlayers':{
           exports:"OpenLayers"
+      },
+      'crypto':{
+          exports:"CryptoJS"
       }
   }
 

@@ -1,8 +1,10 @@
+
+
 <g>
-    <circle class="asset-selection-highlight" data-rv-visibility="ship.friendly | toggle hidden visible"
-            data-rv-each-ship=".ships" data-rv-r="ship.length"
-            data-rv-class="ship.classList" data-rv-cx="ship.xpx"
-            data-rv-cy="ship.ypx" fill="transparent"
-            stroke="black" stroke-width="0.05"></circle>
+    <circle class="asset-selection-highlight" data-rv-each-ship=".ships" visibility="hidden"
+             data-rv-r="ship.length | multiplier 0.8"
+            data-rv-class="ship.classList" data-rv-cx="ship.xpx" data-rv-id="ship.UIID | sprintf %shotspot"
+            data-rv-cy="ship.ypx" pointer-events="all">
+
 
 </g>

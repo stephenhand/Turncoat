@@ -8,6 +8,7 @@ define(["underscore", "backbone", "UI/component/BaseView", "UI/board/AssetSelect
     createModel:()->
       @model ?= new AssetSelectionOverlayViewModel()
 
+
   AssetSelectionOverlayView
 )
 

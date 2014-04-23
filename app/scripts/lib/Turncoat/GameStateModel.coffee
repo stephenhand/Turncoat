@@ -14,10 +14,14 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
 
     searchChildren:(checker)->
       recRes = []
-      ModelProcessor.recurse(@, (item)=>
-        if (@ isnt item and (!checker? || checker(item))) then recRes.push(item)
-        ModelProcessor.CONTINUERECURSION
-      , ModelProcessor.INORDER)
+      ModelProcessor.recurse(@,
+        (item)=>
+          recurse = {}
+          if (@ isnt item and (!checker? || checker(item, recurse)))
+            recRes.push(item)
+          recurse.type ? ModelProcessor.CONTINUERECURSION
+      ,
+        ModelProcessor.INORDER)
       recRes
 
     searchGameStateModels:(modelChecker)->
@@ -27,9 +31,10 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
 
     getOwnershipChain:(root)->
       chain = []
-      root.searchChildren((model)=>
+      root.searchChildren((model, r)=>
         if model is @ or chain.length
           chain.push(model)
+          r.type = ModelProcessor.ABANDONRECURSION
           true
       )
       if (chain.length) then chain.push(root) else chain = null
