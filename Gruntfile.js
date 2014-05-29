@@ -75,8 +75,8 @@ module.exports = function (grunt) {
 			}
 		},
 		clean:{
-			debug:[config.debug],
-			test:[config.debug]
+			debug:[config.debug+"app"],
+			test:[config.debug+"test"]
 		},
 		connect: {
 			options: {
@@ -146,12 +146,17 @@ module.exports = function (grunt) {
 		]);
 	});
 
-	grunt.registerTask('test', function () {
+	grunt.registerTask('browser-test', function () {
 		grunt.task.run([
 			'compile:test',
 			'connect:test',
 			'watch:test'
 
+		]);
+	});
+	grunt.registerTask('test', function () {
+		grunt.task.run([
+			'browser-test'
 		]);
 	});
 
