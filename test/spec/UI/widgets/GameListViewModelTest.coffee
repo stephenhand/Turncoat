@@ -353,9 +353,10 @@ define(["isolate!UI/widgets/GameListViewModel", "lib/turncoat/Constants", "jsMoc
               a.isString(outModel.get("createdText"))
             )
             test("Copies label", ()->
-             handler(
+              handler(
                 get:(key)->
-                  if key is "label" then return "MOCK_LABEL"
+                  if key is "label"
+                    "MOCK_LABEL"
               )
               a.equal(outModel.get("label"), "MOCK_LABEL")
             )

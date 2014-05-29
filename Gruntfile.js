@@ -1,196 +1,164 @@
-module.exports = function( grunt ) {
-  'use strict';
-  //
-  // Grunt configuration:
-  //
-  // https://github.com/cowboy/grunt/blob/master/docs/getting_started.md
-  //
-  grunt.initConfig({
+// Generated on <%= (new Date).toISOString().split('T')[0] %> using
+// <%= pkg.name %> <%= pkg.version %>
+'use strict';
 
-    // Project configuration
-    // ---------------------
+// # Globbing
+// for performance reasons we're only matching one level down:
+// 'test/spec/{,*/}*.js'
+// If you want to recursively match all subfolders, use:
+// 'test/spec/**/*.js'
+Error.stackTraceLimit = 200;
+module.exports = function (grunt) {
+	grunt.loadNpmTasks('grunt-contrib-coffee');
+	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-contrib-copy');
+	grunt.loadNpmTasks('grunt-contrib-clean');
+	grunt.loadNpmTasks('grunt-contrib-connect');
 
-    // Coffee to JS compilation
-    coffee: {
-      compile: {
-        files: {
-          'temp/scripts/*.js': 'app/scripts/**/*.coffee',
-          'temp/spec/*.js':'test/spec/**/*.coffee',
-          'temp/runner/*.js':'test/runner/**/*.coffee'
-        },
-        options: {
-        }
-      }
-    },
+	// Configurable paths
+	var config = {
+		app: 'app',
+		test: 'test',
+		debug:'debug/',
+		release: 'release'
+	};
 
-    // compile .scss/.sass to .css using Compass
-    compass: {
-      dist: {
-        // http://compass-style.org/help/tutorials/configuration-reference/#configuration-properties
-        options: {
-          css_dir: 'temp/styles',
-          sass_dir: 'app/styles',
-          images_dir: 'app/images',
-          javascripts_dir: 'temp/scripts',
-          force: true
-        }
-      }
-    },
+	// Define the configuration for all the tasks
+	grunt.initConfig({
+		coffee:{
+			debug:{
+				files:[{
+					expand:true,
+					dest:config.debug,
+					src:"app/scripts/**/*.coffee",
+					rename: function(dest, src) {
+						return dest + src.replace(/\.coffee$/, ".js");
+					},
+					cwd:"."
+				}]
+			},
+			test:{
+				files:[{
+					expand:true,
+					dest:config.debug,
+					src:["test/{spec,runner}/**/*.coffee","app/scripts/**/*.coffee"],
+					rename: function(dest, src) {
+						return dest + src.replace(/\.coffee$/, ".js").replace(/^app\//,"test/");
+					},
+					cwd:"."
+				}]
+			}
+		},
+		copy:{
+			debug:{
+				files:[{
+					expand:true,
+					dest:config.debug,
+					src:"app/**/*",
+					filter:function(p){
+						return !(/\.coffee$/.test(p));
+					}
+				}]
+			},
+			test:{
+				files:[{
+					expand:true,
+					dest:config.debug,
+					src:["test/**/*","app/{scripts,templates,data}/**/*"],
+					rename: function(dest, src) {
+						return dest + src.replace(/^app\//,"test/");
+					},
+					filter:function(p){
+						return !(/\.coffee$/.test(p));
+					}
+				}]
+			}
+		},
+		clean:{
+			debug:[config.debug],
+			test:[config.debug]
+		},
+		connect: {
+			options: {
+				open: true,
+				// Change this to '0.0.0.0' to access the server from outside
+				hostname: 'localhost',
+			},
+			debug:{
+				options: {
+					port: 9000,
+					base: config.debug + 'app'
+				}
+			},
+			test: {
+				options: {
+					port: 9001,
+					base: config.debug+'test'
+				}
+			},
+			release: {
+				options: {
+					base: 'release',
+					livereload: false
+				}
+			}
+		},
+		watch:{
+			debug:{
+				tasks:["compile:debug"],
+				files:"app/**/*",
+				options:{
+					//livereload: 35729
+				}
+			},
+			test:{
+				tasks:["compile:test"],
+				files:{src:["app/**/*","test/**/*"]},
+				options:{
+					//livereload: 35729
+				}
+			}
+		}
+	});;
 
-    // generate application cache manifest
-    manifest:{
-      dest: ''
-    },
 
-    // headless testing through PhantomJS
-    mocha: {
-        all: ['http://localhost:3502/index.html']
-    },
 
-    // default watch configuration
-    watch: {
-      coffee: {
-        files: ['app/scripts/**/*.coffee',
-                'test/spec/**/*.coffee',
-                'test/runner/**/*.coffee',
-            'test/lib/**/*.coffee'],
-        tasks: 'coffee reload'
-      },
-      compass: {
-        files: [
-          'app/styles/**/*.{scss,sass}'
-        ],
-        tasks: 'compass reload'
-      },
-      reload: {
-        files: [
-          'app/*.html',
-          'app/templates/*.html',
-          'app/data/*.json',
-          'app/styles/**/*.css',
-          'app/scripts/**/*.js',
-          'app/images/**/*'
-        ],
-        tasks: 'reload'
-      }
-    },
-
-    // default lint configuration, change this to match your setup:
-    // https://github.com/cowboy/grunt/blob/master/docs/task_lint.md#lint-built-in-task
-    lint: {
-      options: {
-        // specifying JSHint options and globals
-        options: {
-          curly: true,
-          eqeqeq: true,
-          immed: true,
-          latedef: true,
-          newcap: true,
-          noarg: true,
-          sub: true,
-          undef: true,
-          boss: true,
-          eqnull: true,
-          browser: true
-        },
-        globals: {
-          jQuery: true
-        }
-      },
-      files: [
-        'Gruntfile.js',
-        'app/scripts/**/*.js',
-        'spec/**/*.js'
-      ]
-    },
-
-    // Build configuration
-    // -------------------
-
-    // the staging directory used during the process
-    staging: 'temp',
-    // final build output
-    output: 'dist',
-
-    mkdirs: {
-      staging: 'app/'
-    },
-
-    // Below, all paths are relative to the staging directory, which is a copy
-    // of the app/ directory. Any .gitignore, .ignore and .buildignore file
-    // that might appear in the app/ tree are used to ignore these values
-    // during the copy process.
-
-    // concat css/**/*.css files, inline @import, output a single minified css
-    css: {
-      'styles/main.css': ['styles/**/*.css']
-    },
-
-    // renames JS/CSS to prepend a hash of their contents for easier
-    // versioning
-    rev: {
-      js: 'scripts/**/*.js',
-      css: 'styles/**/*.css',
-      img: 'images/**'
-    },
-
-    // usemin handler should point to the file containing
-    // the usemin blocks to be parsed
-    'usemin-handler': {
-      html: 'index.html'
-    },
-
-    // update references in HTML/CSS to revved files
-    usemin: {
-      html: ['**/*.html'],
-      css: ['**/*.css']
-    },
-
-    // HTML minification
-    html: {
-      files: ['**/*.html']
-    },
-
-    // Optimizes JPGs and PNGs (with jpegtran & optipng)
-    img: {
-      dist: '<config:rev.img>'
-    },
-
-    // rjs configuration. You don't necessarily need to specify the typical
-    // `path` configuration, the rjs task will parse these values from your
-    // main module, using http://requirejs.org/docs/optimization.html#mainConfigFile
-    //
-    // name / out / mainConfig file should be used. You can let it blank if
-    // you're using usemin-handler to parse rjs config from markup (default
-    // setup)
-    rjs: {
-      // no minification, is done by the min task
-      optimize: 'none',
-      baseUrl: './scripts',
-      wrap: true,
-      name: 'main'
-    },
-
-    // While Yeoman handles concat/min when using
-    // usemin blocks, you can still use them manually
-    concat: {
-      dist: ''
-    },
-
-    min: {
-      dist: ''
-    }
+	grunt.registerTask('compile', function (target) {
+		grunt.task.run([
+			'clean:debug',
+			'coffee:debug',
+			'copy:debug'
+		]);
+		if (target==="test"){
+			grunt.task.run([
+				'clean:test',
+				'coffee:test',
+				'copy:test'
+			]);
+		}
   });
 
-  // Alias the `test` task to run the `mocha` task instead
-    grunt.registerTask('test', function(){
-        grunt.config.set('server.port', 3502);
-        grunt.task.run('server:phantom mocha');
-    });
+	grunt.registerTask('debug', function () {
+		grunt.task.run([
+			'compile:debug',
+			'connect:debug',
+			'watch:debug'
+		]);
+	});
 
-    // run test in browser for debugging
-    grunt.registerTask('browser-test', function(){
-        grunt.config.set('server.port', 3502);
-        grunt.task.run('server:test');
-    });
+	grunt.registerTask('test', function () {
+		grunt.task.run([
+			'compile:test',
+			'connect:test',
+			'watch:test'
+
+		]);
+	});
+
 };
+
+
+
+
+
+
