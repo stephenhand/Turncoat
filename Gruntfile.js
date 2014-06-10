@@ -41,7 +41,7 @@ module.exports = function (grunt) {
 				files:[{
 					expand:true,
 					dest:config.debug,
-					src:["test/{spec,runner}/**/*.coffee","app/scripts/**/*.coffee"],
+					src:["test/{spec,runner,lib}/**/*.coffee","app/scripts/**/*.coffee"],
 					rename: function(dest, src) {
 						return dest + src.replace(/\.coffee$/, ".js").replace(/^app\//,"test/");
 					},
@@ -82,7 +82,7 @@ module.exports = function (grunt) {
 			options: {
 				open: true,
 				// Change this to '0.0.0.0' to access the server from outside
-				hostname: 'localhost',
+				hostname: 'localhost'
 			},
 			debug:{
 				options: {
@@ -106,21 +106,14 @@ module.exports = function (grunt) {
 		watch:{
 			debug:{
 				tasks:["compile:debug"],
-				files:"app/**/*",
-				options:{
-					//livereload: 35729
-				}
+				files:"app/**/*"
 			},
 			test:{
 				tasks:["compile:test"],
-				files:{src:["app/**/*","test/**/*"]},
-				options:{
-					//livereload: 35729
-				}
+				files:["app/**/*","test/**/*"]
 			}
 		}
-	});;
-
+	});
 
 
 	grunt.registerTask('compile', function (target) {
@@ -147,11 +140,11 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask('browser-test', function () {
+		grunt.log.writeln("BROWSER TESTING");
 		grunt.task.run([
 			'compile:test',
 			'connect:test',
 			'watch:test'
-
 		]);
 	});
 	grunt.registerTask('test', function () {

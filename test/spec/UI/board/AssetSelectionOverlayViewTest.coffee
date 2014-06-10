@@ -13,7 +13,7 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "jsMockito", "jsHamcrest",
   a = c.assert
   v = jm.Verifiers
   suite("AssetSelectionOverlayView", ()->
-    suite("setModel", ()->
+    suite("createModel", ()->
       test("Model not set already - sets as new AssetViewModel", ()->
         asov = new AssetSelectionOverlayView()
         asov.createModel()

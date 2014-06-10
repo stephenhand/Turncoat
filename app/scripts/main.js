@@ -22,6 +22,7 @@ require.config({
     SharedWorker : 'lib/nativeShims/SharedWorker',
     crypto:"http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5"
   },
+
   shim:{
       'jquery':{
           exports:"$"

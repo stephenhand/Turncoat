@@ -1,4 +1,8 @@
 define(['underscore', 'backbone', 'UI/component/BaseView', "UI/PlayAreaViewModel", "UI/board/AssetSelectionOverlayView", "UI/board/AssetSelectionUnderlayView", "AppState", 'text!templates/PlayArea.html'], (_, Backbone, BaseView, PlayAreaViewModel, AssetSelectionOverlayView, AssetSelectionUnderlayView, AppState, templateText)->
+
+  ASSETSELECTIONVIEW = "assetSelectionView"
+  ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
+
   class PlayAreaView extends BaseView
     initialize: (options)->
       options ?={}
@@ -6,20 +10,31 @@ define(['underscore', 'backbone', 'UI/component/BaseView', "UI/PlayAreaViewModel
       options.rootSelector = "#playArea"
       super(options)
 
-
     createModel:()->
-      @assetSelectionView = new AssetSelectionUnderlayView()
-      @assetSelectionHotspots =   new AssetSelectionOverlayView()
-      @model = new PlayAreaViewModel(null,
-        assetSelectionView:@assetSelectionView
-        assetSelectionHotspots:@assetSelectionHotspots
+      @model = new PlayAreaViewModel()
+      @listenTo(@model, "overlayRequest", (request)->
+        if not request.gameData? then throw new Error("game data missing.")
+        overlay = null
+        switch request.id
+          when ASSETSELECTIONVIEW
+            overlay = new AssetSelectionUnderlayView()
+          when ASSETSELECTIONHOTSPOTS
+            overlay = new AssetSelectionOverlayView()
+        overlay.createModel();
+        overlay.model.set("id",request.id)
+        overlay.model.setGame(request.gameData)
+        @model.get("gameBoard").get(request.layer).set([overlay.model], remove:false)
       )
 
     routeChanged:(route)->
-      if ((route.parts?.length ? 0)>1) then @model.setGame(AppState.loadGame(route.parts[1])) else @model.setGame()
+      if ((route.parts?.length ? 0)>1)
+        @model.setGame(AppState.loadGame(route.parts[1]))
+      else
+        @model.setGame()
 
     render:()->
       super()
+
 
 
   PlayAreaView

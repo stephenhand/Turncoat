@@ -6,6 +6,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ret=Backbone.Model.extend(
         initialize:()->
           @set("overlays", new Backbone.Collection())
+          @set("MOCK LAYER", new Backbone.Collection())
         setGame:()->
       )
       ret
@@ -76,18 +77,30 @@ define(["isolate!UI/PlayAreaViewModel", "jsMockito", "jsHamcrest", "chai"], (Pla
         setup(()->
           pavm.setGame(g)
         )
-        test("Creates a model in overlays with specified id", ()->
-          pavm.activateOverlay("AN ID")
-          a.equal(pavm.get("gameBoard").get("overlays").length, 1)
-          a.equal(pavm.get("gameBoard").get("overlays").at(0).get("id"), "AN ID")
+        test("Creates a model in overlays with specified id on collection at attribute specified by layer", ()->
+          pavm.activateOverlay("AN ID","MOCK LAYER")
+          a.equal(pavm.get("gameBoard").get("MOCK LAYER").length, 1)
+          a.equal(pavm.get("gameBoard").get("MOCK LAYER").at(0).get("id"), "AN ID")
         )
-        test("Triggers 'overlaySpawned' event with id and game model", ()->
+        test("Triggers 'overlayRequest' event with id and game model", ()->
           pavm.trigger = jm.mockFunction()
-          pavm.activateOverlay("AN ID")
-          jm.verify(pavm.trigger)("overlaySpawned",m.allOf(
+          pavm.activateOverlay("AN ID", "MOCK LAYER")
+          jm.verify(pavm.trigger)("overlayRequest",m.allOf(
             m.hasMember("id","AN ID"),
             m.hasMember("gameData",g)
           ))
+        )
+        test("Layer attribute not set - throws error", ()->
+          pavm.get("gameBoard").unset("MOCK LAYER")
+          a.throws(()->
+            pavm.activateOverlay("AN ID","MOCK LAYER")
+          )
+        )
+        test("Layer attribute not valid bb collection - throws", ()->
+          pavm.get("gameBoard").set("MOCK LAYER", {})
+          a.throws(()->
+            pavm.activateOverlay("AN ID","MOCK LAYER")
+          )
         )
       )
     )

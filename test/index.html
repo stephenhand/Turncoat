@@ -21,6 +21,14 @@
       //add jsmockito to global scope
       //JsMockito.Integration.importTo(window);
       //_when = window.when;
+      JsHamcrest.Matchers.assertThat = function(actualValue, matcherOrValue, message) {
+          JsHamcrest.Operators.assert(actualValue, matcherOrValue, {
+              message: message,
+              fail: function (msg) {
+                  throw new Error(msg);
+              }
+          });
+      }
   </script>
   <!-- trigger the mocha runner -->
   <script src="lib/require.js" data-main='runner/bootstrap'></script>

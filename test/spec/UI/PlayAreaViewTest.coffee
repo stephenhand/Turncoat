@@ -1,5 +1,8 @@
 updateFromWatchedCollectionsRes=null
 
+ASSETSELECTIONVIEW = "assetSelectionView"
+ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
+
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("AppState","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
@@ -8,46 +11,217 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("UI/PlayAreaViewModel","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      (model, opts)->
-        constructedWith:model
-        constructedWithOpts:opts
-        setGame:()->
+      class ret
+        constructor:(model, opts)->
+          @constructedWith=model
+          @constructedWithOpts=opts
+          @setGame=()->
+          @on=JsMockito.mockFunction()
+          @get=JsMockito.mockFunction()
+      ret
     )
   )
   Isolate.mapAsFactory("UI/board/AssetSelectionOverlayView","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      class ret
-      ret
+      ret=JsMockito.mockFunction()
+      ret::set=JsMockito.mockFunction()
     )
   )
   Isolate.mapAsFactory("UI/board/AssetSelectionUnderlayView","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      class ret
-      ret
+      ret=JsMockito.mockFunction()
+      ret::set=JsMockito.mockFunction()
+
     )
   )
 )
 
-define(["isolate!UI/PlayAreaView", "jsMockito", "jsHamcrest", "chai"], (PlayAreaView, jm, h, c)->
+define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMockito", "verifiers", ], (PlayAreaView, m, o, a, jm, v)->
   suite("PlayAreaView", ()->
-    m = h.Matchers
-    a = c.assert
-    v = jm.Verifiers
     mocks = mockLibrary["UI/PlayAreaView"]
     suite("createModel", ()->
+
       test("Sets Model as new PlayAreaViewModel without model parameter", ()->
 
         pav = new PlayAreaView(gameState:{})
 
         pav.createModel()
-        a.isDefined(pav.model)
-        a.isFalse(pav.model.constructedWith?)
+        a(m.not(m.nil(pav.model)))
+        a(m.not(pav.model.constructedWith?))
       )
-      test("Sets Model as new PlayAreaViewModel without option parameter specifying assetSelectionView as AssetSelectionUnderlayView object", ()->
+      test("Binds to model's overlayRequest event", ()->
         pav = new PlayAreaView(gameState:{})
         pav.createModel()
-        a.isDefined(pav.model)
-        a.instanceOf(pav.model.constructedWithOpts.assetSelectionView, mocks["UI/board/AssetSelectionUnderlayView"])
+        jm.verify(pav.model.on)("overlayRequest", m.func(), pav)
+      )
+      suite("overlayRequest handler", ()->
+        pav = null
+        handler = null
+        overlays = null
+        underlays = null
+        setup(()->
+          pav = new PlayAreaView(gameState:{})
+          pav.createModel()
+          mockLayerCollection =
+            set:jm.mockFunction()
+          jm.when(pav.model.get)("gameBoard").then(()->
+            get:(key)->
+              if key is "MOCK_LAYER"
+                mockLayerCollection
+          )
+          jm.verify(pav.model.on)("overlayRequest",
+            new JsHamcrest.SimpleMatcher(
+              matches:(h)=>
+                try
+                  handler=h
+                  true
+                catch
+                  false
+            )
+          , pav)
+
+          overlays = []
+          underlays=[]
+          jm.when(mocks["UI/board/AssetSelectionUnderlayView"])().then(()->
+            @set = jm.mockFunction()
+            @createModel = jm.mockFunction()
+            jm.when(@createModel)().then(()=>
+              @model =
+                setGame:jm.mockFunction()
+                set:jm.mockFunction()
+            )
+            underlays.push(@)
+            @
+          )
+          jm.when(mocks["UI/board/AssetSelectionOverlayView"])().then(()->
+            @set = jm.mockFunction()
+            @createModel = jm.mockFunction()
+            jm.when(@createModel)().then(()=>
+              @model =
+                setGame:jm.mockFunction()
+                set:jm.mockFunction()
+            )
+            overlays.push(@)
+            @
+          )
+        )
+        test("ID specifies assetSelectionView - creates assetSelectionUnderlayView", ()->
+          handler.call(pav,
+            id:ASSETSELECTIONVIEW
+            gameData:{}
+            layer:"MOCK_LAYER"
+          )
+          a(underlays.length, 1)
+          a(overlays, m.empty())
+        )
+        test("ID specifies assetSelectionHotspots - creates assetSelectionOverlayView", ()->
+          handler.call(pav,
+            id:ASSETSELECTIONHOTSPOTS
+            gameData:{}
+            layer:"MOCK_LAYER"
+          )
+          a(overlays.length, 1)
+          a(underlays, m.empty())
+        )
+        test("Calls new view's createModel method", ()->
+          handler.call(pav,
+            id:ASSETSELECTIONHOTSPOTS
+            gameData:{}
+            layer:"MOCK_LAYER"
+          )
+          jm.verify(overlays[0].createModel)()
+        )
+        test("Sets new view's model to game supplied in request", ()->
+          g = {}
+          handler.call(pav,
+            id:ASSETSELECTIONHOTSPOTS
+            gameData:g
+            layer:"MOCK_LAYER"
+          )
+          jm.verify(overlays[0].model.setGame)(g)
+        )
+        test("A collection exists on attribute of current view's model's gameboard specified by request layer - adds new view's model to it using set without remove option", ()->
+          handler.call(pav,
+            id:ASSETSELECTIONHOTSPOTS
+            gameData:{}
+            layer:"MOCK_LAYER"
+          )
+          jm.verify(pav.model.get("gameBoard").get("MOCK_LAYER").set)(
+            m.equivalentArray([overlays[0].model]),
+            m.hasMember("remove",false)
+          )
+        )
+        test("Attribute of current view's model's gameboard matching request layer is not a backbone collection - throws", ()->
+          jm.when(pav.model.get)("gameBoard").then(()->
+            get:(key)->
+              if key is "MOCK_LAYER"
+                {}
+          )
+          a(()->
+            handler.call(pav,
+              id:ASSETSELECTIONHOTSPOTS
+              gameData:{}
+              layer:"MOCK_LAYER"
+            )
+          , m.raisesAnything())
+        )
+        test("No attribute of current view's model's gameboard matching request layer exists - throws", ()->
+          jm.when(pav.model.get)("gameBoard").then(()->
+            get:(key)->
+          )
+
+          a(()->
+            handler.call(pav,
+              id:ASSETSELECTIONHOTSPOTS
+              gameData:{}
+              layer:"MOCK_LAYER"
+            )
+          , m.raisesAnything())
+        )
+        test("No gameboard attribute of current view's model exists - throws", ()->
+          jm.when(pav.model.get)("gameBoard").then(()->)
+
+          a(()->
+            handler.call(pav,
+              id:ASSETSELECTIONHOTSPOTS
+              gameData:{}
+              layer:"MOCK_LAYER"
+            )
+          , m.raisesAnything())
+        )
+        test("Invalid ID specified - throws", ()->
+          a(()->
+            handler.call(pav,
+              id:"AMOTHER ID"
+              gameData:{}
+              layer:"MOCK_LAYER"
+            )
+          , m.raisesAnything())
+        )
+        test("No ID specified - throws", ()->
+          a(()->
+            handler.call(pav,
+              gameData:{}
+              layer:"MOCK_LAYER"
+            )
+          , m.raisesAnything())
+        )
+        test("No layer specified - throws", ()->
+          a(()->
+            handler.call(pav,
+              id:ASSETSELECTIONHOTSPOTS
+              gameData:{}
+            )
+          , m.raisesAnything())
+        )
+        test("No game specified - throws", ()->
+          a(()->
+            handler.call(pav,
+              id:ASSETSELECTIONHOTSPOTS
+              layer:"MOCK_LAYER"
+            )
+          , m.raisesAnything())
+        )
       )
     )
     suite("routeChanged", ()->
@@ -98,7 +272,11 @@ define(["isolate!UI/PlayAreaView", "jsMockito", "jsHamcrest", "chai"], (PlayArea
         jm.verify(pav.model.setGame)()
       )
       test("Route not set - throws", ()->
-        a.throws(()=>pav.routeChanged())
+        a(
+          ()=>pav.routeChanged()
+        ,
+          m.raisesAnything()
+        )
       )
     )
   )
