@@ -17,7 +17,7 @@ define(['underscore', 'backbone', 'crypto', 'AppState', 'UI/component/ObservingV
           ]
         ])
         @set("modelId", options.model.id)
-        @set("UIID", Crypto.MD5(options.model.id))
+        @set("UUID", Crypto.MD5(options.model.id))
         @set("classList", @get("classList")+" fleet-asset-2d")
         dim = options.model.get("dimensions")
         @set("length", dim.get("length"))

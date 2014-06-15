@@ -7,14 +7,14 @@
             data-rv-cy="ship.ypx" fill="url(#underlight)"
             stroke="transparent" data-rv-stroke-width="ship.length | multiplier 0.05">
 
-        <animate data-rv-id="ship.UIID | sprintf %s-animateover" data-rv-begin="ship.UIID | sprintf %shotspot.mouseover"
+        <animate data-rv-id="ship.UUID | sprintf %s-animateover" data-rv-begin="ship.UUID | sprintf %shotspot.mouseover"
                  attributeType="XML"
                  attributeName="stroke"
                  restart="whenNotActive"
                  to="black"
                  fill="freeze"
                  dur="0.3s"/>
-        <animate data-rv-id="ship.UIID | sprintf %s-animateover" data-rv-begin="ship.UIID | sprintf %shotspot.mouseout"
+        <animate data-rv-id="ship.UUID | sprintf %s-animateover" data-rv-begin="ship.UUID | sprintf %shotspot.mouseout"
                  attributeType="XML"
                  attributeName="stroke"
                  restart="whenNotActive"
@@ -23,7 +23,7 @@
                  dur="0.3s"/>
         <animate
             attributeType="CSS"
-            data-rv-begin="ship.UIID | sprintf %shotspot.mouseover"
+            data-rv-begin="ship.UUID | sprintf %shotspot.mouseover"
             attributeName="fill-opacity"
             restart="whenNotActive"
             dur="0.3s"
@@ -31,7 +31,7 @@
             fill="freeze"/>
         <animate
                 attributeType="CSS"
-                data-rv-begin="ship.UIID | sprintf %shotspot.mouseout"
+                data-rv-begin="ship.UUID | sprintf %shotspot.mouseout"
                 attributeName="fill-opacity"
                 restart="whenNotActive"
                 dur="0.3s"

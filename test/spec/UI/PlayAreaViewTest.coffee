@@ -36,7 +36,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMockito", "verifiers", ], (PlayAreaView, m, o, a, jm, v)->
+define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMockito", "verifiers"], (PlayAreaView, m, o, a, jm, v)->
   suite("PlayAreaView", ()->
     mocks = mockLibrary["UI/PlayAreaView"]
     suite("createModel", ()->
