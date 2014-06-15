@@ -84,9 +84,11 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           )
           overlays = []
           underlays= []
-          jm.when(mocks["UI/board/AssetSelectionUnderlayView"])().then(()->
+          jm.when(mocks["UI/board/AssetSelectionUnderlayView"])(m.anything()).then((opt)->
+            @constructedWith = opt
             @set = jm.mockFunction()
             @createModel = jm.mockFunction()
+            @render = jm.mockFunction()
             jm.when(@createModel)().then(()=>
               @model =
                 setGame:jm.mockFunction()
@@ -95,9 +97,11 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
             underlays.push(@)
             @
           )
-          jm.when(mocks["UI/board/AssetSelectionOverlayView"])().then(()->
+          jm.when(mocks["UI/board/AssetSelectionOverlayView"])(m.anything()).then((opt)->
+            @constructedWith = opt
             @set = jm.mockFunction()
             @createModel = jm.mockFunction()
+            @render = jm.mockFunction()
             jm.when(@createModel)().then(()=>
               @model =
                 setGame:jm.mockFunction()
@@ -107,13 +111,14 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
             @
           )
         )
-        test("ID specifies assetSelectionView - creates assetSelectionUnderlayView", ()->
+        test("ID specifies assetSelectionView - creates assetSelectionUnderlayView with rootSelector containing id", ()->
           requestOverlay(
             id:ASSETSELECTIONVIEW
             gameData:{}
             layer:"MOCK_LAYER"
           )
           a(underlays.length, 1)
+          a(underlays[0].constructedWith.rootSelector, m.containsString(ASSETSELECTIONVIEW))
           a(overlays, m.empty())
         )
         test("ID specifies assetSelectionHotspots - creates assetSelectionOverlayView", ()->
@@ -123,6 +128,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
             layer:"MOCK_LAYER"
           )
           a(overlays.length, 1)
+          a(overlays[0].constructedWith.rootSelector, m.containsString(ASSETSELECTIONHOTSPOTS))
           a(underlays, m.empty())
         )
         test("Calls new view's createModel method", ()->
@@ -152,6 +158,14 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
             m.equivalentArray([overlays[0].model]),
             m.hasMember("remove",false)
           )
+        )
+        test("Calls new view's render method", ()->
+          requestOverlay(
+            id:ASSETSELECTIONHOTSPOTS
+            gameData:{}
+            layer:"MOCK_LAYER"
+          )
+          jm.verify(overlays[0].render)()
         )
         test("Attribute of current view's model's gameboard matching request layer is not a backbone collection - throws", ()->
           jm.when(pav.model.get)("gameBoard").then(()->

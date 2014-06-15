@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'UI/component/BaseView', "UI/PlayAreaViewModel", "UI/board/AssetSelectionOverlayView", "UI/board/AssetSelectionUnderlayView", "AppState", 'text!templates/PlayArea.html'], (_, Backbone, BaseView, PlayAreaViewModel, AssetSelectionOverlayView, AssetSelectionUnderlayView, AppState, templateText)->
+define(['underscore', 'backbone', 'sprintf', 'UI/component/BaseView', "UI/PlayAreaViewModel", "UI/board/AssetSelectionOverlayView", "UI/board/AssetSelectionUnderlayView", "AppState", 'text!templates/PlayArea.html'], (_, Backbone, sprintf, BaseView, PlayAreaViewModel, AssetSelectionOverlayView, AssetSelectionUnderlayView, AppState, templateText)->
 
   ASSETSELECTIONVIEW = "assetSelectionView"
   ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
@@ -18,13 +18,14 @@ define(['underscore', 'backbone', 'UI/component/BaseView', "UI/PlayAreaViewModel
           overlay = null
           switch request.id
             when ASSETSELECTIONVIEW
-              overlay = new AssetSelectionUnderlayView()
+              overlay = new AssetSelectionUnderlayView(rootSelector:sprintf("#playArea #%s",ASSETSELECTIONVIEW))
             when ASSETSELECTIONHOTSPOTS
-              overlay = new AssetSelectionOverlayView()
+              overlay = new AssetSelectionOverlayView(rootSelector:sprintf("#playArea #%s",ASSETSELECTIONHOTSPOTS))
           overlay.createModel();
           overlay.model.set("id",request.id)
           overlay.model.setGame(request.gameData)
           @model.get("gameBoard").get(request.layer).set([overlay.model], remove:false)
+          overlay.render()
       )
 
     routeChanged:(route)->
