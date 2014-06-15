@@ -12,18 +12,19 @@ define(['underscore', 'backbone', 'UI/component/BaseView', "UI/PlayAreaViewModel
 
     createModel:()->
       @model = new PlayAreaViewModel()
-      @listenTo(@model, "overlayRequest", (request)->
-        if not request.gameData? then throw new Error("game data missing.")
-        overlay = null
-        switch request.id
-          when ASSETSELECTIONVIEW
-            overlay = new AssetSelectionUnderlayView()
-          when ASSETSELECTIONHOTSPOTS
-            overlay = new AssetSelectionOverlayView()
-        overlay.createModel();
-        overlay.model.set("id",request.id)
-        overlay.model.setGame(request.gameData)
-        @model.get("gameBoard").get(request.layer).set([overlay.model], remove:false)
+      @model.setViewAPI(
+        requestOverlay:(request)=>
+          if not request.gameData? then throw new Error("game data missing.")
+          overlay = null
+          switch request.id
+            when ASSETSELECTIONVIEW
+              overlay = new AssetSelectionUnderlayView()
+            when ASSETSELECTIONHOTSPOTS
+              overlay = new AssetSelectionOverlayView()
+          overlay.createModel();
+          overlay.model.set("id",request.id)
+          overlay.model.setGame(request.gameData)
+          @model.get("gameBoard").get(request.layer).set([overlay.model], remove:false)
       )
 
     routeChanged:(route)->

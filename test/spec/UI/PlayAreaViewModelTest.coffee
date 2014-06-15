@@ -12,13 +12,20 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ret
     )
   )
+  Isolate.mapAsFactory("AppState","UI/PlayAreaViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      new Backbone.Model(
+        currentUser:new Backbone.Model(id:"MOCK_CURRENT_USER")
+      )
+    )
+  )
 )
 
-define(["isolate!UI/PlayAreaViewModel", "jsMockito", "jsHamcrest", "chai"], (PlayAreaViewModel, jm, h, c)->
+define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "jsMockito", "verifiers", ], (PlayAreaViewModel, m, o, a, jm, v)->
   suite("PlayAreaViewModel", ()->
-    m = h.Matchers
-    a = c.assert
-    v = jm.Verifiers
+    ASSETSELECTIONVIEW = "assetSelectionView"
+    ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
+
     mocks = mockLibrary["UI/PlayAreaViewModel"]
 
     suite("initialise", ()->
@@ -37,23 +44,118 @@ define(["isolate!UI/PlayAreaViewModel", "jsMockito", "jsHamcrest", "chai"], (Pla
       )
       test("Creates new gameboard widget as 'gameBoard' attribute", ()->
         pavm = new PlayAreaViewModel()
-        a.instanceOf(pavm.get("gameBoard"), mocks["UI/widgets/GameBoardViewModel"])
+        a(pavm.get("gameBoard"), m.instanceOf(mocks["UI/widgets/GameBoardViewModel"]))
+      )
+    )
+    suite("setViewAPI", ()->
+      test("Called with parameter with requestOverlay method - does not throw", ()->
+        pavm = new PlayAreaViewModel()
+        a(
+          ()->
+            pavm.setViewAPI(
+              requestOverlay:()->
+            )
+        ,
+          m.not(m.raisesAnything())
+        )
+      )
+      test("Called with parameter with non callable requerstOverlay property - throws", ()->
+        pavm = new PlayAreaViewModel()
+        a(
+          ()->
+            pavm.setViewAPI(
+              requestOverlay:{}
+            )
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("Called with parameter without requestOverlay property - throws", ()->
+        pavm = new PlayAreaViewModel()
+        a(
+          ()->
+            pavm.setViewAPI({})
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("Called without parameter - throws", ()->
+        pavm = new PlayAreaViewModel()
+        a(
+          ()->
+            pavm.setViewAPI()
+        ,
+          m.raisesAnything()
+        )
       )
     )
     suite("setGame", ()->
+      g = null
       pavm = null
       setup(()->
+        g =
+          getCurrentControllingUser:jm.mockFunction()
+        jm.when(g.getCurrentControllingUser)().then(()->
+          new Backbone.Model(id:"MOCK_CURRENT_USER")
+        )
         pavm = new PlayAreaViewModel()
         pavm.get("gameBoard").setGame = jm.mockFunction()
+        pavm.get("gameBoard").set("overlays",add:jm.mockFunction())
+        pavm.get("gameBoard").set("underlays",add:jm.mockFunction())
       )
       test("Called with game - calls setGame on gameboard with game", ()->
-        g = {}
-
         pavm.setGame(g)
         jm.verify(pavm.get("gameBoard").setGame)(g)
       )
+      test("Current player is controlling player - adds model to underlays with ASSETSELECTIONVIEW as id", ()->
+        pavm.setGame(g)
+        jm.verify(pavm.get("gameBoard").get("underlays").add)(m.hasMember("id", ASSETSELECTIONVIEW))
+      )
+      test("Current player is controlling player, view api set - calls requestOverlay with game, ASSETSELECTIONVIEW as id and underlays as layer", ()->
+        api =
+          requestOverlay:jm.mockFunction()
+        pavm.setViewAPI(api)
+        pavm.setGame(g)
+        jm.verify(api.requestOverlay)(
+          m.allOf(
+            m.hasMember("id", ASSETSELECTIONVIEW),
+            m.hasMember("gameData", g),
+            m.hasMember("layer", "underlays")
+          )
+        )
+      )
+      test("Current player is controlling player - adds model to overlays with ASSETSELECTIONHOTSPOTS as id", ()->
+        pavm.setGame(g)
+        jm.verify(pavm.get("gameBoard").get("overlays").add)(m.hasMember("id", ASSETSELECTIONHOTSPOTS))
+      )
+      test("Current player is controlling player, view api set - calls requestOverlay with game, ASSETSELECTIONHOTSPOTS as id and overlays as layer", ()->
+        api =
+          requestOverlay:jm.mockFunction()
+        pavm.setViewAPI(api)
+        pavm.setGame(g)
+        jm.verify(api.requestOverlay)(
+          m.allOf(
+            m.hasMember("id", ASSETSELECTIONHOTSPOTS),
+            m.hasMember("gameData", g),
+            m.hasMember("layer", "overlays")
+          )
+        )
+      )
+      test("Current player is not controlling player - adds and requests no overlays", ()->
+        api =
+          requestOverlay:jm.mockFunction()
+        jm.when(g.getCurrentControllingUser)().then(()->
+          new Backbone.Model(id:"NOT MOCK_CURRENT_USER")
+        )
+        pavm.setViewAPI(api)
+        pavm.setGame(g)
+        jm.verify(api.requestOverlay, v.never())(
+          m.anything()
+        )
+        jm.verify(pavm.get("gameBoard").get("underlays").add, v.never())(m.anything())
+        jm.verify(pavm.get("gameBoard").get("overlays").add, v.never())(m.anything())
+      )
       test("Called without game - calls setGame on gameboard with undefined", ()->
-        g = {}
         pavm.setGame()
         jm.verify(pavm.get("gameBoard").setGame)(m.nil())
       )
@@ -65,41 +167,54 @@ define(["isolate!UI/PlayAreaViewModel", "jsMockito", "jsHamcrest", "chai"], (Pla
       )
       test("Called without game - does nothing", ()->
         pavm.activateOverlay("AN ID")
-        a.lengthOf(pavm.get("gameBoard").get("overlays"), 0)
-        pavm.setGame({})
+        a(pavm.get("gameBoard").get("overlays").length, 0)
+        pavm.setGame(
+          getCurrentControllingUser:()->
+            get:()->
+        )
         pavm.setGame()
         pavm.activateOverlay("AN ID")
-        a.lengthOf(pavm.get("gameBoard").get("overlays"), 0)
+        a(pavm.get("gameBoard").get("overlays").length, 0)
 
       )
       suite("Called when game set", ()->
-        g={}
+        api=null
+        g=
+          getCurrentControllingUser:()->
+            get:()->
         setup(()->
+          api =
+            requestOverlay:jm.mockFunction()
+          pavm.setViewAPI(api)
           pavm.setGame(g)
         )
         test("Creates a model in overlays with specified id on collection at attribute specified by layer", ()->
           pavm.activateOverlay("AN ID","MOCK LAYER")
-          a.equal(pavm.get("gameBoard").get("MOCK LAYER").length, 1)
-          a.equal(pavm.get("gameBoard").get("MOCK LAYER").at(0).get("id"), "AN ID")
+          a(pavm.get("gameBoard").get("MOCK LAYER").length, 1)
+          a(pavm.get("gameBoard").get("MOCK LAYER").at(0).get("id"), "AN ID")
         )
-        test("Triggers 'overlayRequest' event with id and game model", ()->
+        test("calls requestOverlay on the current view api with id and game model", ()->
           pavm.trigger = jm.mockFunction()
           pavm.activateOverlay("AN ID", "MOCK LAYER")
-          jm.verify(pavm.trigger)("overlayRequest",m.allOf(
+          jm.verify(api.requestOverlay)(m.allOf(
             m.hasMember("id","AN ID"),
             m.hasMember("gameData",g)
           ))
         )
         test("Layer attribute not set - throws error", ()->
           pavm.get("gameBoard").unset("MOCK LAYER")
-          a.throws(()->
+          a(()->
             pavm.activateOverlay("AN ID","MOCK LAYER")
+          ,
+            m.raisesAnything()
           )
         )
         test("Layer attribute not valid bb collection - throws", ()->
           pavm.get("gameBoard").set("MOCK LAYER", {})
-          a.throws(()->
+          a(()->
             pavm.activateOverlay("AN ID","MOCK LAYER")
+          ,
+            m.raisesAnything()
           )
         )
       )

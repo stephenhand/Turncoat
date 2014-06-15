@@ -16,7 +16,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
           @constructedWith=model
           @constructedWithOpts=opts
           @setGame=()->
-          @on=JsMockito.mockFunction()
+          @setViewAPI=JsMockito.mockFunction()
           @get=JsMockito.mockFunction()
       ret
     )
@@ -49,14 +49,14 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
         a(m.not(m.nil(pav.model)))
         a(m.not(pav.model.constructedWith?))
       )
-      test("Binds to model's overlayRequest event", ()->
+      test("Sets models view API with a requestOverlay function", ()->
         pav = new PlayAreaView(gameState:{})
         pav.createModel()
-        jm.verify(pav.model.on)("overlayRequest", m.func(), pav)
+        jm.verify(pav.model.setViewAPI)(m.hasMember("requestOverlay", m.func()))
       )
-      suite("overlayRequest handler", ()->
+      suite("requestOverlay", ()->
         pav = null
-        handler = null
+        requestOverlay = null
         overlays = null
         underlays = null
         setup(()->
@@ -69,19 +69,21 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
               if key is "MOCK_LAYER"
                 mockLayerCollection
           )
-          jm.verify(pav.model.on)("overlayRequest",
+          jm.verify(pav.model.setViewAPI)(
             new JsHamcrest.SimpleMatcher(
-              matches:(h)=>
+              matches:(api)->
                 try
-                  handler=h
+                  requestOverlay=api.requestOverlay
                   true
                 catch
                   false
-            )
-          , pav)
 
+              describeTo: (description)->
+                description.append('setViewAPI api setter')
+            )
+          )
           overlays = []
-          underlays=[]
+          underlays= []
           jm.when(mocks["UI/board/AssetSelectionUnderlayView"])().then(()->
             @set = jm.mockFunction()
             @createModel = jm.mockFunction()
@@ -106,7 +108,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           )
         )
         test("ID specifies assetSelectionView - creates assetSelectionUnderlayView", ()->
-          handler.call(pav,
+          requestOverlay(
             id:ASSETSELECTIONVIEW
             gameData:{}
             layer:"MOCK_LAYER"
@@ -115,7 +117,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           a(overlays, m.empty())
         )
         test("ID specifies assetSelectionHotspots - creates assetSelectionOverlayView", ()->
-          handler.call(pav,
+          requestOverlay(
             id:ASSETSELECTIONHOTSPOTS
             gameData:{}
             layer:"MOCK_LAYER"
@@ -124,7 +126,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           a(underlays, m.empty())
         )
         test("Calls new view's createModel method", ()->
-          handler.call(pav,
+          requestOverlay(
             id:ASSETSELECTIONHOTSPOTS
             gameData:{}
             layer:"MOCK_LAYER"
@@ -133,7 +135,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
         )
         test("Sets new view's model to game supplied in request", ()->
           g = {}
-          handler.call(pav,
+          requestOverlay(
             id:ASSETSELECTIONHOTSPOTS
             gameData:g
             layer:"MOCK_LAYER"
@@ -141,7 +143,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           jm.verify(overlays[0].model.setGame)(g)
         )
         test("A collection exists on attribute of current view's model's gameboard specified by request layer - adds new view's model to it using set without remove option", ()->
-          handler.call(pav,
+          requestOverlay(
             id:ASSETSELECTIONHOTSPOTS
             gameData:{}
             layer:"MOCK_LAYER"
@@ -158,7 +160,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
                 {}
           )
           a(()->
-            handler.call(pav,
+            requestOverlay(
               id:ASSETSELECTIONHOTSPOTS
               gameData:{}
               layer:"MOCK_LAYER"
@@ -171,7 +173,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           )
 
           a(()->
-            handler.call(pav,
+            requestOverlay(
               id:ASSETSELECTIONHOTSPOTS
               gameData:{}
               layer:"MOCK_LAYER"
@@ -182,7 +184,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           jm.when(pav.model.get)("gameBoard").then(()->)
 
           a(()->
-            handler.call(pav,
+            requestOverlay(
               id:ASSETSELECTIONHOTSPOTS
               gameData:{}
               layer:"MOCK_LAYER"
@@ -191,7 +193,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
         )
         test("Invalid ID specified - throws", ()->
           a(()->
-            handler.call(pav,
+            requestOverlay(
               id:"AMOTHER ID"
               gameData:{}
               layer:"MOCK_LAYER"
@@ -208,7 +210,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
         )
         test("No layer specified - throws", ()->
           a(()->
-            handler.call(pav,
+            requestOverlay(
               id:ASSETSELECTIONHOTSPOTS
               gameData:{}
             )
@@ -216,7 +218,7 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
         )
         test("No game specified - throws", ()->
           a(()->
-            handler.call(pav,
+            requestOverlay(
               id:ASSETSELECTIONHOTSPOTS
               layer:"MOCK_LAYER"
             )
