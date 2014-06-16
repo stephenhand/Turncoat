@@ -12,10 +12,10 @@ define(["underscore", "backbone", "UI/component/BaseView", "UI/board/AssetSelect
       "click .asset-selection-highlight":"hotspotClicked"
 
     hotspotClicked:(event)->
-      @model.set("nominatedAsset", @model.get("ships").find(
-        (m)->
-          m.get("UUID")?.toString()? and event.currentTarget.getAttribute("asset-id") is m.get("UUID").toString())
-      )
+      @model.setNominatedAsset(@model.get("ships").find(
+          (m)->
+            m.get("UUID")?.toString()? and event.currentTarget.getAttribute("asset-id") is m.get("UUID").toString()
+      ))
 
 
 

@@ -2,6 +2,8 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("UI/board/AssetSelectionOverlayViewModel","UI/board/AssetSelectionOverlayView", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       class ret
+        constructor:()->
+          @setNominatedAsset = JsMockito.mockFunction()
       ret
     )
   )
@@ -53,6 +55,7 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
 
           ])
         )
+        model.setNominatedAsset = JsMockito.mockFunction()
         asov = new AssetSelectionOverlayView()
         asov.model = model
       )
@@ -68,12 +71,12 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
         )
         test("'nominatedAsset' not set - Sets model's 'nominatedAsset' to be ship represented by clicked element's asset-id", ()->
           asov.hotspotClicked(event)
-          a(model.get("nominatedAsset"), model.get("ships").at(2))
+          jm.verify(model.setNominatedAsset)(model.get("ships").at(2))
         )
         test("'nominatedAsset' set - Still sets model's 'nominatedAsset' to be ship represented by clicked element's asset-id", ()->
           model.set("nominatedAsset",{})
           asov.hotspotClicked(event)
-          a(model.get("nominatedAsset"), model.get("ships").at(2))
+          jm.verify(model.setNominatedAsset)(model.get("ships").at(2))
         )
       )
       test("event not set - throws", ()->
@@ -100,16 +103,16 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
           m.raisesAnything()
         )
       )
-      test("nominatedAsset not set and event currentTarget asset-id not matching UUID ships collection - does nothing", ()->
+      test("nominatedAsset not set and event currentTarget asset-id not matching UUID ships collection - sets nominated asset to nil", ()->
         asov.hotspotClicked(
           currentTarget:
             getAttribute:()->
               "SOMETHING ELSE"
         )
 
-        a(model.get("nominatedAsset"), m.nil())
+        jm.verify(model.setNominatedAsset)(m.nil())
       )
-      test("nominatedAsset set and event currentTarget asset-id not matching UUID in ships collection - unsets nominatedAsset", ()->
+      test("nominatedAsset set and event currentTarget asset-id not matching UUID in ships collection - calls set setNominatedAsset with nil", ()->
         model.set("nominatedAsset",{})
         asov.hotspotClicked(
           currentTarget:
@@ -117,7 +120,7 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
               "SOMETHING ELSE"
         )
 
-        a(model.get("nominatedAsset"), m.nil())
+        jm.verify(model.setNominatedAsset)(m.nil())
       )
       test("Does not match undefined UUID toString output with undefined asset-id", ()->
         model.set("nominatedAsset",{})
@@ -126,7 +129,7 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
             getAttribute:()->
         )
 
-        a(model.get("nominatedAsset"), m.nil())
+        jm.verify(model.setNominatedAsset)(m.nil())
       )
 
     )

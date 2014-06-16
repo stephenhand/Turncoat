@@ -3,6 +3,13 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/board/Fle
     initialize:()->
       super(null, modelType:FleetAssetSelectionViewModel)
 
+    setNominatedAsset:(asset)->
+      if (@get("nominatedAsset"))
+        @get("nominatedAsset").unset("nominated")
+        @unset("nominatedAsset")
+      @set("nominatedAsset", asset)
+      if (asset?) then asset.set("nominated", true)
+
   AssetSelectionOverlayViewModel
 )
 
