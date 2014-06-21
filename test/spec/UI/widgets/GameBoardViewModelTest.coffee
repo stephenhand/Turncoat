@@ -27,24 +27,21 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "chai", "backbone"], (GameBoardViewModel, jm, h, c, Backbone)->
+define(["isolate!UI/widgets/GameBoardViewModel", "matchers", "operators", "assertThat","jsMockito", "verifiers", "backbone"], (GameBoardViewModel , m, o, a, jm, v, Backbone)->
   mocks = window.mockLibrary["UI/widgets/GameBoardViewModel"]
-  m = h.Matchers
-  a = c.assert
-  v = jm.Verifiers
   suite("GameBoardViewModel", ()->
     suite("initialize", ()->
       test("Creates 'ships' attribute as ObservingViewModelCollection", ()->
         gbvm = new GameBoardViewModel()
-        a.instanceOf(gbvm.get("ships"), mocks["UI/component/ObservingViewModelCollection"])
+        a(gbvm.get("ships"), m.instanceOf(mocks["UI/component/ObservingViewModelCollection"]))
       )
       test("Creates 'overlays' attribute as Backbone Collection", ()->
         gbvm = new GameBoardViewModel()
-        a.instanceOf(gbvm.get("overlays"), Backbone.Collection)
+        a(gbvm.get("overlays"), m.instanceOf(Backbone.Collection))
       )
       test("Creates 'underlays' attribute as Backbone Collection", ()->
         gbvm = new GameBoardViewModel()
-        a.instanceOf(gbvm.get("underlays"), Backbone.Collection)
+        a(gbvm.get("underlays"), m.instanceOf(Backbone.Collection))
       )
     )
     suite("setGame", ()->
@@ -79,31 +76,32 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
           jm.verify(gbvm.get("ships").watch)(m.equivalentArray([gsm.watchCollection]))
 
         )
-        test("Calls setGame on all overlays with same game.", ()->
+        test("Calls setGame on overlayModel attribute of all overlays with same game.", ()->
           setter = Backbone.Model.extend(
             initialize:()->
+
               @setGame=jm.mockFunction()
           )
-          gbvm.get("overlays").push(new setter())
-          gbvm.get("overlays").push(new setter())
-          gbvm.get("overlays").push(new setter())
+          gbvm.get("overlays").push(overlayModel:new setter())
+          gbvm.get("overlays").push(overlayModel:new setter())
+          gbvm.get("overlays").push(overlayModel:new setter())
           gbvm.setGame(gsm)
-          jm.verify(gbvm.get("overlays").at(0).setGame)(gsm)
-          jm.verify(gbvm.get("overlays").at(1).setGame)(gsm)
-          jm.verify(gbvm.get("overlays").at(2).setGame)(gsm)
+          jm.verify(gbvm.get("overlays").at(0).get("overlayModel").setGame)(gsm)
+          jm.verify(gbvm.get("overlays").at(1).get("overlayModel").setGame)(gsm)
+          jm.verify(gbvm.get("overlays").at(2).get("overlayModel").setGame)(gsm)
         )
         test("Calls setGame on all underlays with same game.", ()->
           setter = Backbone.Model.extend(
             initialize:()->
               @setGame=jm.mockFunction()
           )
-          gbvm.get("underlays").push(new setter())
-          gbvm.get("underlays").push(new setter())
-          gbvm.get("underlays").push(new setter())
+          gbvm.get("underlays").push(overlayModel:new setter())
+          gbvm.get("underlays").push(overlayModel:new setter())
+          gbvm.get("underlays").push(overlayModel:new setter())
           gbvm.setGame(gsm)
-          jm.verify(gbvm.get("underlays").at(0).setGame)(gsm)
-          jm.verify(gbvm.get("underlays").at(1).setGame)(gsm)
-          jm.verify(gbvm.get("underlays").at(2).setGame)(gsm)
+          jm.verify(gbvm.get("underlays").at(0).get("overlayModel").setGame)(gsm)
+          jm.verify(gbvm.get("underlays").at(1).get("overlayModel").setGame)(gsm)
+          jm.verify(gbvm.get("underlays").at(2).get("overlayModel").setGame)(gsm)
         )
       )
       suite("Game not specified", ()->
@@ -117,43 +115,63 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
             initialize:()->
               @setGame=jm.mockFunction()
           )
-          gbvm.get("overlays").push(new setter())
-          gbvm.get("overlays").push(new setter())
-          gbvm.get("overlays").push(new setter())
+          gbvm.get("overlays").push(overlayModel:new setter())
+          gbvm.get("overlays").push(overlayModel:new setter())
+          gbvm.get("overlays").push(overlayModel:new setter())
           gbvm.setGame()
-          jm.verify(gbvm.get("overlays").at(0).setGame)(m.nil())
-          jm.verify(gbvm.get("overlays").at(1).setGame)(m.nil())
-          jm.verify(gbvm.get("overlays").at(2).setGame)(m.nil())
+          jm.verify(gbvm.get("overlays").at(0).get("overlayModel").setGame)(m.nil())
+          jm.verify(gbvm.get("overlays").at(1).get("overlayModel").setGame)(m.nil())
+          jm.verify(gbvm.get("overlays").at(2).get("overlayModel").setGame)(m.nil())
         )
         test("Calls setGame on all overlays with nothing.", ()->
           setter = Backbone.Model.extend(
             initialize:()->
               @setGame=jm.mockFunction()
           )
-          gbvm.get("underlays").push(new setter())
-          gbvm.get("underlays").push(new setter())
-          gbvm.get("underlays").push(new setter())
+          gbvm.get("underlays").push(overlayModel:new setter())
+          gbvm.get("underlays").push(overlayModel:new setter())
+          gbvm.get("underlays").push(overlayModel:new setter())
           gbvm.setGame()
-          jm.verify(gbvm.get("underlays").at(0).setGame)(m.nil())
-          jm.verify(gbvm.get("underlays").at(1).setGame)(m.nil())
-          jm.verify(gbvm.get("underlays").at(2).setGame)(m.nil())
+          jm.verify(gbvm.get("underlays").at(0).get("overlayModel").setGame)(m.nil())
+          jm.verify(gbvm.get("underlays").at(1).get("overlayModel").setGame)(m.nil())
+          jm.verify(gbvm.get("underlays").at(2).get("overlayModel").setGame)(m.nil())
         )
       )
       test("Overlays not set - throws", ()->
         gbvm.unset("overlays")
-        a.throw(()->gbvm.setGame(gsm))
+        a(
+          ()->gbvm.setGame(gsm)
+        , m.raisesAnything())
       )
-      test("Overlays contains objects with no setGame method - throws", ()->
+      test("Overlays contains objects with no overlayModel - does nothing", ()->
         gbvm.get("overlays").push({})
-        a.throw(()->gbvm.setGame(gsm))
+        a(
+          ()->gbvm.setGame(gsm)
+        , m.not(m.raisesAnything()))
+      )
+      test("Overlays contains objects with overlayModels with no setGame method - throws", ()->
+        gbvm.get("overlays").push({overlayModel:{}})
+        a(
+          ()->gbvm.setGame(gsm)
+        , m.raisesAnything())
       )
       test("Underlays not set - throws", ()->
         gbvm.unset("underlays")
-        a.throw(()->gbvm.setGame(gsm))
+        a(
+          ()->gbvm.setGame(gsm)
+        , m.raisesAnything())
       )
-      test("Underlays contains objects with no setGame method - throws", ()->
+      test("Underlays contains objects with no overlayModel - does nothing", ()->
         gbvm.get("underlays").push({})
-        a.throw(()->gbvm.setGame(gsm))
+        a(
+          ()->gbvm.setGame(gsm)
+        , m.not(m.raisesAnything()))
+      )
+      test("Underlays contains objects with overlayModels with no setGame method - throws", ()->
+        gbvm.get("underlays").push({overlayModel:{}})
+        a(
+          ()->gbvm.setGame(gsm)
+        , m.raisesAnything())
       )
     )
     suite("Ships onSourceUpdated", ()->
@@ -189,38 +207,38 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
         )
         test("Model Id exactly matches Id - matches", ()->
 
-          a.isTrue(comparer(
+          a(comparer(
               get:(key)->
                 if key=="modelId" then 1 else 0
             ,
               id:1
-            )
+            ),true
           )
         )
         test("Model Id not Id - fails", ()->
-          a.isFalse(comparer(
+          a(comparer(
               get:(key)->
                 if key=="modelId" then 1 else 0
             ,
               id:3
-            )
+            ),false
           )
         )
         test("Fails on model Id not exactly Id - fails", ()->
-          a.isFalse(comparer(
+          a(comparer(
               get:(key)->
                 if key=="modelId" then 1 else 0
             ,
               id:'1'
 
-            )
+            ),false
           )
         )
         test("Both ids undefined - fails", ()->
-          chai.assert(comparer(
+          a(comparer(
               get:(key)->undefined
             ,{}
-            )
+            ),true
           )
         )
       )
@@ -233,7 +251,7 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
           gbvm.setGame(gsmWithOneCollection)
         )
         test("No options specified on construction - Creates new FleetAsset2DModel", ()->
-          a.instanceOf(adder({}),mocks["UI/FleetAsset2DViewModel"])
+          a(adder({}),m.instanceOf(mocks["UI/FleetAsset2DViewModel"]))
         )
         test("Option specified without model type - Creates new FleetAsset2DModel", ()->
           gbvm = new GameBoardViewModel(null,{})
@@ -241,7 +259,7 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
             adder = a
           )
           gbvm.setGame(gsmWithOneCollection)
-          a.instanceOf(adder({}),mocks["UI/FleetAsset2DViewModel"])
+          a(adder({}),m.instanceOf(mocks["UI/FleetAsset2DViewModel"]))
 
         )
 
@@ -252,18 +270,18 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
             adder = a
           )
           gbvm.setGame(gsmWithOneCollection)
-          a.instanceOf(adder({}),MockModelType)
+          a(adder({}),m.instanceOf(MockModelType))
 
         )
         test("Creates new model with model option set to input", ()->
           mod = {}
-          a.equal(adder(mod).inputModel,mod)
+          a(adder(mod).inputModel,mod)
         )
         test("Null input - creates new model with model option set to null", ()->
-          a.isUndefined(adder().inputModel)
+          a(adder().inputModel, m.nil())
         )
         test("Game option set to game set", ()->
-          a.equal(adder({}).inputGame, gsmWithOneCollection)
+          a(adder({}).inputGame, gsmWithOneCollection)
         )
       )
       suite("updateFromWatchedCollections filter", ()->
@@ -275,13 +293,13 @@ define(["isolate!UI/widgets/GameBoardViewModel", "jsMockito", "jsHamcrest", "cha
           gbvm.setGame(gsmWithOneCollection)
         )
         test("Input is FleetAsset - true", ()->
-          a.isTrue(filter(new mocks["state/FleetAsset"]()))
+          a(filter(new mocks["state/FleetAsset"]()), true)
         )
         test("Input is not FleetAsset - false", ()->
-          a.isFalse(filter({}))
+          a(filter({}), false)
         )
         test("Input is not defined - false", ()->
-          a.isFalse(filter())
+          a(filter(), false)
         )
       )
     )

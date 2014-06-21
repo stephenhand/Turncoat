@@ -1,4 +1,4 @@
-define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState" ], (_, Backbone, GameBoardViewModel, AppState)->
+define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState","UI/board/AssetSelectionOverlayViewModel" ], (_, Backbone, GameBoardViewModel, AppState, AssetSelectionOverlayViewModel)->
 
   ASSETSELECTIONVIEW = "assetSelectionView"
   ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
@@ -16,19 +16,20 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState" ],
         @get("gameBoard").setGame(game)
 
         if (game?)
-          @activateOverlay=(id, layer)->
-            @get("gameBoard").get(layer).add(new Backbone.Model(id:id))
+          @activateOverlay=(id, layer, model)->
+            @get("gameBoard").get(layer).add(id:id)
             viewAPI.requestOverlay(
               id:id
               layer:layer
               gameData:game
+              overlayModel:model
             )
         else
           @activateOverlay=()->
 
         if (game? and AppState.get("currentUser").get("id") is game.getCurrentControllingUser().get("id"))
           @activateOverlay(ASSETSELECTIONVIEW, "underlays")
-          @activateOverlay(ASSETSELECTIONHOTSPOTS, "overlays")
+          @activateOverlay(ASSETSELECTIONHOTSPOTS, "overlays",@get("gameBoard").get("underlays").get(ASSETSELECTIONVIEW).get("overlayModel"))
 
     activateOverlay:()->
   )

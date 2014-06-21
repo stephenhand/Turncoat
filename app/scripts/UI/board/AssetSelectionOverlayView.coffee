@@ -1,4 +1,4 @@
-define(["underscore", "backbone", "UI/component/BaseView", "UI/board/AssetSelectionOverlayViewModel", "text!templates/AssetSelectionOverlay.html"], (_, Backbone, BaseView, AssetSelectionOverlayViewModel, templateText)->
+define(["underscore", "jquery", "backbone", "UI/component/BaseView", "UI/board/AssetSelectionOverlayViewModel", "text!templates/AssetSelectionOverlay.html"], (_, $, Backbone, BaseView, AssetSelectionOverlayViewModel, templateText)->
   class AssetSelectionOverlayView extends BaseView
     initialize: (options)->
       options ?={}
@@ -7,6 +7,9 @@ define(["underscore", "backbone", "UI/component/BaseView", "UI/board/AssetSelect
 
     createModel:()->
       @model ?= new AssetSelectionOverlayViewModel()
+      @listenTo(@model,"change:nominatedAsset", (model, asset)->
+        if (asset?) then $("#"+asset.get("UUID")+"-animate-show")[0].beginElement()
+      )
 
     events:
       "click .asset-selection-highlight":"hotspotClicked"

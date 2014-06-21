@@ -1,10 +1,33 @@
 
 
 <g>
-    <circle class="asset-selection-highlight" data-rv-each-ship=".ships" visibility="hidden"
+    <circle  data-rv-show="ship.nominated" class="asset-selection-highlight" data-rv-each-ship=".ships"
+                     data-rv-r="ship.length | multiplier 0.8" data-rv-cx="ship.xpx" data-rv-cy="ship.ypx"
+                     data-rv-class="ship.classList" data-rv-asset-id="ship.UUID" fill="transparent"
+                     pointer-events="all" stroke="black" data-rv-stroke-width="ship.length | multiplier 0.05">
+        <animate data-rv-id="ship.UUID | sprintf %s-animate-show" begin="indefinite"
+           attributeType="XML"
+           attributeName="r"
+           restart="whenNotActive"
+           data-rv-to="ship.length | multiplier 1.2"
+           fill="freeze"
+           dur="0.3s"/>
+        <animate data-rv-id="ship.UUID | sprintf %s-animate-hide" begin="indefinite"
+                 attributeType="XML"
+                 attributeName="r"
+                 restart="whenNotActive"
+                 data-rv-to="ship.length | multiplier 0.8"
+                 fill="freeze"
+                 dur="0.3s"/>
+    </circle>
+    <circle  data-rv-show="ship.nominated" class="asset-selection-highlight" data-rv-each-ship=".ships"
+                             data-rv-r="ship.length | multiplier 0.8" data-rv-cx="ship.xpx" data-rv-cy="ship.ypx"
+                             data-rv-class="ship.classList" data-rv-asset-id="ship.UUID" fill="transparent"
+                             pointer-events="all" stroke="black" data-rv-stroke-width="ship.length | multiplier 0.05">
+    </circle>
+    <circle class="asset-selection-highlight" data-rv-each-ship=".ships" visibility="hidden" data-rv-show="ship.friendly"
             data-rv-r="ship.length | multiplier 0.8" data-rv-cx="ship.xpx" data-rv-cy="ship.ypx"
             data-rv-class="ship.classList" data-rv-asset-id="ship.UUID" data-rv-id="ship.UUID | sprintf %shotspot"
-            pointer-events="all">
-
+            pointer-events="all"/>
 
 </g>

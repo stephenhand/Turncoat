@@ -21,10 +21,11 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/BaseView', "UI/PlayAr
               overlay = new AssetSelectionUnderlayView(rootSelector:sprintf("#playArea #%s",ASSETSELECTIONVIEW))
             when ASSETSELECTIONHOTSPOTS
               overlay = new AssetSelectionOverlayView(rootSelector:sprintf("#playArea #%s",ASSETSELECTIONHOTSPOTS))
+          if request.overlayModel? then overlay.model=request.overlayModel
           overlay.createModel();
           overlay.model.set("id",request.id)
           overlay.model.setGame(request.gameData)
-          @model.get("gameBoard").get(request.layer).set([overlay.model], remove:false)
+          @model.get("gameBoard").get(request.layer).get(request.id).set("overlayModel", overlay.model)
           overlay.render()
       )
 
