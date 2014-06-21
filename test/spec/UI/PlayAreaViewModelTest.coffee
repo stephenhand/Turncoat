@@ -92,7 +92,9 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
     suite("setGame", ()->
       g = null
       pavm = null
+      mockUnderlayModel = null
       setup(()->
+        mockUnderlayModel = {}
         g =
           getCurrentControllingUser:jm.mockFunction()
         jm.when(g.getCurrentControllingUser)().then(()->
@@ -100,8 +102,16 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
         )
         pavm = new PlayAreaViewModel()
         pavm.get("gameBoard").setGame = jm.mockFunction()
+        getter = jm.mockFunction()
         pavm.get("gameBoard").set("overlays",add:jm.mockFunction())
-        pavm.get("gameBoard").set("underlays",add:jm.mockFunction())
+        pavm.get("gameBoard").set("underlays",
+          add:jm.mockFunction()
+          get:getter
+        )
+        jm.when(getter)(ASSETSELECTIONVIEW).then((vw)->
+          get:(x)->
+             if x is "overlayModel" then mockUnderlayModel
+        );
       )
       test("Called with game - calls setGame on gameboard with game", ()->
         pavm.setGame(g)
@@ -128,7 +138,7 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
         pavm.setGame(g)
         jm.verify(pavm.get("gameBoard").get("overlays").add)(m.hasMember("id", ASSETSELECTIONHOTSPOTS))
       )
-      test("Current player is controlling player, view api set - calls requestOverlay with game, ASSETSELECTIONHOTSPOTS as id and overlays as layer", ()->
+      test("Current player is controlling player, view api set - calls requestOverlay with game, ASSETSELECTIONHOTSPOTS as id, overlays as layer and overlayModel just added to underlays as model", ()->
         api =
           requestOverlay:jm.mockFunction()
         pavm.setViewAPI(api)
@@ -137,7 +147,8 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
           m.allOf(
             m.hasMember("id", ASSETSELECTIONHOTSPOTS),
             m.hasMember("gameData", g),
-            m.hasMember("layer", "overlays")
+            m.hasMember("layer", "overlays")   ,
+            m.hasMember("overlayModel", mockUnderlayModel)
           )
         )
       )
@@ -216,6 +227,12 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
           ,
             m.raisesAnything()
           )
+        )
+        test("Model specified - passes this to request as overlayModel property", ()->
+          om = {}
+          pavm.trigger = jm.mockFunction()
+          pavm.activateOverlay("AN ID", "MOCK LAYER",om)
+          jm.verify(api.requestOverlay)(m.hasMember("overlayModel",om))
         )
       )
     )
