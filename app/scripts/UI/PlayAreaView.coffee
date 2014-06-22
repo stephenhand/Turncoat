@@ -25,7 +25,7 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/BaseView', "UI/PlayAr
           overlay.createModel();
           overlay.model.set("id",request.id)
           overlay.model.setGame(request.gameData)
-          @model.get("gameBoard").get(request.layer).get(request.id).set("overlayModel", overlay.model)
+          @model.get("gameBoard").get(request.layer).get(request.id)?.set("overlayModel", overlay.model)
           overlay.render()
       )
 

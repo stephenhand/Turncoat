@@ -59,11 +59,15 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
         requestOverlay = null
         overlays = null
         underlays = null
+        mockLayerCollection = null
         setup(()->
           pav = new PlayAreaView(gameState:{})
           pav.createModel()
+          ph = set:jm.mockFunction()
           mockLayerCollection =
-            set:jm.mockFunction()
+            get:(key)->
+              if key is ASSETSELECTIONVIEW or key is ASSETSELECTIONHOTSPOTS
+                ph
           jm.when(pav.model.get)("gameBoard").then(()->
             get:(key)->
               if key is "MOCK_LAYER"
@@ -148,15 +152,25 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           )
           jm.verify(overlays[0].model.setGame)(g)
         )
-        test("A collection exists on attribute of current view's model's gameboard specified by request layer - adds new view's model to it using set without remove option", ()->
+        test("A collection exists on attribute of current view's model's gameboard specified by request layer, which contains a placeholder model with the ID of the overlay just created - sets placeholder's  overlayModel to model created", ()->
           requestOverlay(
             id:ASSETSELECTIONHOTSPOTS
             gameData:{}
             layer:"MOCK_LAYER"
           )
-          jm.verify(pav.model.get("gameBoard").get("MOCK_LAYER").set)(
-            m.equivalentArray([overlays[0].model]),
-            m.hasMember("remove",false)
+          jm.verify(pav.model.get("gameBoard").get("MOCK_LAYER").get(ASSETSELECTIONHOTSPOTS).set)("overlayModel", overlays[0].model)
+        )
+        test("A collection exists on attribute of current view's model's gameboard specified by request layer, but it contains no placeholder model with the ID of the overlay just created - does nothing with layers", ()->
+          mockLayerCollection.get=(key)->
+          a(
+            ()->
+              requestOverlay(
+                id:ASSETSELECTIONHOTSPOTS
+                gameData:{}
+                layer:"MOCK_LAYER"
+              )
+          ,
+            m.not(m.raisesAnything())
           )
         )
         test("Calls new view's render method", ()->
