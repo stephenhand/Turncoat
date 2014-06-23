@@ -4,6 +4,7 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
       class ret
         constructor:()->
           @setNominatedAsset = JsMockito.mockFunction()
+          @on = JsMockito.mockFunction()
       ret
     )
   )
@@ -18,12 +19,18 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
         asov.createModel()
         a(asov.model, m.instanceOf(mocks["UI/board/AssetSelectionOverlayViewModel"]))
       )
-      test("Model set already - does nothing", ()->
+      test("Model set already - does not replace it", ()->
         asov = new AssetSelectionOverlayView()
-        mod = {}
+        mod =
+          on : JsMockito.mockFunction()
         asov.model = mod
         asov.createModel()
         a(asov.model, mod)
+      )
+      test("Binds to changes to 'nominatedAsset' property", ()->
+        asov = new AssetSelectionOverlayView()
+        asov.createModel()
+        jm.verify(asov.model.on)("change:nominatedAsset", m.func())
       )
     )
     suite("hotspotClicked", ()->
