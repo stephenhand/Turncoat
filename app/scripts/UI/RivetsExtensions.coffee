@@ -22,6 +22,10 @@ define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbon
         if (isNaN(pos)) then throw new Error("Cannot set centroid to "+posAtt+" because "+posAtt+" is "+input.get(posAtt))
         if (isNaN(posAdjust)) then throw new Error("Cannot set centroid to  "+posAtt+" attribute because  "+dimAtt+" is "+input.get(dimAtt))
         return pos-posAdjust
+      calc:(input, mask)->
+        val = parseFloat(input)
+        if isNaN(val) then throw new Error("Input to calc formatter must be numeric")
+
 
     binders:
       style_top:(el, value)->

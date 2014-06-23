@@ -65,6 +65,10 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
     window.mockLibrary[requestingModulePath]?= {}
     window.mockLibrary[requestingModulePath]["jqueryObjects"]={
       reset:()->
+        window.mockLibrary[requestingModulePath].jqueryObjects =
+          reset:window.mockLibrary[requestingModulePath].jqueryObjects.reset
+          getSelectorResult:window.mockLibrary[requestingModulePath].jqueryObjects.getSelectorResult
+          setSelectorResult:window.mockLibrary[requestingModulePath].jqueryObjects.setSelectorResult
         window.mockLibrary[requestingModulePath].jqueryObjects.methodResults = {}
         window.mockLibrary[requestingModulePath].jqueryObjects.methodCallbacks = {}
       getSelectorResult:(selector, context)->
@@ -74,6 +78,14 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
           @[selector][context]
         else
           @[selector]
+      setSelectorResult:(val, selector, context)->
+        if selector is window then selector = "__WINDOW_SELECTOR_PLACEHOLDER"
+        if context is window then context = "__WINDOW_CONTEXT_PLACEHOLDER"
+        @[selector]?={}
+        if (context?)
+          @[selector][context] = val
+        else
+          @[selector] = val
     }
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
 
@@ -85,16 +97,18 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
         if selector is window then selector="__WINDOW_SELECTOR_PLACEHOLDER"
         if context is window then context="__WINDOW_CONTEXT_PLACEHOLDER"
 
-        if typeof selector is "object" then _.extend(selector, new UniquelyIdentifiable())
-        if typeof context is "object" then _.extend(selector, new UniquelyIdentifiable())
+        if typeof selector is "object" and !selector.__origToString? then _.extend(selector, new UniquelyIdentifiable())
+        if typeof context is "object" and !context.__origToString? then _.extend(selector, new UniquelyIdentifiable())
 
         mockJQueryObj =createMock(actual,requestingModulePath)
         if context?
           window.mockLibrary[requestingModulePath].jqueryObjects[selector]?=[]
-          window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] = mockJQueryObj
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector][context] ?= mockJQueryObj
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector][context]
         else
-          window.mockLibrary[requestingModulePath].jqueryObjects[selector] = mockJQueryObj
-        mockJQueryObj
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector] ?= mockJQueryObj
+          window.mockLibrary[requestingModulePath].jqueryObjects[selector]
+
       JsMockito.when(mockJQuery)(JsHamcrest.Matchers.anything()).then(
         (selector)=>
           imp(selector)

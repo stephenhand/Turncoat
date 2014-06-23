@@ -31,23 +31,26 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!UI/component/BaseView"], (BaseView)->
+define(["isolate!UI/component/BaseView", "matchers", "operators", "assertThat","jsMockito", "verifiers"], (BaseView, m, o, a, jm, v)->
     #BaseViewTest.coffee test file    
 
     mocks = window.mockLibrary["UI/component/BaseView"];
     suite("BaseView", ()->
+      setup(()->
+        mocks.jqueryObjects = []
+      )
       suite("constructor", ()->
         test("setsTemplate", ()->
           bv = new BaseView(
               template:"TEST_TEMPLATE"
           )
-          chai.assert.equal(bv.template, "TEST_TEMPLATE")
+          a(bv.template, "TEST_TEMPLATE")
         )
         test("setsRootSelector", ()->
           bv = new BaseView(
               rootSelector:"TEST_SELECTOR"
           )
-          chai.assert.equal(bv.rootSelector, "TEST_SELECTOR")
+          a(bv.rootSelector, "TEST_SELECTOR")
         )
       )
       suite("render", ()->
@@ -56,45 +59,45 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             rootSelector:"TEST_SELECTOR"
 
           )
-          bv.createModel=JsMockito.mockFunction()
+          bv.createModel=jm.mockFunction()
           bv.render()
-          JsMockito.verify(bv.createModel)()
+          jm.verify(bv.createModel)()
         )
         test("bindsUsingRootSelectorsFirstChild",()->
           bv = new BaseView(
            rootSelector:"TEST_SELECTOR"
           )
-          bv.createModel=JsMockito.mockFunction()
+          bv.createModel=jm.mockFunction()
           bv.render()
-          JsMockito.verify(mocks.jqueryObjects["TEST_SELECTOR"].children)()
-          JsMockito.verify(mocks.jqueryObjects.methodResults.children.first)()
-          JsMockito.verify(mocks.rivets.bind)(mocks.jqueryObjects.methodResults.first,JsHamcrest.Matchers.anything())
+          jm.verify(mocks.jqueryObjects["TEST_SELECTOR"].children)()
+          jm.verify(mocks.jqueryObjects.methodResults.children.first)()
+          jm.verify(mocks.rivets.bind)(mocks.jqueryObjects.methodResults.first,m.anything())
         )
         test("attachesTemplateToRootSelectorNode", ()->
           bv = new BaseView(
             rootSelector:"TEST_SELECTOR"
             template:"MOCK_TEMPLATE"
           )
-          bv.createModel=JsMockito.mockFunction()
+          bv.createModel=jm.mockFunction()
           bv.render()
-          JsMockito.verify(mocks.jqueryObjects["TEST_SELECTOR"]).html("MOCK_TEMPLATE")
+          jm.verify(mocks.jqueryObjects["TEST_SELECTOR"]).html("MOCK_TEMPLATE")
         )
         test("setsView", ()->
           bv = new BaseView(
             rootSelector:"TEST_SELECTOR"
           )
-          bv.createModel=JsMockito.mockFunction()
+          bv.createModel=jm.mockFunction()
           bv.render()
-          chai.assert.equal(bv.view.id, "MOCK_RIVETS_VIEW")
-          chai.assert.equal(bv.view.selector, mocks.jqueryObjects.methodResults.first)
+          a(bv.view.id, "MOCK_RIVETS_VIEW")
+          a(bv.view.selector, mocks.jqueryObjects.methodResults.first)
         )
         test("sets$elToRootSelectorResult", ()->
           bv = new BaseView(
             rootSelector:"TEST_SELECTOR"
           )
-          bv.createModel=JsMockito.mockFunction()
+          bv.createModel=jm.mockFunction()
           bv.render()
-          chai.assert.equal(bv.$el, mocks.jqueryObjects["TEST_SELECTOR"])
+          a(bv.$el, mocks.jqueryObjects["TEST_SELECTOR"])
         )
 
         test("undelegatesExistingEvents", ()->
@@ -102,12 +105,12 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             rootSelector:"TEST_SELECTOR"
           )
           if (bv.undelegateEvents)
-            bv.undelegateEvents= JsMockito.mockFunction()
+            bv.undelegateEvents= jm.mockFunction()
           else
-            chai.assert(false,"Base Views should support undelegateEvents method")
+            a(false,"Base Views should support undelegateEvents method")
           bv.createModel=JsMockito.mockFunction()
           bv.render()
-          JsMockito.verify(bv.undelegateEvents)()
+          jm.verify(bv.undelegateEvents)()
         )
 
         test("delegatesEventsObject", ()->
@@ -117,12 +120,12 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             events:ev
           )
           if (bv.delegateEvents)
-            bv.delegateEvents= JsMockito.mockFunction()
+            bv.delegateEvents= jm.mockFunction()
           else
-            chai.assert(false, "Base Views should support delegateEvents method")
-          bv.createModel=JsMockito.mockFunction()
+            a(false, "Base Views should support delegateEvents method")
+          bv.createModel=jm.mockFunction()
           bv.render()
-          JsMockito.verify(bv.delegateEvents)(ev)
+          jm.verify(bv.delegateEvents)(ev)
         )
 
         test("delegatesUndefinedIfEventNotDefined", ()->
@@ -131,12 +134,12 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             rootSelector:"TEST_SELECTOR"
           )
           if (bv.delegateEvents)
-            bv.delegateEvents= JsMockito.mockFunction()
+            bv.delegateEvents= jm.mockFunction()
           else
-            chai.assert(false, "Base Views should support delegateEvents method")
-          bv.createModel=JsMockito.mockFunction()
+            a(false, "Base Views should support delegateEvents method")
+          bv.createModel=jm.mockFunction()
           bv.render()
-          JsMockito.verify(bv.delegateEvents)(JsHamcrest.Matchers.nil())
+          jm.verify(bv.delegateEvents)(m.nil())
         )
       )
       suite("createModel", ()->
@@ -144,8 +147,10 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
           bv = new BaseView(
             rootSelector:"TEST_SELECTOR"
           )
-          chai.assert.throw(()->
+          a(()->
             bv.createModel()
+          ,
+            m.raisesAnything()
           )
 
         )
@@ -161,13 +166,13 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             SUBVIEW2:new BaseView(rootSelector:"TEST_SELECTOR")
             SUBVIEW3:new BaseView(rootSelector:"TEST_SELECTOR")
           )
-          bv.subViews.get("SUBVIEW1").routeChanged = JsMockito.mockFunction()
-          bv.subViews.get("SUBVIEW2").routeChanged = JsMockito.mockFunction()
-          bv.subViews.get("SUBVIEW3").routeChanged = JsMockito.mockFunction()
+          bv.subViews.get("SUBVIEW1").routeChanged = jm.mockFunction()
+          bv.subViews.get("SUBVIEW2").routeChanged = jm.mockFunction()
+          bv.subViews.get("SUBVIEW3").routeChanged = jm.mockFunction()
           bv.routeChanged(route)
-          JsMockito.verify(bv.subViews.get("SUBVIEW1").routeChanged)(route)
-          JsMockito.verify(bv.subViews.get("SUBVIEW2").routeChanged)(route)
-          JsMockito.verify(bv.subViews.get("SUBVIEW3").routeChanged)(route)
+          jm.verify(bv.subViews.get("SUBVIEW1").routeChanged)(route)
+          jm.verify(bv.subViews.get("SUBVIEW2").routeChanged)(route)
+          jm.verify(bv.subViews.get("SUBVIEW3").routeChanged)(route)
 
         )
 
@@ -183,13 +188,13 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             SUBVIEW3:new BaseView(rootSelector:"TEST_SELECTOR")
             NOTAVIEW2:{}
           )
-          bv.subViews.get("SUBVIEW1").routeChanged = JsMockito.mockFunction()
-          bv.subViews.get("SUBVIEW2").routeChanged = JsMockito.mockFunction()
-          bv.subViews.get("SUBVIEW3").routeChanged = JsMockito.mockFunction()
+          bv.subViews.get("SUBVIEW1").routeChanged = jm.mockFunction()
+          bv.subViews.get("SUBVIEW2").routeChanged = jm.mockFunction()
+          bv.subViews.get("SUBVIEW3").routeChanged = jm.mockFunction()
           bv.routeChanged(route)
-          JsMockito.verify(bv.subViews.get("SUBVIEW1").routeChanged)(route)
-          JsMockito.verify(bv.subViews.get("SUBVIEW2").routeChanged)(route)
-          JsMockito.verify(bv.subViews.get("SUBVIEW3").routeChanged)(route)
+          jm.verify(bv.subViews.get("SUBVIEW1").routeChanged)(route)
+          jm.verify(bv.subViews.get("SUBVIEW2").routeChanged)(route)
+          jm.verify(bv.subViews.get("SUBVIEW3").routeChanged)(route)
         )
 
         test("subviewsNotSet_Throws", ()->
@@ -198,7 +203,10 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             rootSelector:"TEST_SELECTOR"
           )
           bv.subViews = undefined
-          chai.assert.throw(()->bv.routeChanged(route))
+          a(
+            ()->bv.routeChanged(route)
+          ,
+            m.raisesAnything())
 
         )
 
@@ -208,7 +216,11 @@ define(["isolate!UI/component/BaseView"], (BaseView)->
             rootSelector:"TEST_SELECTOR"
           )
           bv.subViews = {}
-          chai.assert.doesNotThrow(()->bv.routeChanged(route))
+          a(
+            ()->bv.routeChanged(route)
+          ,
+            m.not(m.raisesAnything())
+          )
 
         )
       )

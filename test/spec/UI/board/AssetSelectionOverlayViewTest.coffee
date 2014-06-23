@@ -47,11 +47,9 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
               toString:()->
                 "MOCK_SHIP_ID_2"
           ,
-            new Backbone.Model(
-              UUID:
-                toString:()->
-                  "MOCK_SHIP_ID_3"
-            )
+            UUID:
+              toString:()->
+                "MOCK_SHIP_ID_3"
           ,
             UUID:
               toString:()->

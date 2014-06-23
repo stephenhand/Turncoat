@@ -32,18 +32,21 @@ require(["isolate","isolateHelper","backbone"], (Isolate, Helper, Backbone)->
 )
 
 
-define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
+define(["isolate!UI/ManOWarTableTopView", "matchers", "operators", "assertThat","jsMockito", "verifiers"], (ManOWarTableTopView, m, o, a, jm, v)->
 
   mocks = window.mockLibrary["UI/ManOWarTableTopView"];
   suite("ManOWarTableTopView", ()->
+    setup(()->
+      mocks.jqueryObjects = []
+    )
     suite("constructor", ()->
       test("constructsPlayAreaView", ()->
         MOWTTV = new ManOWarTableTopView()
-        chai.assert.equal("MOCK_PLAYAREAVIEW", MOWTTV.subViews.get("playAreaView").mockId)
+        a("MOCK_PLAYAREAVIEW", MOWTTV.subViews.get("playAreaView").mockId)
       )
       test("constructsAdministrationDialogueView", ()->
         MOWTTV = new ManOWarTableTopView()
-        chai.assert.equal("MOCK_ADMINISTRATIONDIALOGUEVIEW", MOWTTV.subViews.get("administrationDialogue").mockId)
+        a("MOCK_ADMINISTRATIONDIALOGUEVIEW", MOWTTV.subViews.get("administrationDialogue").mockId)
       )
     )
     suite("createModel",()->
@@ -52,7 +55,7 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
           gameState:{}
         )
         MOWTTV.createModel()
-        chai.assert.equal(MOWTTV.model.get("administrationDialogueActive"),false)
+        a(MOWTTV.model.get("administrationDialogueActive"),false)
       )
     )
     suite("createPlayAreaView", ()->
@@ -61,7 +64,7 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
         MOWTTV.createPlayAreaView(
           gameState:{}
         )
-        chai.assert.equal("MOCK_PLAYAREAVIEW", MOWTTV.subViews.get("playAreaView").mockId)
+        a("MOCK_PLAYAREAVIEW", MOWTTV.subViews.get("playAreaView").mockId)
       )
     )
     suite("createAdministrationView", ()->
@@ -70,7 +73,7 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
         MOWTTV.createAdministrationView(
           gameState:{}
         )
-        chai.assert.equal("MOCK_ADMINISTRATIONDIALOGUEVIEW", MOWTTV.subViews.get("administrationDialogue").mockId)
+        a("MOCK_ADMINISTRATIONDIALOGUEVIEW", MOWTTV.subViews.get("administrationDialogue").mockId)
       )
     )
     suite("render", ()->
@@ -83,7 +86,7 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
           gameState:{}
         )
         MOWTTV.render()
-        JsMockito.verify(MOWTTV.subViews.get("playAreaView").render)()
+        jm.verify(MOWTTV.subViews.get("playAreaView").render)()
       )
       test("rendersAdminstrationAreaView", ()->
         MOWTTV = new ManOWarTableTopView()
@@ -94,7 +97,7 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
           gameState:{}
         )
         MOWTTV.render()
-        JsMockito.verify(MOWTTV.subViews.get("administrationDialogue").render)()
+        jm.verify(MOWTTV.subViews.get("administrationDialogue").render)()
       )
       test("initialisesAdministrationJQModal", ()->
         MOWTTV = new ManOWarTableTopView()
@@ -105,11 +108,11 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
           gameState:{}
         )
         MOWTTV.render()
-        JsMockito.verify(mocks.jqueryObjects["#administrationDialogue"].jqm)()
+        jm.verify(mocks.jqueryObjects["#administrationDialogue"].jqm)()
       )
       suite("Admin dialog hide handler", ()->
         test("Calls Router unsetSubRoute on administrationDialogue", ()->
-          mocks["UI/routing/Router"].unsetSubRoute = JsMockito.mockFunction()
+          mocks["UI/routing/Router"].unsetSubRoute = jm.mockFunction()
           MOWTTV = new ManOWarTableTopView()
           MOWTTV.createPlayAreaView(
             gameState:{}
@@ -118,13 +121,13 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
             gameState:{}
           )
           MOWTTV.render()
-          JsMockito.verify(mocks.jqueryObjects["#administrationDialogue"].jqm)(JsHamcrest.Matchers.hasMember("onHide",
+          jm.verify(mocks.jqueryObjects["#administrationDialogue"].jqm)(m.hasMember("onHide",
             new JsHamcrest.SimpleMatcher(
               matches:(handler)->
-                MOWTTV.model.set=JsMockito.mockFunction()
+                MOWTTV.model.set=jm.mockFunction()
                 try
                   handler()
-                  JsMockito.verify(mocks["UI/routing/Router"].unsetSubRoute)("administrationDialogue")
+                  jm.verify(mocks["UI/routing/Router"].unsetSubRoute)("administrationDialogue")
                   true
                 catch e
                   false
@@ -146,7 +149,7 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
         MOWTTV.render()
 
         MOWTTV.model.set("administrationDialogueActive",true)
-        JsMockito.verify(mocks.jqueryObjects["#administrationDialogue"].jqmShow)()
+        jm.verify(mocks.jqueryObjects["#administrationDialogue"].jqmShow)()
       )
     )
     suite("routeChanged", ()->
@@ -164,45 +167,57 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
       test("Calls routeChanged with same route on Play Area sub view.", ()->
         route = {}
         MOWTTV.routeChanged(route)
-        JsMockito.verify(MOWTTV.subViews.get("playAreaView").routeChanged)(route)
+        jm.verify(MOWTTV.subViews.get("playAreaView").routeChanged)(route)
       )
       test("No route throws.", ()->
 
-        chai.assert.throws(()->MOWTTV.routeChanged())
+        a(
+          ()->MOWTTV.routeChanged()
+        ,
+          m.raisesAnything()
+        )
       )
       suite("Route has no sub views property.", ()->
 
         test("Sets administrationDialogueActive false", ()->
           MOWTTV.model.set("administrationDialogueActive",true)
           MOWTTV.routeChanged({})
-          chai.assert.isFalse(MOWTTV.model.get("administrationDialogueActive"))
+          a(MOWTTV.model.get("administrationDialogueActive"), false)
 
         )
         test("Doesnt call routeChanged on administrationView", ()->
           MOWTTV.model.set("administrationDialogueActive",true)
           MOWTTV.routeChanged({})
-          JsMockito.verify(MOWTTV.subViews.get("administrationDialogue").routeChanged, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+          jm.verify(MOWTTV.subViews.get("administrationDialogue").routeChanged, v.never())(m.anything())
         )
         test("Undefined administrationView doesnt throw", ()->
           MOWTTV.subViews.unset("administrationDialogue")
-          chai.assert.doesNotThrow(()->MOWTTV.routeChanged({}))
+          a(
+            ()->MOWTTV.routeChanged({})
+          ,
+            m.not(m.raisesAnything())
+          )
         )
       )
       suite("Route has no administrationDialog sub view.", ()->
         test("Sets administrationDialogueActive false", ()->
           MOWTTV.model.set("administrationDialogueActive",true)
           MOWTTV.routeChanged({subRoutes:{}})
-          chai.assert.isFalse(MOWTTV.model.get("administrationDialogueActive"))
+          a(MOWTTV.model.get("administrationDialogueActive"), false)
 
         )
         test("Doesnt call routeChanged on administrationView", ()->
           MOWTTV.model.set("administrationDialogueActive",true)
           MOWTTV.routeChanged({subRoutes:{}})
-          JsMockito.verify(MOWTTV.subViews.get("administrationDialogue").routeChanged, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+          jm.verify(MOWTTV.subViews.get("administrationDialogue").routeChanged, v.never())(m.anything())
         )
         test("Undefined administrationView doesnt throw", ()->
           MOWTTV.subViews.unset("administrationDialogue")
-          chai.assert.doesNotThrow(()->MOWTTV.routeChanged({subRoutes:{}}))
+          a(
+            ()->MOWTTV.routeChanged({subRoutes:{}})
+          ,
+            m.not(m.raisesAnything())
+          )
         )
       )
       suite("Route has administrationDialog sub route.", ()->
@@ -212,7 +227,7 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
             subRoutes:
               administrationDialogue:{}
           )
-          chai.assert.isTrue(MOWTTV.model.get("administrationDialogueActive"))
+          a(MOWTTV.model.get("administrationDialogueActive"), true)
 
         )
         test("Call routeChanged on administrationView with administrationDialog subView", ()->
@@ -222,25 +237,30 @@ define(['isolate!UI/ManOWarTableTopView'], (ManOWarTableTopView)->
             subRoutes:
               administrationDialogue:adminRoute
           )
-          JsMockito.verify(MOWTTV.subViews.get("administrationDialogue").routeChanged)(adminRoute)
+          jm.verify(MOWTTV.subViews.get("administrationDialogue").routeChanged)(adminRoute)
         )
         test("Undefined administrationDialogue throws", ()->
           MOWTTV.subViews.unset("administrationDialogue")
-          chai.assert.throws(
+          a(
             ()->
               MOWTTV.routeChanged(
                 subRoutes:
                   administrationDialogue:{}
               )
+          ,
+            m.raisesAnything()
           )
         )
       )
       test("Undefined playAreaView throws", ()->
         MOWTTV.subViews.unset("playAreaView")
-        chai.assert.throws(()->MOWTTV.routeChanged({}))
+        a(
+          ()->MOWTTV.routeChanged({})
+        ,
+          m.raisesAnything()
+        )
       )
     )
   )
-
 )
 
