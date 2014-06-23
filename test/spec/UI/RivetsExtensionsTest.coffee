@@ -10,15 +10,10 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
   Isolate.mapAsFactory("sprintf","UI/RivetsExtensions", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      spf=JsMockito.mockFunction()
-      JsMockito.when(spf)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then(
-        (a,b)->
-          {
-          mask:a
-          value:b
-          }
-      )
-      spf
+      ret = ()->
+        ret.func.apply(ret, arguments)
+      ret.func = actual
+      ret
     )
   )
 )
@@ -179,6 +174,19 @@ define(['isolate!UI/RivetsExtensions', "matchers", "operators", "assertThat","js
         )
       )
       suite("sprintf",()->
+        origSPF = null
+        setup(()->
+          origSPF = mocks["sprintf"].func
+          mocks["sprintf"].func=jm.mockFunction()
+          JsMockito.when(mocks["sprintf"].func)(m.anything(),m.anything()).then(
+            (a,b)->
+              mask:a
+              value:b
+          )
+        )
+        teardown(()->
+          origSPF = mocks["sprintf"].func = origSPF
+        )
         test("Calls sprintf with first parameter as value and second parameter as pattern",()->
           ret = RivetsExtensions.formatters.sprintf("MOCK_VALUE","MOCK_MASK")
           a(ret.mask,"MOCK_MASK")
@@ -193,8 +201,50 @@ define(['isolate!UI/RivetsExtensions', "matchers", "operators", "assertThat","js
             m.raisesAnything()
           )
         )
+        test("throws if input is not defined",()->
+          a(()->
+            RivetsExtensions.formatters.calc(null,"%d*5")
+          ,
+            m.raisesAnything()
+          )
+        )
+        test("return unmodified input if mask is not defined",()->
+          a(RivetsExtensions.formatters.calc(13),13)
+        )
+        test("substitutes input into mask using sprintf then returns result of expression",()->
+          a(RivetsExtensions.formatters.calc(3,"%d*5"),15)
+        )
+        test("allows Javascript method calls",()->
+          a(RivetsExtensions.formatters.calc(3.123,"Math.floor(%d)"),3)
+        )
+        test("throws if invalid Javascript used in expression",()->
+          a(()->
+            RivetsExtensions.formatters.calc(13, "Matth.bugaboo(%d)")
+          ,
+            m.raisesAnything()
+          )
+        )
+        test("allows input not to be used",()->
+          a(RivetsExtensions.formatters.calc(3.123,"100/2"),50)
+        )
+        test("allows non numeric return types",()->
+          a(RivetsExtensions.formatters.calc(3.123,"(100/2)+'hello'"),"50hello")
+        )
       )
       suite("multiplier",()->
+        origSPF = null
+        setup(()->
+          origSPF = mocks["sprintf"].func
+          mocks["sprintf"].func=jm.mockFunction()
+          JsMockito.when(mocks["sprintf"].func)(m.anything(),m.anything()).then(
+            (a,b)->
+              mask:a
+              value:b
+          )
+        )
+        teardown(()->
+          origSPF = mocks["sprintf"].func = origSPF
+        )
         test("decimalInputdecimalMultiplierNoMask_ReturnsMultiplied",()->
           ret = RivetsExtensions.formatters.multiplier("3.5", "2.5")
           a(ret,"8.75")

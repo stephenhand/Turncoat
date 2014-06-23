@@ -25,6 +25,8 @@ define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbon
       calc:(input, mask)->
         val = parseFloat(input)
         if isNaN(val) then throw new Error("Input to calc formatter must be numeric")
+        if !mask then return input
+        eval(sprintf(mask, val))
 
 
     binders:
