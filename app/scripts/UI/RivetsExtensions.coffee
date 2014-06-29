@@ -1,6 +1,6 @@
-require(['UI/rivets/binders/FeedItem'])
+require(["UI/rivets/binders/FeedItem"])
 
-define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbone, sprintf, Rivets)->
+define(["jquery", "underscore", "backbone", "sprintf", "rivets", "lib/2D/TransformBearings"], ($, _, Backbone, sprintf, Rivets, bearings)->
 
 
   RivetsExtensions =

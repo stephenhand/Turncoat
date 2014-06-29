@@ -8,7 +8,9 @@ define(["underscore", "jquery", "backbone", "UI/component/BaseView", "UI/board/A
     createModel:()->
       @model ?= new AssetSelectionOverlayViewModel()
       @listenTo(@model,"change:nominatedAsset", (model, asset)->
-        if (asset?) then $("#"+asset.get("UUID")+"-animate-show")[0].beginElement()
+        if (asset?) then $("."+asset.get("UUID")+"-animate-show").each(()->
+          @beginElement()
+        )
       )
 
     events:
