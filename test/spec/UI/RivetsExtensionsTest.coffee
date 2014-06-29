@@ -194,25 +194,119 @@ define(['isolate!UI/RivetsExtensions', "matchers", "operators", "assertThat","js
         )
       )
       suite("calc",()->
-        test("throws if input is not parsable as a float",()->
-          a(()->
-            RivetsExtensions.formatters.calc("MOCK_VALUE","MOCK_MASK%d")
-          ,
-            m.raisesAnything()
+        suite("mask not defined", ()->
+          test("returns unmodified input",()->
+            a(RivetsExtensions.formatters.calc(13),13)
+          )
+          test("returns unmodified input even if input is not numeric or a backbone model",()->
+            obj = {}
+            a(RivetsExtensions.formatters.calc(obj),obj)
           )
         )
-        test("throws if input is not defined",()->
-          a(()->
-            RivetsExtensions.formatters.calc(null,"%d*5")
-          ,
-            m.raisesAnything()
+        suite("input is not a Backbone Model instance", ()->
+          test("throws if input is not typeof number and no attribute arguments specified",()->
+            a(()->
+              RivetsExtensions.formatters.calc("MOCK_VALUE","12+%d")
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("still throws if input is parsable as a float",()->
+            myEvilObject =
+              valueOf:()->
+                133.7
+              toString:()->
+                "133.7"
+            a(()->
+              RivetsExtensions.formatters.calc(myEvilObject,"12+%d")
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("throws if input is not defined",()->
+            a(()->
+              RivetsExtensions.formatters.calc(null,"%d*5")
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("substitutes input into mask using sprintf then returns result of expression",()->
+            a(RivetsExtensions.formatters.calc(3,"%d*5"),15)
           )
         )
-        test("return unmodified input if mask is not defined",()->
-          a(RivetsExtensions.formatters.calc(13),13)
-        )
-        test("substitutes input into mask using sprintf then returns result of expression",()->
-          a(RivetsExtensions.formatters.calc(3,"%d*5"),15)
+        suite("input is a Backbone Model instance", ()->
+          model = null
+          setup(()->
+            model = new Backbone.Model(
+              propA:12
+              propB:-16
+              propC:20.5
+            )
+          )
+          test("No mask, returns unmodified input", ()->
+            anyModel = new Backbone.Model(prop:"val");
+            a(RivetsExtensions.formatters.calc(anyModel),anyModel)
+            a(RivetsExtensions.formatters.calc(anyModel).attributes,m.hasMember("prop","val"))
+          )
+          test("No attributes specified, no substitutions specified in mask - returns mask calculation", ()->
+            a(RivetsExtensions.formatters.calc(model, "Math.floor(2.2*3)"),6)
+          )
+          test("No attributes specified, substitutions specified in mask - throws", ()->
+            a(()->
+              RivetsExtensions.formatters.calc(model, "Math.floor(%d*3)")
+            ,m.raisesAnything())
+          )
+          test("Single attribute specified, single substitution specified in mask - calculates using backbone attribute of input with attribute name", ()->
+            a(RivetsExtensions.formatters.calc(model, "Math.floor(%d*3)", "propA"),36)
+          )
+          test("Multiple attributes specified, same number of substitutions specified in mask - calculates substituting placeholders with attributes in order parameters are spoecified", ()->
+            a(RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA"),-10)
+          )
+          test("Objects derived from Backbone.Model work the same", ()->
+            derived = Backbone.Model.extend()
+            derivedModel = new derived(
+              propA:12
+              propB:-16
+              propC:20.5
+            )
+            a(RivetsExtensions.formatters.calc(derivedModel, "Math.floor(%d*3)", "propA"),36)
+            a(RivetsExtensions.formatters.calc(derivedModel, "%d+Math.sqrt(%d*3)", "propB", "propA"),-10)
+          )
+          test("Less substitutions specified than attributes - additional attributes ignored", ()->
+            a(RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "propC"),-10)
+          )
+          test("More substitutions specified than attributes - throws", ()->
+            a(()->
+              RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB")
+            ,m.raisesAnything())
+          )
+          test("Any attributes are non numeric - throws", ()->
+            model.set("propB", "THREE")
+            a(()->
+              RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA")
+            ,m.raisesAnything())
+          )
+          test("Any attributes are missing - throws", ()->
+            a(()->
+              RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "notPropB", "propA")
+            ,m.raisesAnything())
+          )
+          test("Any unused attributes are missing or non numeric - throws", ()->
+            a(()->
+              RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "notPropB")
+            ,m.raisesAnything())
+            model.set("propC", "THREE")
+            a(()->
+              RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "propC")
+            ,m.raisesAnything())
+          )
+          test("get function not defined - throws", ()->
+            model.get = null
+            a(()->
+              RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA")
+            ,m.raisesAnything())
+          )
+
         )
         test("allows Javascript method calls",()->
           a(RivetsExtensions.formatters.calc(3.123,"Math.floor(%d)"),3)

@@ -23,10 +23,15 @@ define(['jquery', 'underscore', 'backbone', 'sprintf', 'rivets'], ($, _, Backbon
         if (isNaN(posAdjust)) then throw new Error("Cannot set centroid to  "+posAtt+" attribute because  "+dimAtt+" is "+input.get(dimAtt))
         return pos-posAdjust
       calc:(input, mask)->
-        val = parseFloat(input)
-        if isNaN(val) then throw new Error("Input to calc formatter must be numeric")
-        if !mask then return input
-        eval(sprintf(mask, val))
+        if !mask? then return input
+        vals = []
+        if input instanceof Backbone.Model
+          for attr,idx in arguments when idx>1
+            val = input.get(attr)
+            if typeof val is "number" then vals.push(val) else throw new Error("All inputs to calc formatter must be numeric.")
+        else if typeof input is "number" then vals = [input] else throw new Error("Input to calc formatter must be numeric")
+        vals.unshift(mask)
+        eval(sprintf.apply(null, vals))
 
 
     binders:
