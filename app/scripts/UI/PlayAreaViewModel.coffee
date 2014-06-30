@@ -2,6 +2,7 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState","U
 
   ASSETSELECTIONVIEW = "assetSelectionView"
   ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
+  ASSETCOMMANDVIEW = "assetCommandView"
 
   PlayAreaViewModel = Backbone.Model.extend(
     initialize: (m, options)->
@@ -29,7 +30,11 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState","U
 
         if (game? and AppState.get("currentUser").get("id") is game.getCurrentControllingUser().get("id"))
           @activateOverlay(ASSETSELECTIONVIEW, "underlays")
-          @activateOverlay(ASSETSELECTIONHOTSPOTS, "overlays",@get("gameBoard").get("underlays").get(ASSETSELECTIONVIEW).get("overlayModel"))
+          overlayModel = @get("gameBoard").get("underlays").get(ASSETSELECTIONVIEW).get("overlayModel")
+          @activateOverlay(ASSETSELECTIONHOTSPOTS, "overlays", overlayModel)
+          @listenTo(overlayModel, "change:nominatedAsset", ()->
+            @activateOverlay(ASSETCOMMANDVIEW, "overlays")
+          )
 
     activateOverlay:()->
   )

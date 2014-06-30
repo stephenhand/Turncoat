@@ -25,6 +25,7 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
   suite("PlayAreaViewModel", ()->
     ASSETSELECTIONVIEW = "assetSelectionView"
     ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
+    ASSETCOMMANDVIEW = "assetCommandView"
 
     mocks = mockLibrary["UI/PlayAreaViewModel"]
 
@@ -94,7 +95,10 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
       pavm = null
       mockUnderlayModel = null
       setup(()->
-        mockUnderlayModel = {}
+
+        mockUnderlayModel =
+          on:jm.mockFunction()
+          get:jm.mockFunction()
         g =
           getCurrentControllingUser:jm.mockFunction()
         jm.when(g.getCurrentControllingUser)().then(()->
@@ -117,38 +121,77 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
         pavm.setGame(g)
         jm.verify(pavm.get("gameBoard").setGame)(g)
       )
-      test("Current player is controlling player - adds model to underlays with ASSETSELECTIONVIEW as id", ()->
-        pavm.setGame(g)
-        jm.verify(pavm.get("gameBoard").get("underlays").add)(m.hasMember("id", ASSETSELECTIONVIEW))
-      )
-      test("Current player is controlling player, view api set - calls requestOverlay with game, ASSETSELECTIONVIEW as id and underlays as layer", ()->
-        api =
-          requestOverlay:jm.mockFunction()
-        pavm.setViewAPI(api)
-        pavm.setGame(g)
-        jm.verify(api.requestOverlay)(
-          m.allOf(
-            m.hasMember("id", ASSETSELECTIONVIEW),
-            m.hasMember("gameData", g),
-            m.hasMember("layer", "underlays")
-          )
+      suite("Current player is controlling player", ()->
+        test("Adds model to underlays with ASSETSELECTIONVIEW as id", ()->
+          pavm.setGame(g)
+          jm.verify(pavm.get("gameBoard").get("underlays").add)(m.hasMember("id", ASSETSELECTIONVIEW))
         )
-      )
-      test("Current player is controlling player - adds model to overlays with ASSETSELECTIONHOTSPOTS as id", ()->
-        pavm.setGame(g)
-        jm.verify(pavm.get("gameBoard").get("overlays").add)(m.hasMember("id", ASSETSELECTIONHOTSPOTS))
-      )
-      test("Current player is controlling player, view api set - calls requestOverlay with game, ASSETSELECTIONHOTSPOTS as id, overlays as layer and overlayModel just added to underlays as model", ()->
-        api =
-          requestOverlay:jm.mockFunction()
-        pavm.setViewAPI(api)
-        pavm.setGame(g)
-        jm.verify(api.requestOverlay)(
-          m.allOf(
-            m.hasMember("id", ASSETSELECTIONHOTSPOTS),
-            m.hasMember("gameData", g),
-            m.hasMember("layer", "overlays")   ,
-            m.hasMember("overlayModel", mockUnderlayModel)
+        test("Adds model to overlays with ASSETSELECTIONHOTSPOTS as id", ()->
+          pavm.setGame(g)
+          jm.verify(pavm.get("gameBoard").get("overlays").add)(m.hasMember("id", ASSETSELECTIONHOTSPOTS))
+        )
+        test("Activating underlay fails to create desired layer structure - throws", ()->
+          getter = jm.mockFunction()
+          pavm.get("gameBoard").set("underlays",
+            add:jm.mockFunction()
+            get:getter
+          )
+          jm.when(getter)(ASSETSELECTIONVIEW).then((vw)->
+            get:(x)->
+          );
+          a(()->
+            pavm.setGame(g)
+          ,m.raisesAnything())
+        )
+        suite("View API is set", ()->
+          api = null
+          setup(()->
+            api =
+              requestOverlay:jm.mockFunction()
+            pavm.setViewAPI(api)
+
+          )
+          test("Calls requestOverlay with game, ASSETSELECTIONVIEW as id and underlays as layer", ()->
+            pavm.setGame(g)
+            jm.verify(api.requestOverlay)(
+              m.allOf(
+                m.hasMember("id", ASSETSELECTIONVIEW),
+                m.hasMember("gameData", g),
+                m.hasMember("layer", "underlays")
+              )
+            )
+          )
+          test("Calls requestOverlay with game, ASSETSELECTIONHOTSPOTS as id, overlays as layer and overlayModel just added to underlays as model", ()->
+            pavm.setGame(g)
+            jm.verify(api.requestOverlay)(
+              m.allOf(
+                m.hasMember("id", ASSETSELECTIONHOTSPOTS),
+                m.hasMember("gameData", g),
+                m.hasMember("layer", "overlays")   ,
+                m.hasMember("overlayModel", mockUnderlayModel)
+              )
+            )
+          )
+          test("Listens to the overlay/underlay model for changes to nominatedAsset", ()->
+            pavm.setGame(g)
+            jm.verify(mockUnderlayModel.on)("change:nominatedAsset", m.func(), pavm)
+          )
+          suite("overlay/underlay change:nominatedAsset listener",()->
+            listener = null
+            nominated = null
+            setup(()->
+              nominated = {}
+              jm.when(mockUnderlayModel.get)("nominatedAsset").then(()->nominated)
+              jm.when(mockUnderlayModel.on)("change:nominatedAsset", m.func(), pavm).then((e,l,c)->
+                listener=l
+              )
+              pavm.setGame(g)
+              pavm.activateOverlay = jm.mockFunction()
+            )
+            test("Activates command overlay with nominatedAsset",()->
+              listener.call(pavm)
+              jm.verify(pavm.activateOverlay)(ASSETCOMMANDVIEW,"overlays")
+            )
           )
         )
       )
