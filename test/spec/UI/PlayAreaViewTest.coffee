@@ -2,6 +2,7 @@ updateFromWatchedCollectionsRes=null
 
 ASSETSELECTIONVIEW = "assetSelectionView"
 ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
+ASSETCOMMANDVIEW = "assetCommandView"
 
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("AppState","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
@@ -31,7 +32,12 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ret=JsMockito.mockFunction()
       ret::set=JsMockito.mockFunction()
-
+    )
+  )
+  Isolate.mapAsFactory("UI/board/AssetCommandOverlayView","UI/PlayAreaView", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      ret=JsMockito.mockFunction()
+      ret::set=JsMockito.mockFunction()
     )
   )
 )
@@ -114,6 +120,19 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
             overlays.push(@)
             @
           )
+          jm.when(mocks["UI/board/AssetCommandOverlayView"])(m.anything()).then((opt)->
+            @constructedWith = opt
+            @set = jm.mockFunction()
+            @createModel = jm.mockFunction()
+            @render = jm.mockFunction()
+            jm.when(@createModel)().then(()=>
+              @model =
+                setGame:jm.mockFunction()
+                set:jm.mockFunction()
+            )
+            overlays.push(@)
+            @
+          )
         )
         test("ID specifies assetSelectionView - creates assetSelectionUnderlayView with rootSelector containing id", ()->
           requestOverlay(
@@ -133,6 +152,16 @@ define(["isolate!UI/PlayAreaView", "matchers", "operators", "assertThat","jsMock
           )
           a(overlays.length, 1)
           a(overlays[0].constructedWith.rootSelector, m.containsString(ASSETSELECTIONHOTSPOTS))
+          a(underlays, m.empty())
+        )
+        test("ID specifies assetCommandView - creates assetCommandOverlayView", ()->
+          requestOverlay(
+            id:ASSETCOMMANDVIEW
+            gameData:{}
+            layer:"MOCK_LAYER"
+          )
+          a(overlays.length, 1)
+          a(overlays[0].constructedWith.rootSelector, m.containsString(ASSETCOMMANDVIEW))
           a(underlays, m.empty())
         )
         test("Calls new view's createModel method", ()->

@@ -179,7 +179,20 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
           suite("overlay/underlay change:nominatedAsset listener",()->
             listener = null
             nominated = null
+            commandOverlay = null
+            getter = null
             setup(()->
+              getter = jm.mockFunction()
+              commandOverlay =
+                setAsset : jm.mockFunction()
+              pavm.get("gameBoard").set("overlays",
+                add:jm.mockFunction()
+                get:getter
+              )
+              jm.when(getter)(ASSETCOMMANDVIEW).then((vw)->
+                get:(x)->
+                  if x is "overlayModel" then commandOverlay
+              );
               nominated = {}
               jm.when(mockUnderlayModel.get)("nominatedAsset").then(()->nominated)
               jm.when(mockUnderlayModel.on)("change:nominatedAsset", m.func(), pavm).then((e,l,c)->
@@ -189,8 +202,36 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
               pavm.activateOverlay = jm.mockFunction()
             )
             test("Activates command overlay with nominatedAsset",()->
-              listener.call(pavm)
+              listener.call(pavm,
+                get:(key)->
+                  if key is "modelId" then "MOCK ASSET ID"
+              )
               jm.verify(pavm.activateOverlay)(ASSETCOMMANDVIEW,"overlays")
+            )
+            test("Sets asset on command overlay using id from model passed in from listener",()->
+              listener.call(pavm,
+                get:(key)->
+                  if key is "modelId" then "MOCK ASSET ID"
+              )
+              jm.verify(commandOverlay.setAsset)("MOCK ASSET ID")
+            )
+            test("Command overlay model not where expected - throws",()->
+              jm.when(getter)(ASSETCOMMANDVIEW).then((vw)->
+                get:(x)->
+              );
+              a(()->
+                listener.call(pavm,
+                  get:(key)->
+                    if key is "modelId" then "MOCK ASSET ID"
+                )
+              ,m.raisesAnything())
+            )
+            test("Nominated asset has no model id - sets asset with nothing",()->
+
+              listener.call(pavm,
+                get:(key)->
+              )
+              jm.verify(commandOverlay.setAsset)(m.nil())
             )
           )
         )

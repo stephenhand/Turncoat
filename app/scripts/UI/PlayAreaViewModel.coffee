@@ -32,8 +32,9 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState","U
           @activateOverlay(ASSETSELECTIONVIEW, "underlays")
           overlayModel = @get("gameBoard").get("underlays").get(ASSETSELECTIONVIEW).get("overlayModel")
           @activateOverlay(ASSETSELECTIONHOTSPOTS, "overlays", overlayModel)
-          @listenTo(overlayModel, "change:nominatedAsset", ()->
+          @listenTo(overlayModel, "change:nominatedAsset", (nominated)->
             @activateOverlay(ASSETCOMMANDVIEW, "overlays")
+            @get("gameBoard").get("overlays").get(ASSETCOMMANDVIEW).get("overlayModel").setAsset(nominated.get("modelId"))
           )
 
     activateOverlay:()->

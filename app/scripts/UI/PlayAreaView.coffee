@@ -1,7 +1,18 @@
-define(['underscore', 'backbone', 'sprintf', 'UI/component/BaseView', "UI/PlayAreaViewModel", "UI/board/AssetSelectionOverlayView", "UI/board/AssetSelectionUnderlayView", "AppState", 'text!templates/PlayArea.html'], (_, Backbone, sprintf, BaseView, PlayAreaViewModel, AssetSelectionOverlayView, AssetSelectionUnderlayView, AppState, templateText)->
+define(['underscore',
+        'backbone',
+        'sprintf',
+        'UI/component/BaseView',
+        "UI/PlayAreaViewModel",
+        "UI/board/AssetCommandOverlayView",
+        "UI/board/AssetSelectionOverlayView",
+        "UI/board/AssetSelectionUnderlayView",
+        "AppState",
+        'text!templates/PlayArea.html'],
+(_, Backbone, sprintf, BaseView, PlayAreaViewModel, AssetCommandOverlayView, AssetSelectionOverlayView, AssetSelectionUnderlayView, AppState, templateText)->
 
   ASSETSELECTIONVIEW = "assetSelectionView"
   ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
+  ASSETCOMMANDVIEW = "assetCommandView"
 
   class PlayAreaView extends BaseView
     initialize: (options)->
@@ -21,6 +32,8 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/BaseView', "UI/PlayAr
               overlay = new AssetSelectionUnderlayView(rootSelector:sprintf("#playArea #%s",ASSETSELECTIONVIEW))
             when ASSETSELECTIONHOTSPOTS
               overlay = new AssetSelectionOverlayView(rootSelector:sprintf("#playArea #%s",ASSETSELECTIONHOTSPOTS))
+            when ASSETCOMMANDVIEW
+              overlay = new AssetCommandOverlayView(rootSelector:sprintf("#playArea #%s",ASSETCOMMANDVIEW))
           if request.overlayModel? then overlay.model=request.overlayModel
           overlay.createModel();
           overlay.model.set("id",request.id)
