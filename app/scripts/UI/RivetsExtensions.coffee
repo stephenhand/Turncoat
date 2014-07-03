@@ -25,11 +25,13 @@ define(["jquery", "underscore", "backbone", "sprintf", "rivets", "lib/2D/Transfo
       calc:(input, mask)->
         if !mask? then return input
         vals = []
-        if input instanceof Backbone.Model
+        if typeof input is "number"
+          vals = [input]
+        else
           for attr,idx in arguments when idx>1
-            val = input.get(attr)
+            val = Rivets.config.adapter.read(input, attr)
             if typeof val is "number" then vals.push(val) else throw new Error("All inputs to calc formatter must be numeric.")
-        else if typeof input is "number" then vals = [input] else throw new Error("Input to calc formatter must be numeric")
+
         vals.unshift(mask)
         eval(sprintf.apply(null, vals))
 

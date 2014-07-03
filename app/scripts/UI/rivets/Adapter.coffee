@@ -38,14 +38,26 @@ define(["underscore", "backbone"], (_, Backbone)->
       if !_.isArray(keypath) then keypath=keypath.split(".")
       if (keypath[0])
         key = keypath.shift()
-        val = obj.get(key)
+        val = null
+        switch key
+          when "_indexOf"
+            if obj.collection? then val = obj.collection.indexOf(obj) else val = -1
+          when "_length"
+            if (obj instanceof Backbone.Collection)
+              return obj.length
+            else if obj.collection?
+              return obj.collection.length
+            else
+              return 0
+          else
+            val = obj.get(key)
         if !val?
           val
         else
           @read(val ,keypath)
       else
         if (obj instanceof Backbone.Collection)
-          obj["models"]
+          return obj["models"]
         else
           obj
 

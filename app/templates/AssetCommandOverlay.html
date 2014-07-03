@@ -30,39 +30,39 @@
              data-rv-class="nominated.classList" data-rv-asset-id="nominated.UUID" fill="transparent"
              pointer-events="all" stroke="black" data-rv-stroke-width="nominated.length | multiplier 0.05">
     </circle>
-    <line
-            data-rv-x1="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).x+%f length xpx"
-            data-rv-y1="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).y+%f length ypx"
-            data-rv-x2="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).x+%f length xpx"
-            data-rv-y2="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).y+%f length ypx"
+    <line   data-rv-each-command=".commands"
+            data-rv-x1="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).x+%f _length _indexOf target.length target.xpx"
+            data-rv-y1="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).y+%f _length _indexOf target.length target.ypx"
+            data-rv-x2="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).x+%f _length _indexOf target.length target.xpx"
+            data-rv-y2="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).y+%f _length _indexOf target.length target.ypx"
             data-rv-stroke-width="nominated.length | multiplier 0.05"
             stroke="black">
         <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
                  attributeType="XML"
                  attributeName="x2"
                  restart="whenNotActive"
-                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*2).x+%f length xpx"
+                 data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*2).x+%f _length _indexOf target.length target.xpx"
                  fill="freeze"
                  dur="0.3s"/>
         <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
                  attributeType="XML"
                  attributeName="y2"
                  restart="whenNotActive"
-                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*2).y+%f length ypx"
+                 data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*2).y+%f _length _indexOf target.length target.ypx"
                  fill="freeze"
                  dur="0.3s"/>
         <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
                  attributeType="XML"
                  attributeName="x2"
                  restart="whenNotActive"
-                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*1.2).x+%f length xpx"
+                 data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*1.2).x+%f _length _indexOf target.length target.xpx"
                  fill="freeze"
                  dur="0.3s"/>
         <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
                  attributeType="XML"
                  attributeName="y2"
                  restart="whenNotActive"
-                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*1.2).y+%f length ypx"
+                 data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*1.2).y+%f _length _indexOf target.length target.ypx"
                  fill="freeze"
                  dur="0.3s"/>
     </line>

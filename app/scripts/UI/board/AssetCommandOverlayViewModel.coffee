@@ -12,14 +12,23 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
         if !ship? then throw new Error("Nominated asset not found.")
         @get("nominatedAssets").set([ship])
         @set("commands", new Backbone.Collection([
-            label:"Move",
-             commands:new Backbone.Collection([
-               label:"Oars",
-               label:"Sail"
-             ])
+            target:ship
+            label:"Move"
+            commands:new Backbone.Collection([
+              target:ship
+              label:"Oars"
+            ,
+              target:ship
+              label:"Sail"
+            ])
           ,
+            target:ship
             label:"Fire"
-          ]))
+          ,
+            target:ship
+            label:"Fire"
+          ])
+        )
 
   AssetCommandOverlayViewModel
 )

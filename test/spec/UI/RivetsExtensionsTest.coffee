@@ -5,6 +5,13 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       stubRivets =
         binders:{}
         formatters:{}
+        config:
+          adapter:
+            read:JsMockito.mockFunction()
+      JsMockito.when(stubRivets.config.adapter.read)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((obj, key)->
+        obj[key]
+      )
+
       stubRivets
     )
   )
@@ -234,19 +241,20 @@ define(['isolate!UI/RivetsExtensions', "matchers", "operators", "assertThat","js
             a(RivetsExtensions.formatters.calc(3,"%d*5"),15)
           )
         )
-        suite("input is a Backbone Model instance", ()->
+        suite("input is not a number", ()->
           model = null
           setup(()->
-            model = new Backbone.Model(
+            model =
               propA:12
               propB:-16
               propC:20.5
-            )
+
           )
           test("No mask, returns unmodified input", ()->
-            anyModel = new Backbone.Model(prop:"val");
+            anyModel =
+              prop:"val";
             a(RivetsExtensions.formatters.calc(anyModel),anyModel)
-            a(RivetsExtensions.formatters.calc(anyModel).attributes,m.hasMember("prop","val"))
+            a(RivetsExtensions.formatters.calc(anyModel),m.hasMember("prop","val"))
           )
           test("No attributes specified, no substitutions specified in mask - returns mask calculation", ()->
             a(RivetsExtensions.formatters.calc(model, "Math.floor(2.2*3)"),6)
@@ -256,21 +264,15 @@ define(['isolate!UI/RivetsExtensions', "matchers", "operators", "assertThat","js
               RivetsExtensions.formatters.calc(model, "Math.floor(%d*3)")
             ,m.raisesAnything())
           )
-          test("Single attribute specified, single substitution specified in mask - calculates using backbone attribute of input with attribute name", ()->
+          test("Calls rivets adapter read method using input and attribute name", ()->
+            RivetsExtensions.formatters.calc(model, "Math.floor(%d*3)", "propA")
+            jm.verify(mocks["rivets"].config.adapter.read)(model,"propA")
+          )
+          test("Single attribute specified, single substitution specified in mask - calculates using value as read by rivets adapter of input using attribute name", ()->
             a(RivetsExtensions.formatters.calc(model, "Math.floor(%d*3)", "propA"),36)
           )
           test("Multiple attributes specified, same number of substitutions specified in mask - calculates substituting placeholders with attributes in order parameters are spoecified", ()->
             a(RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA"),-10)
-          )
-          test("Objects derived from Backbone.Model work the same", ()->
-            derived = Backbone.Model.extend()
-            derivedModel = new derived(
-              propA:12
-              propB:-16
-              propC:20.5
-            )
-            a(RivetsExtensions.formatters.calc(derivedModel, "Math.floor(%d*3)", "propA"),36)
-            a(RivetsExtensions.formatters.calc(derivedModel, "%d+Math.sqrt(%d*3)", "propB", "propA"),-10)
           )
           test("Less substitutions specified than attributes - additional attributes ignored", ()->
             a(RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "propC"),-10)
@@ -281,7 +283,7 @@ define(['isolate!UI/RivetsExtensions', "matchers", "operators", "assertThat","js
             ,m.raisesAnything())
           )
           test("Any attributes are non numeric - throws", ()->
-            model.set("propB", "THREE")
+            model.propB="THREE"
             a(()->
               RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA")
             ,m.raisesAnything())
@@ -295,13 +297,15 @@ define(['isolate!UI/RivetsExtensions', "matchers", "operators", "assertThat","js
             a(()->
               RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "notPropB")
             ,m.raisesAnything())
-            model.set("propC", "THREE")
+            model.propC="THREE"
             a(()->
               RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "propC")
             ,m.raisesAnything())
           )
-          test("get function not defined - throws", ()->
-            model.get = null
+          test("Rivets adapter throws - throws", ()->
+            JsMockito.when(mocks["rivets"].config.adapter.read)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((obj, key)->
+              throw new Error()
+            )
             a(()->
               RivetsExtensions.formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA")
             ,m.raisesAnything())
