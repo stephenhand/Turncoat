@@ -1,0 +1,71 @@
+
+<g>
+<g data-rv-each-nominated=".nominatedAssets">
+
+    <animateTransform data-rv-class="nominated.UUID | sprintf %s-animate-show" restart="whenNotActive"
+                      attributeName="transform" attributeType="XML" type="rotate" data-rv-from="nominated | calc '300,%f,%f' xpx ypx"
+                      data-rv-to="nominated | calc '360,%f,%f' xpx ypx" dur="0.3s" fill="freeze" begin="indefinite"></animateTransform>
+    <circle class="asset-selection-highlight"
+            data-rv-r="nominated.length | multiplier 0.8" data-rv-cx="nominated.xpx" data-rv-cy="nominated.ypx"
+            data-rv-class="nominated.classList" data-rv-asset-id="nominated.UUID" fill="transparent"
+            pointer-events="all" stroke="black" data-rv-stroke-width="nominated.length | multiplier 0.05">
+        <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
+                 attributeType="XML"
+                 attributeName="r"
+                 restart="whenNotActive"
+                 data-rv-to="nominated.length | multiplier 2"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
+                 attributeType="XML"
+                 attributeName="r"
+                 restart="whenNotActive"
+                 data-rv-to="nominated.length | multiplier 0.8"
+                 fill="freeze"
+                 dur="0.3s"/>
+    </circle>
+
+    <circle  class="asset-selection-highlight"
+             data-rv-r="nominated.length | multiplier 0.8" data-rv-cx="nominated.xpx" data-rv-cy="nominated.ypx"
+             data-rv-class="nominated.classList" data-rv-asset-id="nominated.UUID" fill="transparent"
+             pointer-events="all" stroke="black" data-rv-stroke-width="nominated.length | multiplier 0.05">
+    </circle>
+    <line
+            data-rv-x1="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).x+%f length xpx"
+            data-rv-y1="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).y+%f length ypx"
+            data-rv-x2="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).x+%f length xpx"
+            data-rv-y2="nominated | calc bearings.bearingAndDistanceToVector(60,%f*0.8).y+%f length ypx"
+            data-rv-stroke-width="nominated.length | multiplier 0.05"
+            stroke="black">
+        <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
+                 attributeType="XML"
+                 attributeName="x2"
+                 restart="whenNotActive"
+                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*2).x+%f length xpx"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
+                 attributeType="XML"
+                 attributeName="y2"
+                 restart="whenNotActive"
+                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*2).y+%f length ypx"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
+                 attributeType="XML"
+                 attributeName="x2"
+                 restart="whenNotActive"
+                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*1.2).x+%f length xpx"
+                 fill="freeze"
+                 dur="0.3s"/>
+        <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
+                 attributeType="XML"
+                 attributeName="y2"
+                 restart="whenNotActive"
+                 data-rv-to="nominated | calc bearings.bearingAndDistanceToVector(60,%f*1.2).y+%f length ypx"
+                 fill="freeze"
+                 dur="0.3s"/>
+    </line>
+
+    </g>
+</g>

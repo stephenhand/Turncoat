@@ -202,14 +202,14 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
               pavm.activateOverlay = jm.mockFunction()
             )
             test("Activates command overlay with nominatedAsset",()->
-              listener.call(pavm,
+              listener.call(pavm, {},
                 get:(key)->
                   if key is "modelId" then "MOCK ASSET ID"
               )
               jm.verify(pavm.activateOverlay)(ASSETCOMMANDVIEW,"overlays")
             )
             test("Sets asset on command overlay using id from model passed in from listener",()->
-              listener.call(pavm,
+              listener.call(pavm, {},
                 get:(key)->
                   if key is "modelId" then "MOCK ASSET ID"
               )
@@ -220,7 +220,7 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
                 get:(x)->
               );
               a(()->
-                listener.call(pavm,
+                listener.call(pavm, {},
                   get:(key)->
                     if key is "modelId" then "MOCK ASSET ID"
                 )
@@ -228,7 +228,7 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
             )
             test("Nominated asset has no model id - sets asset with nothing",()->
 
-              listener.call(pavm,
+              listener.call(pavm, {},
                 get:(key)->
               )
               jm.verify(commandOverlay.setAsset)(m.nil())

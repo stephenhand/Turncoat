@@ -27,11 +27,6 @@ define(["isolate!UI/board/AssetSelectionOverlayView", "matchers", "operators", "
         asov.createModel()
         a(asov.model, mod)
       )
-      test("Binds to changes to 'nominatedAsset' property", ()->
-        asov = new AssetSelectionOverlayView()
-        asov.createModel()
-        jm.verify(asov.model.on)("change:nominatedAsset", m.func())
-      )
     )
     suite("hotspotClicked", ()->
       model = null

@@ -2,73 +2,10 @@
 
 <g>
     <g data-rv-each-ship=".ships">
-        <animateTransform data-rv-class="ship.UUID | sprintf %s-animate-show" restart="whenNotActive"
-                          attributeName="transform" attributeType="XML" type="rotate" data-rv-from="ship | calc '300,%f,%f' xpx ypx"
-                          data-rv-to="ship | calc '360,%f,%f' xpx ypx" dur="0.3s" fill="freeze" begin="indefinite"></animateTransform>
-        <circle data-rv-show="ship.nominated" class="asset-selection-highlight"
-                data-rv-r="ship.length | multiplier 0.8" data-rv-cx="ship.xpx" data-rv-cy="ship.ypx"
-                data-rv-class="ship.classList" data-rv-asset-id="ship.UUID" fill="transparent"
-                pointer-events="all" stroke="black" data-rv-stroke-width="ship.length | multiplier 0.05">
-            <animate data-rv-class="ship.UUID | sprintf %s-animate-show" begin="indefinite"
-                     attributeType="XML"
-                     attributeName="r"
-                     restart="whenNotActive"
-                     data-rv-to="ship.length | multiplier 2"
-                     fill="freeze"
-                     dur="0.3s"/>
-            <animate data-rv-class="ship.UUID | sprintf %s-animate-hide" begin="indefinite"
-                     attributeType="XML"
-                     attributeName="r"
-                     restart="whenNotActive"
-                     data-rv-to="ship.length | multiplier 0.8"
-                     fill="freeze"
-                     dur="0.3s"/>
-        </circle>
-        <circle  data-rv-show="ship.nominated" class="asset-selection-highlight"
-                 data-rv-r="ship.length | multiplier 0.8" data-rv-cx="ship.xpx" data-rv-cy="ship.ypx"
-                 data-rv-class="ship.classList" data-rv-asset-id="ship.UUID" fill="transparent"
-                 pointer-events="all" stroke="black" data-rv-stroke-width="ship.length | multiplier 0.05">
-        </circle>
         <circle class="asset-selection-highlight" visibility="hidden" data-rv-show="ship.friendly"
                 data-rv-r="ship.length | multiplier 0.8" data-rv-cx="ship.xpx" data-rv-cy="ship.ypx"
                 data-rv-class="ship.classList" data-rv-asset-id="ship.UUID" data-rv-id="ship.UUID | sprintf %shotspot"
                 pointer-events="all"/>
-        <line
-                data-rv-x1="ship | calc bearings.bearingAndDistanceToVector(60,%f*0.8).x+%f length xpx"
-                data-rv-y1="ship | calc bearings.bearingAndDistanceToVector(60,%f*0.8).y+%f length ypx"
-                data-rv-x2="ship | calc bearings.bearingAndDistanceToVector(60,%f*0.8).x+%f length xpx"
-                data-rv-y2="ship | calc bearings.bearingAndDistanceToVector(60,%f*0.8).y+%f length ypx"
-                data-rv-stroke-width="ship.length | multiplier 0.05"
-                stroke="black">
-            <animate data-rv-class="ship.UUID | sprintf %s-animate-show" begin="indefinite"
-                     attributeType="XML"
-                     attributeName="x2"
-                     restart="whenNotActive"
-                     data-rv-to="ship | calc bearings.bearingAndDistanceToVector(60,%f*2).x+%f length xpx"
-                     fill="freeze"
-                     dur="0.3s"/>
-            <animate data-rv-class="ship.UUID | sprintf %s-animate-show" begin="indefinite"
-                     attributeType="XML"
-                     attributeName="y2"
-                     restart="whenNotActive"
-                     data-rv-to="ship | calc bearings.bearingAndDistanceToVector(60,%f*2).y+%f length ypx"
-                     fill="freeze"
-                     dur="0.3s"/>
-            <animate data-rv-class="ship.UUID | sprintf %s-animate-hide" begin="indefinite"
-                     attributeType="XML"
-                     attributeName="x2"
-                     restart="whenNotActive"
-                     data-rv-to="ship | calc bearings.bearingAndDistanceToVector(60,%f*1.2).x+%f length xpx"
-                     fill="freeze"
-                     dur="0.3s"/>
-            <animate data-rv-class="ship.UUID | sprintf %s-animate-hide" begin="indefinite"
-                     attributeType="XML"
-                     attributeName="y2"
-                     restart="whenNotActive"
-                     data-rv-to="ship | calc bearings.bearingAndDistanceToVector(60,%f*1.2).y+%f length ypx"
-                     fill="freeze"
-                     dur="0.3s"/>
-        </line>
 
     </g>
 </g>
