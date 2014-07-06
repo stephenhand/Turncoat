@@ -57,8 +57,47 @@
               "fleet":[
                   {
                       "_type":"FleetAsset",
-                      "movementTypes":[
-                      ],
+                      "actions":[
+													{
+												 		"name":"move",
+														"types":[
+															{
+																"name":"sail"
+															},
+															{
+																"name":"oars",
+																"distance":4,
+																"modifiers":[
+																	{
+																		"condition":"NO_TURN",
+																		"modifier":2
+																	}
+																],
+																"turns":[
+																	{
+																		"maxBearing":45,
+																		"minBeforeMove":"SHIP_LENGTH/2",
+																		"minAfterMove":2,
+																		"cost":2
+																	},
+																	{
+																		"maxBearing":90,
+																		"minBeforeMove":0,
+																		"minAfterMove":0,
+																		"cost":2
+																	},
+																	{
+																		"maxBearing":180,
+																		"minBeforeMove":0,
+																		"minAfterMove":0,
+																		"cost":4
+																	}
+																]
+															}
+														]
+												 	}
+                      	]
+                      ,
                       "position":{
                           "_type":"AssetPosition",
                           "x":36,
@@ -80,8 +119,47 @@
               "fleet":[
                   {
                       "_type":"FleetAsset",
-                      "movementTypes":[
-                      ],
+                     "actions":[
+												{
+													"name":"move",
+													"types":[
+														{
+															"name":"sail"
+														},
+														{
+															"name":"oars",
+															"distance":4,
+															"modifiers":[
+																{
+																	"condition":"NO_TURN",
+																	"modifier":2
+																}
+															],
+															"turns":[
+																{
+																	"maxBearing":45,
+																	"minBeforeMove":"SHIP_LENGTH/2",
+																	"minAfterMove":2,
+																	"cost":2
+																},
+																{
+																	"maxBearing":90,
+																	"minBeforeMove":0,
+																	"minAfterMove":0,
+																	"cost":2
+																},
+																{
+																	"maxBearing":180,
+																	"minBeforeMove":0,
+																	"minAfterMove":0,
+																	"cost":4
+																}
+															]
+														}
+													]
+												}
+											]
+										 ,
                       "position":{
                           "_type":"AssetPosition",
                           "x":36,

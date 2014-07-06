@@ -3,6 +3,30 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
     initialize:()->
       super()
       @set("nominatedAssets", new Backbone.Collection())
+    setGame:(game)->
+      super(game)
+      if game
+        @getCommandsForAsset = (id, viewModel)->
+          commands = new Backbone.Collection()
+          action = game.getCurrentControllingPlayer().get("fleet").get(id).get("actions").at(0)
+          if (action.get("types"))
+            for actionType in action.get("types").models
+              commands.push(
+                target:viewModel
+                label:actionType.get("name")
+              )
+          else
+            commands.push(
+              target:viewModel
+              label:action.get("name")
+            )
+          commands.push(
+            target:viewModel
+            label:"Pass"
+          )
+          commands
+      else
+        delete @getCommandsForAsset
 
     setAsset:(id)->
       if !id?
@@ -11,24 +35,9 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
         ship = @get("ships").findWhere(modelId:id)
         if !ship? then throw new Error("Nominated asset not found.")
         @get("nominatedAssets").set([ship])
-        @set("commands", new Backbone.Collection([
-            target:ship
-            label:"Move"
-            commands:new Backbone.Collection([
-              target:ship
-              label:"Oars"
-            ,
-              target:ship
-              label:"Sail"
-            ])
-          ,
-            target:ship
-            label:"Fire"
-          ,
-            target:ship
-            label:"Fire"
-          ])
-        )
+
+        @set("commands", @getCommandsForAsset(id, ship))
+
 
   AssetCommandOverlayViewModel
 )
