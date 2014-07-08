@@ -30,13 +30,13 @@
                  data-rv-class="nominated.classList" data-rv-asset-id="nominated.UUID" fill="transparent"
                  pointer-events="all" stroke="black" data-rv-stroke-width="nominated.length | multiplier 0.05">
         </circle>
-        <g data-rv-each-command=".commands">
-            <g opacity="0">
-                <path data-rv-id="command._indexOf | sprintf commandHotspot-%s" data-rv-d="command | calc 'M'+%f+','+(%f-(%f*0.8))+'A'+(%f*0.8)+','+(%f*0.8)+',0,0,1,'+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).x+%f)+','+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).y+%f)+'l'+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).x+','+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).y+'A'+(%f*2)+','+(%f*2)+',0,0,0,'+%f+','+(%f-(%f*2))+'z' target.xpx target.ypx target.length target.length target.length _length target.length target.xpx _length target.length target.ypx _length target.length _length target.length target.length target.length target.xpx target.ypx target.length"
-                      data-rv-stroke-width="nominated.length | multiplier 0.05"  fill="red" stroke="transparent">
+        <g data-rv-each-command=".commands" data-rv-transform="command | calc 'rotate('+((360/%f)*(%f))+','+%f+','+%f+')' _length _indexOf target.xpx target.ypx">
+            <g opacity="0" data-rv-transform="command | calc 'rotate('+(360-((360/%f)/2))+','+%f+','+%f+')' _length target.xpx target.ypx">
+                <path data-rv-title="command.label" data-rv-id="command._indexOf | sprintf commandHotspot%s" data-rv-d="command | calc 'M'+%f+','+(%f-(%f*0.8))+'A'+(%f*0.8)+','+(%f*0.8)+',0,0,1,'+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).x+%f)+','+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).y+%f)+'l'+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).x+','+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).y+'A'+(%f*2)+','+(%f*2)+',0,0,0,'+%f+','+(%f-(%f*2))+'z' target.xpx target.ypx target.length target.length target.length _length target.length target.xpx _length target.length target.ypx _length target.length _length target.length target.length target.length target.xpx target.ypx target.length"
+                      data-rv-stroke-width="nominated.length | multiplier 0.05"  fill="#DFDFDF" stroke="transparent" data-rv-on-click="command.select">
 
                 </path>
-                <animate data-rv-begin="command._indexOf | sprintf commandHotspot-%s.mouseover"
+                <animate data-rv-begin="command._indexOf | sprintf commandHotspot%s.mouseover"
                          attributeType="XML"
                          attributeName="opacity"
                          restart="whenNotActive"
@@ -44,7 +44,7 @@
                          to="1"
                          fill="freeze"
                          dur="0.3s"/>
-                <animate begin="commandHotspot.mouseout"
+                <animate data-rv-begin="command._indexOf | sprintf commandHotspot%s.mouseout"
                          attributeType="XML"
                          attributeName="opacity"
                          restart="whenNotActive"
@@ -54,38 +54,25 @@
                          dur="0.3s"/>
             </g>
             <line
-                    data-rv-x1="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).x+%f _length _indexOf target.length target.xpx"
-                    data-rv-y1="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).y+%f _length _indexOf target.length target.ypx"
-                    data-rv-x2="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).x+%f _length _indexOf target.length target.xpx"
-                    data-rv-y2="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*0.8).y+%f _length _indexOf target.length target.ypx"
+                    data-rv-x1="command.target.xpx"
+                    data-rv-y1="command | calc %f+(%f*0.8) target.ypx target.length"
+                    data-rv-x2="command.target.xpx"
+                    data-rv-y2="command | calc %f+(%f*0.8) target.ypx target.length"
                     data-rv-stroke-width="nominated.length | multiplier 0.05"
                     stroke="black">
-                <animate id="spinoutcommand" data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
-                         attributeType="XML"
-                         attributeName="x2"
-                         restart="whenNotActive"
-                         data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*2).x+%f _length _indexOf target.length target.xpx"
-                         fill="freeze"
-                         dur="0.3s"/>
+
                 <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
                          attributeType="XML"
                          attributeName="y2"
                          restart="whenNotActive"
-                         data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*2).y+%f _length _indexOf target.length target.ypx"
-                         fill="freeze"
-                         dur="0.3s"/>
-                <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
-                         attributeType="XML"
-                         attributeName="x2"
-                         restart="whenNotActive"
-                         data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*1.2).x+%f _length _indexOf target.length target.xpx"
+                         data-rv-to="command | calc %f+(%f*2) target.ypx target.length"
                          fill="freeze"
                          dur="0.3s"/>
                 <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
                          attributeType="XML"
                          attributeName="y2"
                          restart="whenNotActive"
-                         data-rv-to="command | calc bearings.bearingAndDistanceToVector((360/%f)*(%f+1),%f*1.2).y+%f _length _indexOf target.length target.ypx"
+                         data-rv-to="command | calc %f+(%f*0.8) target.ypx target.length"
                          fill="freeze"
                          dur="0.3s"/>
 
