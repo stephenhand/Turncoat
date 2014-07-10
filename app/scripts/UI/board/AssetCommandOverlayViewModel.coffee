@@ -15,7 +15,9 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
                 typeCommand = new Backbone.Model(
                   target:viewModel
                   label:actionType.get("name")
+                  name:actionType.get("name")
                   select:(ev)=>
+                    @set("nominatedCommand", typeCommand)
                     alert(typeCommand.get("label"))
                 )
                 commands.push(typeCommand))()
@@ -23,14 +25,18 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
             actionCommand = new Backbone.Model(
               target:viewModel
               label:action.get("name")
+              name:action.get("name")
               select:(ev)=>
+                @set("nominatedCommand", actionCommand)
                 alert(actionCommand.get("label"))
             )
             commands.push(actionCommand)
           passCommand = new Backbone.Model(
             target:viewModel
             label:"Pass"
+            name:"pass"
             select:(ev)=>
+              @set("nominatedCommand", passCommand)
               alert(passCommand.get("label"))
           )
           commands.push(passCommand)

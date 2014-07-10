@@ -1,15 +1,20 @@
 define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (StateRegistry, Backbone, Factory)->
-  vivify = (dataObject, ignoreTypeInfo)->
-    if (Array.isArray(dataObject))
-      dataObject[index] = vivify(subObject, ignoreTypeInfo) for subObject, index in dataObject when (typeof(subObject)=="object")
-      new Backbone.Collection(dataObject)
-    else
-      dataObject[subObject] = vivify(dataObject[subObject], ignoreTypeInfo) for subObject of dataObject when (typeof(dataObject[subObject])=="object")
-      dataObject[subObject]
-      if (!ignoreTypeInfo && dataObject._type? && StateRegistry[dataObject._type]?)
-        new StateRegistry[dataObject._type](dataObject)
+  vivify = (rootObject, options)->
+    vivifyRecursive = (dataObject)->
+      if (Array.isArray(dataObject))
+        ret = null
+        dataObject[index] = vivifyRecursive(subObject, options) for subObject, index in dataObject when (typeof(subObject)=="object")
+        ret = new Backbone.Collection(dataObject)
       else
-        new Backbone.Model(dataObject)
+        dataObject[subObject] = vivifyRecursive(dataObject[subObject], options) for subObject of dataObject when (typeof(dataObject[subObject])=="object")
+        dataObject[subObject]
+        if (!(options?.ignoreTypeInfo) && dataObject._type? && StateRegistry[dataObject._type]?)
+          ret = new StateRegistry[dataObject._type](dataObject)
+        else
+          ret = new Backbone.Model(dataObject)
+      if options?.setRootLinkback and dataObject isnt rootObject then ret._root = rootObject
+      ret
+    vivifyRecursive(rootObject)
 
   recordType = (stateObject)->
     if (stateObject instanceof Backbone.Collection)
@@ -38,7 +43,7 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
 
     unmarshalState:(stateString)->
       dataObject = JSON.parse(stateString)
-      vivify(dataObject)
+      vivify(dataObject, setRootLinkback:true)
 
     marshalAction:(actionObject)->
       throw new Error("Not implemented")
@@ -48,7 +53,7 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
 
     unmarshalModel:(modelJSON)->
       pojso = JSON.parse(modelJSON)
-      vivify(pojso, true)
+      vivify(pojso, ignoreTypeInfo:true)
 
     marshalModel:(model)->
       if (model instanceof Backbone.Collection or model instanceof Backbone.Model)

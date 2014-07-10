@@ -7,6 +7,9 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
       c = @getOwnershipChain(game)
       _.find(c, (ci)->ci instanceof StateRegistry["Player"]) ? null
 
+    getAvailableActions:()->
+
+
   FleetAsset.toString=()->
     "FleetAsset"
 
