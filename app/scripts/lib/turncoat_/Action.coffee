@@ -1,6 +1,6 @@
 define(['underscore','backbone'], (_,Backbone)->
   Action = Backbone.Model.extend(
-    initialise:()->
+    initialise:(m, options)->
       @set("events", @get("events") ? new Backbone.Collection())
 
     play:(parameters)->

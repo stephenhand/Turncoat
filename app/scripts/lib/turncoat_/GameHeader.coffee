@@ -1,6 +1,6 @@
 
 
-define(['underscore', 'backbone', 'moment', 'lib/turncoat/GameStateModel', 'lib/turncoat/StateRegistry'], (_, Backbone, moment, GameStateModel, StateRegistry)->
+define(['underscore', 'backbone', 'moment', 'lib/turncoat/GameStateModel', 'lib/turncoat/TypeRegistry'], (_, Backbone, moment, GameStateModel, TypeRegistry)->
   GameHeader = Backbone.Model.extend(
     initialize:()->
       if typeof(@get("created")) is "string" then @set("created", moment.utc(@get("created")))
@@ -9,7 +9,7 @@ define(['underscore', 'backbone', 'moment', 'lib/turncoat/GameStateModel', 'lib/
   GameHeader.toString=()->
     "GameHeader"
 
-  StateRegistry.registerType("GameHeader", GameHeader)
+  TypeRegistry.registerType("GameHeader", GameHeader)
 
   GameHeader
 )
