@@ -1,5 +1,5 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
-  Isolate.mapAsFactory("lib/turncoat/StateRegistry", "lib/marshallers/JSONMarshaller", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/TypeRegistry", "lib/marshallers/JSONMarshaller", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       m=
         reverseLookup:JsMockito.mockFunction()
@@ -52,13 +52,13 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
     " }"
     setup(()->
       marshaller = new JSONMarshaller()
-      mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"]["MOCK_TYPE"]=jm.mockFunction()
-      jm.when(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"]["MOCK_TYPE"])(m.anything()).then((data)->
+      mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/TypeRegistry"]["MOCK_TYPE"]=jm.mockFunction()
+      jm.when(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/TypeRegistry"]["MOCK_TYPE"])(m.anything()).then((data)->
         val = new mockType()
         val.data = data
         val
       )
-      jm.when(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverseLookup)(m.anything()).then(()->"MOCK_TYPE")
+      jm.when(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/TypeRegistry"].reverseLookup)(m.anything()).then(()->"MOCK_TYPE")
 
     )
     suite("marshalState", ()->
@@ -199,7 +199,6 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
           propA:"TEST_STRING"
           propB:42
         )
-        #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
         origAttr = {}
         origAttrCount = 0
         for attrName, attrVal of testModel.attributes
@@ -319,7 +318,6 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
           modelC
         ])
         testModel.set("propC", col)
-        #mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"].reverse[testModelType]="MOCK_TYPE"
         json = marshaller.marshalState(testModel)
         parsedModel = JSON.parse(json)
         a(parsedModel.propC.length, 3)
@@ -327,7 +325,6 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
       )
 
       test("setsTypeForKnownTypesInArrays", ()->
-
         testModel = new mockType()
         testModel.set(
           propA:"TEST_STRING"
@@ -380,7 +377,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
       )
       test("callsRegisteredVivifierForKnownSubSype", ()->
         marshaller.unmarshalState(mockMarshalledType)
-        JsMockito.verify(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
+        JsMockito.verify(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/TypeRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
           matches:(data)->
             data._type is "MOCK_TYPE" &&
             data.propA is "valA" &&
@@ -395,7 +392,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
       )
       test("vivifiesKnownObject1Deep", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
-        jm.verify(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
+        jm.verify(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/TypeRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
           matches:(data)->
             data._type is "MOCK_TYPE" &&
             data.propE is 4 &&
@@ -418,7 +415,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
       )
       test("vivifiesKnownCollectionMembersAsCorrectType", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
-        jm.verify(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/StateRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
+        jm.verify(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/TypeRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
           matches:(data)->
             data.propI is "valH"
         ))
@@ -539,6 +536,20 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
           ,m.raisesAnything())
         )
 
+      )
+      suite("unmarshalAction",()->
+        test("Proxies to unmarshalState", ()->
+          marshaller.unmarshalState = jm.mockFunction()
+          marshaller.unmarshalAction("A PARAMETER")
+          jm.verify(marshaller.unmarshalState)("A PARAMETER")
+        )
+      )
+      suite("marshalAction",()->
+        test("Proxies to marshalState", ()->
+          marshaller.marshalState = jm.mockFunction()
+          marshaller.marshalAction("A PARAMETER")
+          jm.verify(marshaller.marshalState)("A PARAMETER")
+        )
       )
     )
 

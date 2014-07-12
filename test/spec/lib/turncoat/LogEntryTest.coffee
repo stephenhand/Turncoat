@@ -21,7 +21,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ret
     )
   )
-  Isolate.mapAsFactory("lib/turncoat/StateRegistry", "lib/turncoat/LogEntry", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/TypeRegistry", "lib/turncoat/LogEntry", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       registerType:JsMockito.mockFunction()
     )
@@ -44,7 +44,7 @@ define(['isolate!lib/turncoat/LogEntry',], (LogEntry)->
     )
     suite("RegisterType", ()->
       test("usesLogEntryConstriuctor", ()->
-        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("LogEntry", LogEntry)
+        JsMockito.verify(mocks["lib/turncoat/TypeRegistry"].registerType)("LogEntry", LogEntry)
       )
     )
   )

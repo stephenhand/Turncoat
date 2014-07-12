@@ -1,11 +1,11 @@
-define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/StateRegistry', 'state/AssetPosition'], (_, Backbone, GameStateModel, StateRegistry, AssetPosition)->
+define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/TypeRegistry', 'state/AssetPosition'], (_, Backbone, GameStateModel, TypeRegistry, AssetPosition)->
   class FleetAsset extends GameStateModel
     defaults:
       position:null
 
     getOwningPlayer:(game)->
       c = @getOwnershipChain(game)
-      _.find(c, (ci)->ci instanceof StateRegistry["Player"]) ? null
+      _.find(c, (ci)->ci instanceof TypeRegistry["Player"]) ? null
 
     getAvailableActions:()->
 
@@ -13,7 +13,7 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
   FleetAsset.toString=()->
     "FleetAsset"
 
-  StateRegistry.registerType("FleetAsset", FleetAsset)
+  TypeRegistry.registerType("FleetAsset", FleetAsset)
 
 
   FleetAsset

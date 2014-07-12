@@ -1,6 +1,6 @@
-define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
-  #StateRegistryTest.coffee test file
-  suite("StateRegistryTest", ()->
+define(["isolate!lib/turncoat/TypeRegistry"], (TypeRegistry)->
+  #TypeRegistryTest.coffee test file
+  suite("TypeRegistry", ()->
     suite("registerType", ()->
       test("registeringTypeAddsConstructorToRegistry", ()->
         class testGameStateType
@@ -9,15 +9,15 @@ define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
 
         testGameStateType.toString = ()->
           "ME AS A STRING!"
-        StateRegistry.registerType("testGameStateType",testGameStateType)
-        testObj = new StateRegistry["testGameStateType"]()
+        TypeRegistry.registerType("testGameStateType",testGameStateType)
+        testObj = new TypeRegistry["testGameStateType"]()
         chai.assert.equal("MOCK_VALUE", testObj.mockProperty)
       )
 
       test("constructingUnregisteredTypeThrows", ()->
 
         chai.assert.throws(()=>
-          new StateRegistry["missingGameStateType"]()
+          new TypeRegistry["missingGameStateType"]()
         )
       )
       test("registeringTypePopulatesReverseRegistry", ()->
@@ -25,8 +25,8 @@ define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
           constructor:()->
             @mockProperty="MOCK_VALUE"
 
-        StateRegistry.registerType("testGameStateType",testGameStateType)
-        testType = StateRegistry.reverseLookup(testGameStateType)
+        TypeRegistry.registerType("testGameStateType",testGameStateType)
+        testType = TypeRegistry.reverseLookup(testGameStateType)
         chai.assert.equal(testType, "testGameStateType")
       )
 
@@ -34,7 +34,7 @@ define(["isolate!lib/turncoat/StateRegistry"], (StateRegistry)->
         class anotherGameStateType
           constructor:()->
             @mockProperty="MOCK_VALUE"
-        lookup = StateRegistry.reverseLookup(anotherGameStateType)
+        lookup = TypeRegistry.reverseLookup(anotherGameStateType)
         chai.assert.isUndefined(lookup)
       )
     )

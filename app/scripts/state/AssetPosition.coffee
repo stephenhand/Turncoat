@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/StateRegistry'], (_, Backbone, GameStateModel, StateRegistry)->
+define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/TypeRegistry'], (_, Backbone, GameStateModel, TypeRegistry)->
   class AssetPosition extends GameStateModel
     x : null
     y : null
@@ -6,7 +6,7 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/S
   AssetPosition.toString=()->
       "AssetPosition"
 
-  StateRegistry.registerType("AssetPosition", AssetPosition)
+  TypeRegistry.registerType("AssetPosition", AssetPosition)
 
   AssetPosition
 )

@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/Game', 'lib/turncoat/StateRegistry', 'state/Player'], (_, Backbone, GameStateModel, Game, StateRegistry, Player)->
+define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/Game', 'lib/turncoat/TypeRegistry', 'state/Player'], (_, Backbone, GameStateModel, Game, TypeRegistry, Player)->
   class ManOWarGameState extends Game
     players:new Backbone.Collection(
       model:Player
@@ -20,7 +20,7 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/G
 
   ManOWarGameState.toString=()->
     "ManOWarGameState"
-  StateRegistry.registerType("ManOWarGameState",ManOWarGameState)
+  TypeRegistry.registerType("ManOWarGameState",ManOWarGameState)
 
   ManOWarGameState
 )

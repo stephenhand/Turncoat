@@ -21,7 +21,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       ret
     )
   )
-  Isolate.mapAsFactory("lib/turncoat/StateRegistry", "lib/turncoat/GameHeader", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/TypeRegistry", "lib/turncoat/GameHeader", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       registerType:JsMockito.mockFunction()
     )
@@ -45,7 +45,7 @@ define(['isolate!lib/turncoat/GameHeader'], (GameHeader)->
     )
     suite("RegisterType", ()->
       test("registersGameHeaderConstriuctor", ()->
-        JsMockito.verify(mocks["lib/turncoat/StateRegistry"].registerType)("GameHeader",GameHeader)
+        JsMockito.verify(mocks["lib/turncoat/TypeRegistry"].registerType)("GameHeader",GameHeader)
       )
 
     )

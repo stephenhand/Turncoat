@@ -147,15 +147,15 @@ define(["isolate","isolateHelper", "uuid"], ( Isolate, Helper, UUID)->
   )
 
 
-  Isolate.mapAsFactory("lib/turncoat/StateRegistry", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/TypeRegistry", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       switch requestingModulePath
         when "lib/marshallers/JSONMarshaller"
-          mockStateRegistry =
+          mockTypeRegistry =
             reverse:[]
         else
-          mockStateRegistry = actual
-      mockStateRegistry
+          mockTypeRegistry = actual
+      mockTypeRegistry
     )
   )
 

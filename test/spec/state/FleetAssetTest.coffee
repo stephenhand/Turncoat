@@ -4,7 +4,7 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
       actual
     )
   )
-  Isolate.mapAsFactory("lib/turncoat/StateRegistry","state/FleetAsset", (actual, modulePath, requestingModulePath)->
+  Isolate.mapAsFactory("lib/turncoat/TypeRegistry","state/FleetAsset", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       registerType:JsMockito.mockFunction()
     )
@@ -21,7 +21,8 @@ define(["isolate!state/FleetAsset", "jsMockito", "jsHamcrest", "chai"], (FleetAs
       fa = null
       class MockPlayer
       setup(()->
-        mocks["lib/turncoat/StateRegistry"]["Player"]=MockPlayer
+        mocks["lib/turncoat/TypeRegistry"]["Player"]=MockPlayer
+        mocks["lib/turncoat/TypeRegistry"]["Player"]=MockPlayer
         fa = new FleetAsset()
       )
       test("Object whose type is registered as 'Player' is part of ownership chain - returns that object", ()->

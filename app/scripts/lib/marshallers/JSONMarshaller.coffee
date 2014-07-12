@@ -1,4 +1,4 @@
-define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (StateRegistry, Backbone, Factory)->
+define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRegistry, Backbone, Factory)->
   vivify = (rootObject, options)->
     vivifyRecursive = (dataObject)->
       if (Array.isArray(dataObject))
@@ -8,8 +8,8 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
       else
         dataObject[subObject] = vivifyRecursive(dataObject[subObject], options) for subObject of dataObject when (typeof(dataObject[subObject])=="object")
         dataObject[subObject]
-        if (!(options?.ignoreTypeInfo) && dataObject._type? && StateRegistry[dataObject._type]?)
-          ret = new StateRegistry[dataObject._type](dataObject)
+        if (!(options?.ignoreTypeInfo) && dataObject._type? && TypeRegistry[dataObject._type]?)
+          ret = new TypeRegistry[dataObject._type](dataObject)
         else
           ret = new Backbone.Model(dataObject)
       if options?.setRootLinkback and dataObject isnt rootObject then ret._root = rootObject
@@ -23,7 +23,7 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
     recordType(stateObject.attributes[subObject]) for subObject of stateObject.attributes when stateObject.attributes[subObject] instanceof Backbone.Collection or stateObject.attributes[subObject] instanceof Backbone.Model
     if (stateObject instanceof Backbone.Model)
       stateObject.set(
-        "_type" : StateRegistry.reverseLookup(stateObject.constructor)
+        "_type" : TypeRegistry.reverseLookup(stateObject.constructor)
       )
 
   forgetType = (stateObject)->
@@ -46,10 +46,10 @@ define(["lib/turncoat/StateRegistry","backbone", "lib/turncoat/Factory"], (State
       vivify(dataObject, setRootLinkback:true)
 
     marshalAction:(actionObject)->
-      throw new Error("Not implemented")
+      @marshalState(actionObject)
 
     unmarshalAction:(actionString)->
-      throw new Error("Not implemented")
+      @unmarshalState(actionString)
 
     unmarshalModel:(modelJSON)->
       pojso = JSON.parse(modelJSON)
