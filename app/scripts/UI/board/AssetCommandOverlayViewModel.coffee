@@ -7,40 +7,12 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
       super(game)
       if game
         @getCommandsForAsset = (id, viewModel)->
-          commands = new Backbone.Collection()
-          action = game.getCurrentControllingPlayer().get("fleet").get(id).get("actions").at(0)
-          if (action.get("types"))
-            for actionType in action.get("types").models
-              (()->
-                typeCommand = new Backbone.Model(
-                  target:viewModel
-                  label:actionType.get("name")
-                  name:actionType.get("name")
-                  select:(ev)=>
-                    @set("nominatedCommand", typeCommand)
-                    alert(typeCommand.get("label"))
-                )
-                commands.push(typeCommand))()
-          else
-            actionCommand = new Backbone.Model(
-              target:viewModel
-              label:action.get("name")
-              name:action.get("name")
-              select:(ev)=>
-                @set("nominatedCommand", actionCommand)
-                alert(actionCommand.get("label"))
-            )
-            commands.push(actionCommand)
-          passCommand = new Backbone.Model(
+          commands = game.getCurrentControllingPlayer().get("fleet").get(id).getAvailableActions()
+          new Backbone.Collection(_.map(commands, (command)->
+            name:command.get("name")
+            label:command.get("name")
             target:viewModel
-            label:"Pass"
-            name:"pass"
-            select:(ev)=>
-              @set("nominatedCommand", passCommand)
-              alert(passCommand.get("label"))
-          )
-          commands.push(passCommand)
-          commands
+          ))
       else
         delete @getCommandsForAsset
 
