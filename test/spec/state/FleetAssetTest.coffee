@@ -11,14 +11,12 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!state/FleetAsset", "jsMockito", "jsHamcrest", "chai"], (FleetAsset, jm, h, c)->
+define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMockito", "verifiers"], (FleetAsset, m, o, a, jm, v)->
   mocks = window.mockLibrary["state/FleetAsset"]
-  m = h.Matchers
-  a = c.assert
-  v = jm.Verifiers
   suite("FleetAsset", ()->
-    suite("getPlayer", ()->
+    suite("getOwningPlayer", ()->
       fa = null
+
       class MockPlayer
       setup(()->
         mocks["lib/turncoat/TypeRegistry"]["Player"]=MockPlayer
@@ -31,14 +29,14 @@ define(["isolate!state/FleetAsset", "jsMockito", "jsHamcrest", "chai"], (FleetAs
         jm.when(fa.getOwnershipChain)(m.anything()).then(()->
           [{},{},{}, p, {}, {}]
         )
-        a.equal(fa.getOwningPlayer({}), p)
+        a(fa.getOwningPlayer({}), p)
       )
       test("No such object is part of ownership chain - returns null", ()->
         fa.getOwnershipChain = jm.mockFunction()
         jm.when(fa.getOwnershipChain)(m.anything()).then(()->
           [{},{},{}, {}, {}, {}]
         )
-        a.isNull(fa.getOwningPlayer({}))
+        a(fa.getOwningPlayer({}), m.nil())
       )
       test("Several such object part of ownership chain - returns first", ()->
         p1 = new MockPlayer()
@@ -49,7 +47,48 @@ define(["isolate!state/FleetAsset", "jsMockito", "jsHamcrest", "chai"], (FleetAs
         jm.when(fa.getOwnershipChain)(m.anything()).then(()->
           [{}, p3, p4, {}, p1, p2]
         )
-        a.equal(fa.getOwningPlayer({}), p3)
+        a(fa.getOwningPlayer({}), p3)
+      )
+    )
+    suite("getAvailableActions", ()->
+      fa = null
+      rb = null
+      ruleEntry = null
+      rule = null
+      setup(()->
+        fa = new FleetAsset()
+        rule =
+          getPermittedActionsForAsset : jm.mockFunction()
+        jm.when(rule.getPermittedActionsForAsset)().then(()->
+          "AVAILABLE_ACTIONS"
+        )
+        ruleEntry =
+          getRule : jm.mockFunction()
+        jm.when(ruleEntry.getRule)().then(()->
+          rule
+        )
+        rb =
+          lookUp : jm.mockFunction()
+        jm.when(rb.lookUp)(m.string()).then((path)->
+          if path is "ships.permitted-actions" then ruleEntry
+        )
+        fa._root =
+          getRuleBook:()->
+            rb
+      )
+      test("Looks up ships.permitted-actions in the game's rulebook", ()->
+        fa.getAvailableActions()
+        jm.verify(rb.lookUp)("ships.permitted-actions")
+      )
+      test("Gets rule from looke up entry, calls getAvailableActions on it and returns result", ()->
+        acts = fa.getAvailableActions()
+        jm.verify(ruleEntry.getRule)()
+        jm.verify(rule.getPermittedActionsForAsset)()
+        a(acts, "AVAILABLE_ACTIONS")
+      )
+      test("Rule entry lookup fails - throws", ()->
+        jm.when(rb.lookUp)(m.string()).then(()->)
+        a(fa.getAvailableActions, m.raisesAnything())
       )
     )
   )

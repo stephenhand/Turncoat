@@ -8,6 +8,10 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/T
       _.find(c, (ci)->ci instanceof TypeRegistry["Player"]) ? null
 
     getAvailableActions:()->
+      @_root.getRuleBook()
+        .lookUp("ships.permitted-actions")
+        .getRule()
+        .getPermittedActionsForAsset()
 
 
   FleetAsset.toString=()->
