@@ -1,6 +1,8 @@
 require(["isolate", "isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("lib/turncoat/Action", "rules/AssetPermittedActions", (actual, modulePath, requestingModulePath)->
-    Backbone.Model.extend({})
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      Backbone.Model.extend({})
+    )
   )
 )
 
@@ -88,6 +90,33 @@ define(["isolate!rules/AssetPermittedActions", "matchers", "operators", "assertT
         a(acts[3].get("name"),"ACTION3-TYPE2")
         a(acts[3].get("rule"),"RULE5")
         a(acts[4].get("name"),"finish")
+      )
+      test("All actions created as 'Action' type", ()->
+        acts = AssetPermittedActions.getPermittedActionsForAsset(new Backbone.Model(
+          actions:new Backbone.Collection([
+            name:"ACTION1"
+            rule:"RULE1"
+          ,
+            name:"ACTION2"
+            rule:"RULE2"
+          ,
+            name:"ACTION3"
+            rule:"RULE3"
+            types:new Backbone.Collection([
+              name:"ACTION3-TYPE1"
+              rule:"RULE4"
+            ,
+              name:"ACTION3-TYPE2"
+              rule:"RULE5"
+            ])
+          ])
+        ), game)
+        a(acts.length, 5)
+        a(acts[0],m.instanceOf(mocks["lib/turncoat/Action"]))
+        a(acts[1],m.instanceOf(mocks["lib/turncoat/Action"]))
+        a(acts[2],m.instanceOf(mocks["lib/turncoat/Action"]))
+        a(acts[3],m.instanceOf(mocks["lib/turncoat/Action"]))
+        a(acts[4],m.instanceOf(mocks["lib/turncoat/Action"]))
       )
       test("Asset has actions collection with actions with empty types - omits action", ()->
         acts = AssetPermittedActions.getPermittedActionsForAsset(new Backbone.Model(
