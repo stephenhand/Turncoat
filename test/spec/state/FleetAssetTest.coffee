@@ -55,6 +55,7 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
       rb = null
       ruleEntry = null
       rule = null
+      game = null
       setup(()->
         fa = new FleetAsset()
         rule =
@@ -72,18 +73,20 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
         jm.when(rb.lookUp)(m.string()).then((path)->
           if path is "ships.permitted-actions" then ruleEntry
         )
-        fa._root =
+        game =
           getRuleBook:()->
             rb
+        fa.getRoot = ()->
+          game
       )
       test("Looks up ships.permitted-actions in the game's rulebook", ()->
         fa.getAvailableActions()
         jm.verify(rb.lookUp)("ships.permitted-actions")
       )
-      test("Gets rule from looke up entry, calls getAvailableActions on it and returns result", ()->
+      test("Gets rule from looke up entry, calls getPermittedActionsForAsset on it with itselef and game and returns result", ()->
         acts = fa.getAvailableActions()
         jm.verify(ruleEntry.getRule)()
-        jm.verify(rule.getPermittedActionsForAsset)()
+        jm.verify(rule.getPermittedActionsForAsset)(fa, game)
         a(acts, "AVAILABLE_ACTIONS")
       )
       test("Rule entry lookup fails - throws", ()->

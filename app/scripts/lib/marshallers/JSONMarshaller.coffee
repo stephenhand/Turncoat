@@ -1,5 +1,6 @@
 define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRegistry, Backbone, Factory)->
   vivify = (rootObject, options)->
+    vivifiedRoot = null
     vivifyRecursive = (dataObject)->
       if (Array.isArray(dataObject))
         ret = null
@@ -12,9 +13,12 @@ define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRe
           ret = new TypeRegistry[dataObject._type](dataObject)
         else
           ret = new Backbone.Model(dataObject)
-      if options?.setRootLinkback and dataObject isnt rootObject then ret._root = rootObject
+      if options?.setRootLinkback and dataObject isnt rootObject then ret.getRoot = ()->
+        vivifiedRoot
       ret
-    vivifyRecursive(rootObject)
+    vivifiedRoot = vivifyRecursive(rootObject)
+    vivifiedRoot
+
 
   recordType = (stateObject)->
     if (stateObject instanceof Backbone.Collection)

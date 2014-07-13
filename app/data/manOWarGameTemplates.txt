@@ -62,10 +62,12 @@
 												 		"name":"move",
 														"types":[
 															{
-																"name":"sail"
+																"name":"sail",
+																"rule":"ships.actions.move"
 															},
 															{
 																"name":"oars",
+                                "rule":"ships.actions.move",
 																"distance":4,
 																"modifiers":[
 																	{
@@ -124,10 +126,12 @@
 													"name":"move",
 													"types":[
 														{
-															"name":"sail"
+															"name":"sail",
+                              "rule":"ships.actions.move"
 														},
 														{
 															"name":"oars",
+                              "rule":"ships.actions.move",
 															"distance":4,
 															"modifiers":[
 																{

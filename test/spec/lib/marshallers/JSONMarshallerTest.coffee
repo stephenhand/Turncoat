@@ -422,17 +422,17 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(ut.data.knownObject.data.collection.at(2), m.instanceOf(mockType))
         a(ut.data.knownObject.data.collection.at(2).mockMethod, m.func())
       )
-      test("Vivifies known object with Linkback to root", ()->
+      test("Vivifies known object with getRoot function which returns root", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
-        a(ut.data.knownObject._root,ut.data)
+        a(ut.data.knownObject.getRoot(),ut)
       )
-      test("Vivifies unknown object with linkback to root", ()->
+      test("Vivifies unknown object with linkback function to root", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
-        a(ut.data.unknownObject._root,ut.data)
+        a(ut.data.unknownObject.getRoot(),ut)
       )
       test("Vivifies array with linkback to root", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
-        a(ut.data.knownObject.data.collection._root,ut.data)
+        a(ut.data.knownObject.data.collection.getRoot(),ut)
       )
       test("Does not create root with a linkback to itself", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
