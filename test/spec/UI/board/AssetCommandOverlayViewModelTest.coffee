@@ -124,9 +124,9 @@ define(["isolate!UI/board/AssetCommandOverlayViewModel", "matchers", "operators"
                   [
                     new Backbone.Model(name:"ACTION1")
                   ,
-                    new Backbone.Model(name:"ACTION2")
+                    new Backbone.Model(name:"ACTION2", base:"fire")
                   ,
-                    new Backbone.Model(name:"ACTION3")
+                    new Backbone.Model(name:"ACTION3", base:"move")
                   ]
                 )
                 g =
@@ -142,17 +142,57 @@ define(["isolate!UI/board/AssetCommandOverlayViewModel", "matchers", "operators"
                 acovm.setAsset("MODEL 2")
                 jm.verify(modelShip.getAvailableActions)()
               )
-              test("Array of models returned - adds a command with label and same as action name and viewModel ship as target for all commands", ()->
-                acovm.setAsset("MODEL 2")
-                a(acovm.get("commands").at(0).get("label"), "ACTION1")
-                a(acovm.get("commands").at(0).get("name"), "ACTION1")
-                a(acovm.get("commands").at(0).get("target"), acovm.get("ships").at(1))
-                a(acovm.get("commands").at(1).get("label"), "ACTION2")
-                a(acovm.get("commands").at(1).get("name"), "ACTION2")
-                a(acovm.get("commands").at(1).get("target"), acovm.get("ships").at(1))
-                a(acovm.get("commands").at(2).get("label"), "ACTION3")
-                a(acovm.get("commands").at(2).get("name"), "ACTION3")
-                a(acovm.get("commands").at(2).get("target"), acovm.get("ships").at(1))
+              suite("Array of models returned.", ()->
+                test("adds a command with label and same as action name and viewModel ship as target for all commands", ()->
+                  acovm.setAsset("MODEL 2")
+                  a(acovm.get("commands").at(0).get("label"), "ACTION1")
+                  a(acovm.get("commands").at(0).get("name"), "ACTION1")
+                  a(acovm.get("commands").at(0).get("target"), acovm.get("ships").at(1))
+                  a(acovm.get("commands").at(1).get("label"), "ACTION2")
+                  a(acovm.get("commands").at(1).get("name"), "ACTION2")
+                  a(acovm.get("commands").at(1).get("target"), acovm.get("ships").at(1))
+                  a(acovm.get("commands").at(2).get("label"), "ACTION3")
+                  a(acovm.get("commands").at(2).get("name"), "ACTION3")
+                  a(acovm.get("commands").at(2).get("target"), acovm.get("ships").at(1))
+                )
+                test("sets overlay to different strings for different bases", ()->
+                  acovm.setAsset("MODEL 2")
+                  a(acovm.get("commands").at(1).get("overlay"), m.string())
+                  a(acovm.get("commands").at(2).get("overlay"), m.string())
+                  a(acovm.get("commands").at(2).get("overlay"), m.not(acovm.get("commands").at(1).get("overlay")))
+                )
+                test("sets null overlay where base is not set", ()->
+                  acovm.setAsset("MODEL 2")
+                  a(acovm.get("commands").at(0).get("overlay"), m.nil())
+                )
+                test("sets null overlay where base is not recognised", ()->
+                  jm.when(modelShip.getAvailableActions)().then(()->
+                    [
+                      new Backbone.Model(name:"ACTION1", base:"SOMETHING")
+                    ,
+                      new Backbone.Model(name:"ACTION2", base:"fire")
+                    ,
+                      new Backbone.Model(name:"ACTION3", base:"move")
+                    ]
+                  )
+                  acovm.setAsset("MODEL 2")
+                  a(acovm.get("commands").at(0).get("overlay"), m.nil())
+                )
+                test("sets select function on command items", ()->
+                  acovm.setAsset("MODEL 2")
+                  a(acovm.get("commands").at(0).get("select"), m.func())
+                  a(acovm.get("commands").at(1).get("select"), m.func())
+                  a(acovm.get("commands").at(2).get("select"), m.func())
+                )
+                suite("command select function", ()->
+                  setup(()->
+                    acovm.setAsset("MODEL 2")
+                  )
+                  test("sets viewModel 'selectedCommand' to object", ()->
+                    acovm.get("commands").at(1).get("select")()
+                    a(acovm.get("selectedCommand"),acovm.get("commands").at(1))
+                  )
+                )
               )
               test("Empty array returned - adds nothing to commands", ()->
                 jm.when(modelShip.getAvailableActions)().then(()->

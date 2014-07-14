@@ -43,85 +43,88 @@ define(["isolate!rules/v0_0_1/ships/AssetPermittedActions", "matchers", "operato
           a(acts.length, 1)
           a(acts[0].get("name"),"finish")
         )
-        test("Asset has actions collection with actions with no types - returns backbone model named for each action with 'finish' on the end, copying the rules", ()->
-          acts = apar.getPermittedActionsForAsset(new Backbone.Model(
-            actions:new Backbone.Collection([
-              name:"ACTION1"
-              rule:"RULE1"
-            ,
-              name:"ACTION2"
-              rule:"RULE2"
-            ,
-              name:"ACTION3"
-              rule:"RULE3"
-            ])
-          ), game)
-          a(acts[0].get("name"),"ACTION1")
-          a(acts[0].get("rule"),"RULE1")
-          a(acts[1].get("name"),"ACTION2")
-          a(acts[1].get("rule"),"RULE2")
-          a(acts[2].get("name"),"ACTION3")
-          a(acts[2].get("rule"),"RULE3")
-          a(acts[3].get("name"),"finish")
-          a(acts.length, 4)
-        )
-        test("Asset has actions collection with actions with types - returns names of types for actions with types, copying rules", ()->
-          acts = apar.getPermittedActionsForAsset(new Backbone.Model(
-            actions:new Backbone.Collection([
-              name:"ACTION1"
-              rule:"RULE1"
-            ,
-              name:"ACTION2"
-              rule:"RULE2"
-            ,
-              name:"ACTION3"
-              rule:"RULE3"
-              types:new Backbone.Collection([
-                name:"ACTION3-TYPE1"
-                rule:"RULE4"
+        suite("Asset has actions collection with actions with no types", ()->
+          acts = null
+          setup(()->
+            acts = apar.getPermittedActionsForAsset(new Backbone.Model(
+              actions:new Backbone.Collection([
+                name:"ACTION1"
+                rule:"RULE1"
               ,
-                name:"ACTION3-TYPE2"
-                rule:"RULE5"
-              ])
-            ])
-          ), game)
-          a(acts.length, 5)
-          a(acts[0].get("name"),"ACTION1")
-          a(acts[0].get("rule"),"RULE1")
-          a(acts[1].get("name"),"ACTION2")
-          a(acts[1].get("rule"),"RULE2")
-          a(acts[2].get("name"),"ACTION3-TYPE1")
-          a(acts[2].get("rule"),"RULE4")
-          a(acts[3].get("name"),"ACTION3-TYPE2")
-          a(acts[3].get("rule"),"RULE5")
-          a(acts[4].get("name"),"finish")
-        )
-        test("All actions created as 'Action' type", ()->
-          acts = apar.getPermittedActionsForAsset(new Backbone.Model(
-            actions:new Backbone.Collection([
-              name:"ACTION1"
-              rule:"RULE1"
-            ,
-              name:"ACTION2"
-              rule:"RULE2"
-            ,
-              name:"ACTION3"
-              rule:"RULE3"
-              types:new Backbone.Collection([
-                name:"ACTION3-TYPE1"
-                rule:"RULE4"
+                name:"ACTION2"
+                rule:"RULE2"
               ,
-                name:"ACTION3-TYPE2"
-                rule:"RULE5"
+                name:"ACTION3"
+                rule:"RULE3"
               ])
-            ])
-          ), game)
-          a(acts.length, 5)
-          a(acts[0],m.instanceOf(mocks["lib/turncoat/Action"]))
-          a(acts[1],m.instanceOf(mocks["lib/turncoat/Action"]))
-          a(acts[2],m.instanceOf(mocks["lib/turncoat/Action"]))
-          a(acts[3],m.instanceOf(mocks["lib/turncoat/Action"]))
-          a(acts[4],m.instanceOf(mocks["lib/turncoat/Action"]))
+            ), game)
+          )
+          test("returns backbone model named for each action with 'finish' on the end, copying the rules", ()->
+
+            a(acts[0].get("name"),"ACTION1")
+            a(acts[0].get("rule"),"RULE1")
+            a(acts[1].get("name"),"ACTION2")
+            a(acts[1].get("rule"),"RULE2")
+            a(acts[2].get("name"),"ACTION3")
+            a(acts[2].get("rule"),"RULE3")
+            a(acts[3].get("name"),"finish")
+            a(acts.length, 4)
+          )
+          test("Sets base to action name", ()->
+
+            a(acts[0].get("base"),"ACTION1")
+            a(acts[1].get("base"),"ACTION2")
+            a(acts[2].get("base"),"ACTION3")
+          )
+        )
+        suite("Asset has actions collection with actions with types", ()->
+          acts = null
+          setup(()->
+            acts = apar.getPermittedActionsForAsset(new Backbone.Model(
+              actions:new Backbone.Collection([
+                name:"ACTION1"
+                rule:"RULE1"
+              ,
+                name:"ACTION2"
+                rule:"RULE2"
+              ,
+                name:"ACTION3"
+                rule:"RULE3"
+                types:new Backbone.Collection([
+                  name:"ACTION3-TYPE1"
+                  rule:"RULE4"
+                ,
+                  name:"ACTION3-TYPE2"
+                  rule:"RULE5"
+                ])
+              ])
+            ), game)
+          )
+          test("returns names of types for actions with types, copying rules", ()->
+
+            a(acts.length, 5)
+            a(acts[0].get("name"),"ACTION1")
+            a(acts[0].get("rule"),"RULE1")
+            a(acts[1].get("name"),"ACTION2")
+            a(acts[1].get("rule"),"RULE2")
+            a(acts[2].get("name"),"ACTION3-TYPE1")
+            a(acts[2].get("rule"),"RULE4")
+            a(acts[3].get("name"),"ACTION3-TYPE2")
+            a(acts[3].get("rule"),"RULE5")
+            a(acts[4].get("name"),"finish")
+          )
+          test("All actions created as 'Action' type", ()->
+            a(acts.length, 5)
+            a(acts[0],m.instanceOf(mocks["lib/turncoat/Action"]))
+            a(acts[1],m.instanceOf(mocks["lib/turncoat/Action"]))
+            a(acts[2],m.instanceOf(mocks["lib/turncoat/Action"]))
+            a(acts[3],m.instanceOf(mocks["lib/turncoat/Action"]))
+            a(acts[4],m.instanceOf(mocks["lib/turncoat/Action"]))
+          )
+          test("Actions created from types has 'base' set as parent action name", ()->
+            a(acts[2].get("base"),"ACTION3")
+            a(acts[3].get("base"),"ACTION3")
+          )
         )
         test("Asset has actions collection with actions with empty types - omits action", ()->
           acts = apar.getPermittedActionsForAsset(new Backbone.Model(
