@@ -3,6 +3,7 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState","U
   ASSETSELECTIONVIEW = "assetSelectionView"
   ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
   ASSETCOMMANDVIEW = "assetCommandView"
+  NAVIGATIONVIEW = "navigationView"
 
   PlayAreaViewModel = Backbone.Model.extend(
     initialize: (m, options)->
@@ -34,7 +35,14 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState","U
           @activateOverlay(ASSETSELECTIONHOTSPOTS, "overlays", overlayModel)
           @listenTo(overlayModel, "change:nominatedAsset", (overlay, nominated)->
             @activateOverlay(ASSETCOMMANDVIEW, "overlays")
-            @get("gameBoard").get("overlays").get(ASSETCOMMANDVIEW).get("overlayModel").setAsset(nominated.get("modelId"))
+            commandOverlayModel = @get("gameBoard").get("overlays").get(ASSETCOMMANDVIEW).get("overlayModel")
+            commandOverlayModel.setAsset(nominated.get("modelId"))
+            @listenTo(commandOverlayModel,"change:selectedCommand", (overlay,command)->
+              if command.get("overlay")?
+                @activateOverlay(command.get("overlay"), "overlays")
+                actionOverlayModel = @get("gameBoard").get("overlays").get(command.get("overlay")).get("overlayModel")
+                actionOverlayModel.setAsset(command.get("target").get("modelId"))
+            )
           )
 
     activateOverlay:()->

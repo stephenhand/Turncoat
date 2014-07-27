@@ -1,5 +1,9 @@
-define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsset2DViewModel"], (_, Backbone, GameBoardViewModel, FleetAsset2DViewModel)->
-  class AssetCommandOverlayViewModel extends GameBoardViewModel
+define(["underscore", "backbone", "UI/board/NominatedAssetOverlayViewModel", "UI/FleetAsset2DViewModel"], (_, Backbone, NominatedAssetOverlayViewModel, FleetAsset2DViewModel)->
+
+  NAVIGATIONVIEW = "navigationView"
+  TACTICALVIEW = "tacticalView"
+
+  class AssetCommandOverlayViewModel extends NominatedAssetOverlayViewModel
     initialize:()->
       super()
       @set("nominatedAssets", new Backbone.Collection())
@@ -8,15 +12,16 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
       that = @
       if game
         @getCommandsForAsset = (id, viewModel)->
+          if !viewModel? then throw new Error("nominatedAssets must be set.")
           commands = game.getCurrentControllingPlayer().get("fleet").get(id).getAvailableActions()
           new Backbone.Collection(_.map(commands, (command)->
             overlay = null
             ret = null
             switch command.get("base")
               when "move"
-                overlay = "navigation"
+                overlay = NAVIGATIONVIEW
               when "fire"
-                overlay = "tactical"
+                overlay = TACTICALVIEW
 
             ret = new Backbone.Model(
               name:command.get("name")
@@ -32,14 +37,8 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "UI/FleetAsse
         delete @getCommandsForAsset
 
     setAsset:(id)->
-      if !id?
-        @get("nominatedAssets").reset()
-      else
-        ship = @get("ships").findWhere(modelId:id)
-        if !ship? then throw new Error("Nominated asset not found.")
-        @get("nominatedAssets").set([ship])
-
-        @set("commands", @getCommandsForAsset(id, ship))
+      super(id)
+      if id? then @set("commands", @getCommandsForAsset(id, @get("nominatedAssets").at(0)))
 
 
   AssetCommandOverlayViewModel

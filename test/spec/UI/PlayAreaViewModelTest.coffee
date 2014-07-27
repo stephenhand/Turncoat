@@ -21,7 +21,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "jsMockito", "verifiers", ], (PlayAreaViewModel, m, o, a, jm, v)->
+define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "jsMockito", "verifiers","backbone" ], (PlayAreaViewModel, m, o, a, jm, v, Backbone)->
   suite("PlayAreaViewModel", ()->
     ASSETSELECTIONVIEW = "assetSelectionView"
     ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
@@ -185,6 +185,7 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
               getter = jm.mockFunction()
               commandOverlay =
                 setAsset : jm.mockFunction()
+                on : jm.mockFunction()
               pavm.get("gameBoard").set("overlays",
                 add:jm.mockFunction()
                 get:getter
@@ -192,7 +193,7 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
               jm.when(getter)(ASSETCOMMANDVIEW).then((vw)->
                 get:(x)->
                   if x is "overlayModel" then commandOverlay
-              );
+              )
               nominated = {}
               jm.when(mockUnderlayModel.get)("nominatedAsset").then(()->nominated)
               jm.when(mockUnderlayModel.on)("change:nominatedAsset", m.func(), pavm).then((e,l,c)->
@@ -218,13 +219,15 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
             test("Command overlay model not where expected - throws",()->
               jm.when(getter)(ASSETCOMMANDVIEW).then((vw)->
                 get:(x)->
-              );
+              )
               a(()->
                 listener.call(pavm, {},
                   get:(key)->
                     if key is "modelId" then "MOCK ASSET ID"
                 )
-              ,m.raisesAnything())
+              ,
+                m.raisesAnything()
+              )
             )
             test("Nominated asset has no model id - sets asset with nothing",()->
 
@@ -232,6 +235,65 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
                 get:(key)->
               )
               jm.verify(commandOverlay.setAsset)(m.nil())
+            )
+            test("Listens to the overlay/underlay model for changes to selectedCommand", ()->
+              listener.call(pavm, {},
+                get:(key)->
+              )
+              jm.verify(commandOverlay.on)("change:selectedCommand", m.func(), pavm)
+            )
+            suite("selectedCommand change listener", ()->
+              selectedCommandListener = null
+              aovm = null
+              command = null
+              setup(()->
+                jm.when(commandOverlay.on)("change:selectedCommand", m.func(), pavm).then((ev, l, m)->
+                  selectedCommandListener = l
+                )
+                listener.call(pavm, {},
+                  get:(key)->
+                )
+                command =
+                  get:(key)->
+                    switch key
+                      when "overlay" then "MOCK ACTION OVERLAY"
+                      when "target" then new Backbone.Model(modelId:"MOCK SHIP ID")
+                aovm =
+                  setAsset : jm.mockFunction()
+                jm.when(getter)("MOCK ACTION OVERLAY").then((vw)->
+                  get:(x)->
+                    if x is "overlayModel" then aovm
+                )
+              )
+              test("Command not specified - throws", ()->
+
+                a(()->
+                  selectedCommandListener.call(pavm, {})
+                , m.raisesAnything()
+                )
+              )
+              test("Overlay not specified - does nothing",()->
+                selectedCommandListener.call(pavm, {}, get:()->)
+                jm.verify(pavm.activateOverlay, v.never())("MOCK ACTION OVERLAY", m.anything())
+                jm.verify(aovm.setAsset, v.never())(m.anything())
+              )
+              test("Activates action overlay using overlay name supplied on command",()->
+                selectedCommandListener.call(pavm, {}, command)
+                jm.verify(pavm.activateOverlay)("MOCK ACTION OVERLAY","overlays")
+              )
+              test("Activation adds overlay to collection correctly - setAsset is then called on overlay", ()->
+                selectedCommandListener.call(pavm, {}, command)
+                jm.verify(aovm.setAsset)("MOCK SHIP ID")
+              )
+              test("Activation fails to add overlay to collection correctly - throws", ()->
+                jm.when(getter)("MOCK ACTION OVERLAY").then((vw)->
+                  get:(x)->
+                )
+                a(()->
+                  selectedCommandListener.call(pavm, {}, command)
+                , m.raisesAnything()
+                )
+              )
             )
           )
         )

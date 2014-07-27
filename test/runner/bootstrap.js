@@ -38,7 +38,10 @@ require.config({
         sprintf: 'vendor/sprintf',
         setTimeout: 'lib/nativeShims/setTimeout',
         setInterval : 'lib/nativeShims/setInterval',
-        crypto:"http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5"
+        crypto:[
+					"http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5",
+					"lib/cryptoStub",
+				]
     },
     shim:{
         'jquery':{
@@ -119,7 +122,8 @@ require(['vendor/log4javascript_uncompressed','spec/AppHostTest',
     'spec/UI/board/AssetSelectionUnderlayViewTest',
     'spec/UI/board/AssetSelectionOverlayViewTest',
 		'spec/UI/board/AssetSelectionOverlayViewModelTest',
-    'spec/UI/board/FleetAssetSelectionViewModelTest',
+		'spec/UI/board/NominatedAssetOverlayViewModelTest',
+		'spec/UI/board/FleetAssetSelectionViewModelTest',
 		'spec/rules/v0_0_1/ships/AssetPermittedActionsTest',
     'spec/rules/ManOWarMoveTest',
     'spec/state/FleetAssetTest',
