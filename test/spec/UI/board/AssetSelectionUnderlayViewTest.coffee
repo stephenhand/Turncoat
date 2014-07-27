@@ -7,24 +7,21 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!UI/board/AssetSelectionUnderlayView", "jsMockito", "jsHamcrest", "chai"], (AssetSelectionUnderlayView, jm, h, c)->
+define(["isolate!UI/board/AssetSelectionUnderlayView", "matchers", "operators", "assertThat", "jsMockito", "verifiers"],(AssetSelectionUnderlayView, m, o, a, jm, v)->
   mocks = window.mockLibrary["UI/board/AssetSelectionUnderlayView"]
-  m = h.Matchers
-  a = c.assert
-  v = jm.Verifiers
   suite("AssetSelectionUnderlayView", ()->
-    suite("setModel", ()->
+    suite("createModel", ()->
       test("Model not set already - sets as new AssetViewModel", ()->
         asov = new AssetSelectionUnderlayView()
         asov.createModel()
-        a.instanceOf(asov.model, mocks["UI/board/AssetSelectionOverlayViewModel"])
+        a(asov.model, m.instanceOf(mocks["UI/board/AssetSelectionOverlayViewModel"]))
       )
       test("Model set already - does nothing", ()->
         asov = new AssetSelectionUnderlayView()
         m = {}
         asov.model = m
         asov.createModel()
-        a.equal(asov.model, m)
+        a(asov.model, m)
       )
     )
   )

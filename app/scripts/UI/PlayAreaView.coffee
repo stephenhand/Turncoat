@@ -6,13 +6,15 @@ define(['underscore',
         "UI/board/AssetCommandOverlayView",
         "UI/board/AssetSelectionOverlayView",
         "UI/board/AssetSelectionUnderlayView",
+        "UI/board/NavigationOverlayView",
         "AppState",
         'text!templates/PlayArea.html'],
-(_, Backbone, sprintf, BaseView, PlayAreaViewModel, AssetCommandOverlayView, AssetSelectionOverlayView, AssetSelectionUnderlayView, AppState, templateText)->
+(_, Backbone, sprintf, BaseView, PlayAreaViewModel, AssetCommandOverlayView, AssetSelectionOverlayView, AssetSelectionUnderlayView, NavigationOverlayView, AppState, templateText)->
 
   ASSETSELECTIONVIEW = "assetSelectionView"
   ASSETSELECTIONHOTSPOTS = "assetSelectionHotspots"
   ASSETCOMMANDVIEW = "assetCommandView"
+  NAVIGATIONVIEW = "navigationView"
 
   class PlayAreaView extends BaseView
     initialize: (options)->
@@ -34,6 +36,8 @@ define(['underscore',
               overlay = new AssetSelectionOverlayView(rootSelector:sprintf("#playArea #%s",ASSETSELECTIONHOTSPOTS))
             when ASSETCOMMANDVIEW
               overlay = new AssetCommandOverlayView(rootSelector:sprintf("#playArea #%s",ASSETCOMMANDVIEW))
+            when NAVIGATIONVIEW
+              overlay = new NavigationOverlayView(rootSelector:sprintf("#playArea #%s",NAVIGATIONVIEW))
           if request.overlayModel? then overlay.model=request.overlayModel
           overlay.createModel();
           overlay.model.set("id",request.id)
