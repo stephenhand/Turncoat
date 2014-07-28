@@ -15,6 +15,13 @@ define([
     createModel:()->
       @model ?= new NavigationOverlayViewModel()
 
+    navigationMouseMove:(ev)->
+      console.log(ev)
+
+    events:
+      "mousemove #navigationHotspot":"navigationMouseMove"
+
+
   NavigationOverlayView
 )
 

@@ -6,7 +6,7 @@ define(["underscore", "backbone", "UI/board/NominatedAssetOverlayViewModel", "UI
   class AssetCommandOverlayViewModel extends NominatedAssetOverlayViewModel
     initialize:()->
       super()
-      @set("nominatedAssets", new Backbone.Collection())
+
     setGame:(game)->
       super(game)
       that = @

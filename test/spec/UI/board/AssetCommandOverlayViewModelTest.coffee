@@ -10,6 +10,7 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
         setGame:(game)->
           @setGameSuper(game)
         initialize:()->
+          @set("nominatedAssets", new Backbone.Collection())
           @initializeSuper()
         setAsset:(id)->
           @setAssetSuper(id)
@@ -27,9 +28,6 @@ define(["isolate!UI/board/AssetCommandOverlayViewModel", "matchers", "operators"
       test("calls NominatedAssetOverlayViewModel initialize", ()->
         acovm = new AssetCommandOverlayViewModel()
         jm.verify(acovm.initializeSuper)()
-      )
-      test("sets nominatedAssets as empty collection", ()->
-        a(new AssetCommandOverlayViewModel().get("nominatedAssets"), m.allOf(m.instanceOf(Backbone.Collection), m.hasMember("models", m.empty())))
       )
     )
     suite("setGame", ()->
