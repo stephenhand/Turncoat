@@ -3,6 +3,9 @@ define(['underscore','backbone'], (_,Backbone)->
     initialise:(m, options)->
       @set("events", @get("events") ? new Backbone.Collection())
 
+    preview:(game)->
+      throw new Error("Not implemented")
+
     play:(parameters)->
       throw new Error("Not implemented")
 

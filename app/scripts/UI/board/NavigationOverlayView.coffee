@@ -16,7 +16,6 @@ define([
       @model ?= new NavigationOverlayViewModel()
 
     navigationMouseMove:(ev)->
-      console.log(ev)
 
     events:
       "mousemove #navigationHotspot":"navigationMouseMove"

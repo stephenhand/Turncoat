@@ -12,6 +12,9 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
         throw new Error("State Marshaller not set, set a default state marshaller before constructing GSMs you plan to marshal.")
       GameStateModel.marshaller.marshalState(@)
 
+    ghost:()->
+      GameStateModel.marshaller.unmarshalState(GameStateModel.marshaller.marshalState(@))
+
     searchChildren:(checker)->
       recRes = []
       ModelProcessor.recurse(@,

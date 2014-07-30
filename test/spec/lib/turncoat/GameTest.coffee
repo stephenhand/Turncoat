@@ -21,11 +21,8 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     )
   )
 )
-define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants)->
-  m = JsHamcrest.Matchers
-  a = chai.assert
-  jm = JsMockito
-  v = JsMockito.Verifiers
+define(["isolate!lib/turncoat/Game", "matchers", "operators", "assertThat", "jsMockito", "verifiers", "lib/turncoat/Constants"],
+(Game, m, o, a, jm, v, Constants)->
   mocks = window.mockLibrary["lib/turncoat/Game"]
 
   suite("Game", ()->
@@ -88,8 +85,11 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         )
       )
       test("No parameter - throws", ()->
-        a.throw(()->
-          game.activate()
+        a(
+          ()->
+            game.activate()
+        ,
+          m.raisesAnything()
         )
       )
       test("Builds transport with game id and supplied owner id", ()->
@@ -145,7 +145,12 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           jm.verify(game.logEvent)(event)
         )
         test("Event not Backbone Model - throws", ()->
-          a.throw(()->handler({}))
+          a(
+            ()->
+              handler({})
+          ,
+            m.raisesAnything()
+          )
         )
         suite("Event is USERSTATUSCHANGED", ()->
           setup(()->
@@ -163,36 +168,36 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           test("Data missing - does nothing", ()->
             event.unset("data")
             handler.call(game,event)
-            a.isUndefined(game.get("users").get("MOCK USER").get("status"))
-            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+            a(game.get("users").get("MOCK USER").get("status"), m.nil())
+            a(game.get("users").get("NOT MOCK USER").get("status"), m.nil())
           )
           test("User Id missing - does nothing", ()->
             event.get("data").unset("userId")
             handler.call(game,event)
-            a.isUndefined(game.get("users").get("MOCK USER").get("status"))
-            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+            a(game.get("users").get("MOCK USER").get("status"), m.nil())
+            a(game.get("users").get("NOT MOCK USER").get("status"), m.nil())
           )
           test("Status missing - does nothing", ()->
             game.get("users").get("MOCK USER").set("status", "EXISTING STATUS")
             event.get("data").unset("status")
             handler.call(game,event)
-            a.equal(game.get("users").get("MOCK USER").get("status"), "EXISTING STATUS")
-            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+            a(game.get("users").get("MOCK USER").get("status"), "EXISTING STATUS")
+            a(game.get("users").get("NOT MOCK USER").get("status"), m.nil())
           )
           test("User Id is not in game user list - does nothing", ()->
             event.get("data").set("userId", "MISSING USER")
             handler.call(game,event)
-            a.isUndefined(game.get("users").get("MOCK USER").get("status"))
-            a.isUndefined(game.get("users").get("NOT MOCK USER").get("status"))
+            a(game.get("users").get("MOCK USER").get("status"), m.nil())
+            a(game.get("users").get("NOT MOCK USER").get("status"), m.nil())
           )
           test("Game has no user collection - does nothing", ()->
             game.unset("users")
             handler.call(game,event)
-            a.isUndefined(game.get("users"))
+            a(game.get("users"), m.nil())
           )
           test("Specified user exists and status set - sets status", ()->
             handler.call(game,event)
-            a.equal(game.get("users").get("MOCK USER").get("status"),"MOCK STATUS")
+            a(game.get("users").get("MOCK USER").get("status"),"MOCK STATUS")
           )
           test("Specified user exists and status set - save's game state via persister using transport's user id", ()->
             handler.call(game,event)
@@ -249,11 +254,14 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           jm.verify(mocks["lib/backboneTools/ModelProcessor"].deepUpdate, v.never())(m.anything(), m.anything())
         )
         test("Game not set - throws", ()->
-          a.throws(()->
-            handler.call(game,
-              gameId:"A GAME ID"
-              userId:"A USER ID"
-            )
+          a(
+            ()->
+              handler.call(game,
+                gameId:"A GAME ID"
+                userId:"A USER ID"
+              )
+          ,
+            m.raisesAnything()
           )
         )
         test("Event gameId matches game id, Event userId matches owner id and event game set - deepUpdates game with event", ()->
@@ -368,8 +376,11 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
 
       )
       test("Game not activated - throws", ()->
-        a.throws(()->
-          game.updateUserStatus("MOCK_USER", "TEST STATUS")
+        a(
+          ()->
+            game.updateUserStatus("MOCK_USER", "TEST STATUS")
+        ,
+          m.raisesAnything()
         )
       )
       suite("Game activated", ()->
@@ -459,14 +470,14 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           test("Adds new move to start", ()->
             event = new Backbone.Model()
             game.logMove(event)
-            a.equal(game.get("moveLog").length, 2)
+            a(game.get("moveLog").length, 2)
 
-            a.equal(game.get("moveLog").at(0), event)
+            a(game.get("moveLog").at(0), event)
 
           )
           test("Preserves Existing Events", ()->
             game.logMove({})
-            a.equal(game.get("moveLog").at(1).get("userId"), "MOCK_MOVER")
+            a(game.get("moveLog").at(1).get("userId"), "MOCK_MOVER")
           )
 
         )
@@ -474,15 +485,18 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           game = new Game()
           event = new Backbone.Model()
           game.logMove(event)
-          a.equal(game.get("moveLog").length, 1)
-          a.equal(game.get("moveLog").at(0), event)
+          a(game.get("moveLog").length, 1)
+          a(game.get("moveLog").at(0), event)
         )
         test("Invalid move log - Throws", ()->
           game = new Game(
             moveLog:{}
           )
-          a.throw(()->
-            game.logMove({})
+          a(
+            ()->
+              game.logMove({})
+          ,
+            m.raisesAnything()
           )
         )
       )
@@ -490,11 +504,11 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
         suite("Game without move log", ()->
           test("No userId - returns undefined", ()->
             game = new Game()
-            a.isUndefined(game.getLastMove())
+            a(game.getLastMove(), m.nil())
           )
           test("userId specified - returns undefined", ()->
             game = new Game()
-            a.isUndefined(game.getLastMove("MOVER_NAME"))
+            a(game.getLastMove("MOVER_NAME"), m.nil())
           )
         )
 
@@ -519,18 +533,28 @@ define(["isolate!lib/turncoat/Game", "lib/turncoat/Constants"], (Game, Constants
           )
           test("No userId - returns top move", ()->
             ret= game.getLastMove()
-            a.equal("MOCK_MOVER",ret.get("userId"))
-            a.equal("MOCK_DETAILS",ret.get("details"))
-            a.equal("MOCK_TIME",ret.get("timestamp").moment)
+            a("MOCK_MOVER",ret.get("userId"))
+            a("MOCK_DETAILS",ret.get("details"))
+            a("MOCK_TIME",ret.get("timestamp").moment)
           )
           test("UserId that exists in log - returns top move with that userId of that name", ()->
             ret= game.getLastMove("MOCK_MOVER_2")
-            a.equal("MOCK_MOVER_2",ret.get("userId"))
-            a.equal("MOCK_DETAILS_2",ret.get("details"))
-            a.equal("MOCK_TIME_2",ret.get("timestamp").moment)
+            a("MOCK_MOVER_2",ret.get("userId"))
+            a("MOCK_DETAILS_2",ret.get("details"))
+            a("MOCK_TIME_2",ret.get("timestamp").moment)
           )
           test("UserId that doesnt exist in log - returns undefined", ()->
-            a.isUndefined(game.getLastMove("MOCK_MOVER_3"))
+            a(game.getLastMove("MOCK_MOVER_3"), m.nil())
+          )
+        )
+      )
+      suite("getRuleBook", ()->
+        test("always throws", ()->
+          a(
+            ()->
+              new Game().getRuleBook({})
+          ,
+            m.raisesAnything()
           )
         )
       )

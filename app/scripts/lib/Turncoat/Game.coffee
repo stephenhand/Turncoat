@@ -75,6 +75,8 @@ define(["underscore", "backbone", "lib/backboneTools/ModelProcessor", "lib/turnc
       if @get("moveLog")?
         @get("moveLog").find((l)->(!userid? || userid is l.get("userId")))
 
+    getRuleBook:()->
+      throw new Error('getRulBook not implemented')
 
 
   Game

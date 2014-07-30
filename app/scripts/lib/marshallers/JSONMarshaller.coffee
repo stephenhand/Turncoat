@@ -49,6 +49,7 @@ define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRe
       dataObject = JSON.parse(stateString)
       vivify(dataObject, setRootLinkback:true)
 
+
     marshalAction:(actionObject)->
       @marshalState(actionObject)
 

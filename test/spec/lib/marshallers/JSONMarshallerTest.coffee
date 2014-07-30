@@ -358,6 +358,13 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         parsedModel = JSON.parse(json)
         a(parsedModel.propC[1]._type, "MOCK_TYPE")
       )
+      test("Throws if called with nothing", ()->
+        a(()->
+          marshaller.marshalState()
+        ,
+          m.raisesAnything()
+        )
+      )
     )
 
     suite("unmarshalState", ()->
@@ -438,8 +445,16 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         ut = marshaller.unmarshalState(mockMarshalledType)
         a(ut._root ,m.nil())
       )
+      test("Throws if called with nothing", ()->
+        a(()->
+          marshaller.unmarshalState()
+        ,
+          m.raisesAnything()
+        )
+      )
 
     )
+
     suite("Model", ()->
       origParse=JSON.parse
       origStringify=JSON.stringify
