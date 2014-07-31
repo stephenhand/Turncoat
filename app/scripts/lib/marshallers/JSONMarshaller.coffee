@@ -29,6 +29,7 @@ define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRe
       stateObject.set(
         "_type" : TypeRegistry.reverseLookup(stateObject.constructor)
       )
+      if (!stateObject.get("id")?) then stateObject.set("id", stateObject.id)
 
   forgetType = (stateObject)->
     if (stateObject instanceof Backbone.Collection)

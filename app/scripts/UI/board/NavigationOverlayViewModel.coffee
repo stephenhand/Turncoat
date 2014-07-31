@@ -1,7 +1,10 @@
-define(["underscore", "backbone", "ui/board/NominatedAssetOverlayViewModel"], (_, Backbone, NominatedAssetOverlayViewModel)->
+define(["underscore", "backbone", "UI/board/NominatedAssetOverlayViewModel"], (_, Backbone, NominatedAssetOverlayViewModel)->
   class NavigationOverlayViewModel extends NominatedAssetOverlayViewModel
     initialize:()->
       super()
+
+    setGame:(game)->
+      super(game.ghost())
 
     setAsset:(id)->
       super(id)

@@ -62,7 +62,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
 
     )
     suite("marshalState", ()->
-      test("correctlyMarshalsBackboneModelsAttributes", ()->
+      test("Correctly marshals Backbone Model's attributes", ()->
         testModelType = Backbone.Model.extend(
           toString:JsMockito.mockFunction()
           initialize:()->
@@ -77,7 +77,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(parsedModel.propA, "TEST_STRING")
         a(parsedModel.propB, 42)
       )
-      test("correctlyPreservesTypeIn_typeAttribute", ()->
+      test("Preserves type in _type attribute", ()->
 
         testModel = new mockType()
         testModel.set(
@@ -89,7 +89,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         parsedModel = JSON.parse(json)
         a(parsedModel._type, "MOCK_TYPE")
       )
-      test("correctlyPreservesTypeIn_typeAttribute1LevelDeep", ()->
+      test("Preserves type in _type attribute 1 level deep", ()->
 
         testModel = new mockType()
         testModel.set(
@@ -104,7 +104,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(parsedModel.propC._type, "MOCK_TYPE")
       )
 
-      test("correctlyPreservesTypeIn_typeAttribute3LevelsDeep", ()->
+      test("Preserves type in _type attribute 3 levels deep", ()->
 
         testModel = new mockType()
         testModel.set(
@@ -130,7 +130,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(parsedModel.propC.propF.propI._type, "MOCK_TYPE")
       )
 
-      test("correctlyPreservesType_typeAttributeInCollection", ()->
+      test("Preserves type in _type attribute in collection", ()->
 
         testModel = new mockType()
         testModel.set(
@@ -145,7 +145,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(parsedModel[0].propC._type, "MOCK_TYPE")
       )
 
-      test("correctlyPreservesType_typeAttributeInDeepCollection", ()->
+      test("Preserves type in _type attribute in deep collection", ()->
 
 
         testModel = new mockType()
@@ -172,7 +172,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(parsedModel.propC.propF[0].propI._type, "MOCK_TYPE")
       )
 
-      test("recursiveTypeRecordingIgnoresNonModelObjects", ()->
+      test("Recursive type recording ignores non model objects", ()->
 
         testModel = new mockType()
         testModel.set(
@@ -188,14 +188,42 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(parsedModel.propB.innerProp, "ANYTHING")
       )
 
+      test('preserves id property even if not explicitly set as backbone attributes', ()->
+        testModel = new mockType()
+        testModel.set(
+          propA:"TEST_STRING"
+          propB:{innerProp:"ANYTHING"}
+          propC:new mockType()
+        )
+        testModel.id = "TEST IDENTIFIER"
 
-      test("leavesAttributesUnmodified", ()->
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        a(parsedModel.id, "TEST IDENTIFIER")
+      )
+      test('preserves attribute if property conflicts with id attribute', ()->
+        testModel = new mockType()
+        testModel.set(
+          id:"TEST ATTRIBUTE IDENTIFIER"
+          propA:"TEST_STRING"
+          propB:{innerProp:"ANYTHING"}
+          propC:new mockType()
+        )
+        testModel.id = "TEST IDENTIFIER"
+
+        json = marshaller.marshalState(testModel)
+        parsedModel = JSON.parse(json)
+        a(parsedModel.id, "TEST ATTRIBUTE IDENTIFIER")
+      )
+
+      test("Leaves attributes unmodified", ()->
         testModelType = Backbone.Model.extend(
           toString:JsMockito.mockFunction()
           initialize:()->
         )
         testModel = new testModelType()
         testModel.set(
+          id:"ID"
           propA:"TEST_STRING"
           propB:42
         )
@@ -212,16 +240,18 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(origAttrCount, newAttrCount)
       )
 
-      test("leavesAttributesUnmodified3LevelsDeep", ()->
+      test("Leaves attributes unmodified 3 levels deep", ()->
 
         testModel = new mockType()
         testModel.set(
+          id:"ID1"
           propA:"TEST_STRING"
           propB:42
           propC:new mockType()
         )
 
         testModel.get("propC").set(
+          id:"ID2"
           propD:"TEST_STRING"
           propE:""
           propF:new mockType()
@@ -229,6 +259,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
 
 
         testModel.get("propC").get("propF").set(
+          id:"ID3"
           propG:"TEST_STRING"
           propH:""
           propI:new mockType()
@@ -247,8 +278,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
       )
 
 
-      test("leavesAttributesUnmodifiedInCollections", ()->
-
+      test("Leaves attributes unmodified in collections", ()->
         testModel = new mockType()
         testModel.set(
           id:"CHEESE"
@@ -289,7 +319,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(origAttrCount, newAttrCount)
       )
 
-      test("createsArraysFromCollections", ()->
+      test("Creates arrays from collections", ()->
         testModel = new mockType()
         testModel.set(
           propA:"TEST_STRING"
@@ -324,7 +354,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(parsedModel.propC[1].propB, 22)
       )
 
-      test("setsTypeForKnownTypesInArrays", ()->
+      test("Sets type for known types in arrays", ()->
         testModel = new mockType()
         testModel.set(
           propA:"TEST_STRING"
@@ -368,21 +398,21 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
     )
 
     suite("unmarshalState", ()->
-      test("createsBackboneModel", ()->
+      test("Creates Backbone Model.", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
         a(ut.set, m.func())
         a(ut.unset, m.func())
         a(ut.get, m.func())
         a(ut.attributes, m.object())
       )
-      test("createsBackboneModelForUnknownSubType", ()->
+      test("Creates Backbone Model for unknown subType", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
         a(ut.data.unknownObject.set, m.func())
         a(ut.data.unknownObject.unset, m.func())
         a(ut.data.unknownObject.get, m.func())
         a(ut.data.unknownObject.attributes, m.object())
       )
-      test("callsRegisteredVivifierForKnownSubSype", ()->
+      test("calls registered vivifier for known subType", ()->
         marshaller.unmarshalState(mockMarshalledType)
         JsMockito.verify(mockLibrary["lib/marshallers/JSONMarshaller"]["lib/turncoat/TypeRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
           matches:(data)->

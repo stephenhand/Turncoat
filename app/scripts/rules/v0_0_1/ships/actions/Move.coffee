@@ -2,7 +2,7 @@ define(["underscore", "backbone", "lib/turncoat/RuleBookEntry", "lib/turncoat/Ac
 
   move = new RuleBookEntry()
   move.getRule = ()->
-    preview:(newProposedAction, game, asset, currentPreviewActions)->
+    preview:(action, game, asset)->
       return new Action();
 
 )

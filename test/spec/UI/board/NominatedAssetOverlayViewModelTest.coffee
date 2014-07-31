@@ -22,21 +22,22 @@ define(["isolate!UI/board/NominatedAssetOverlayViewModel", "matchers", "operator
         "verifiers", "backbone"], (NominatedAssetOverlayViewModel, m, o, a, jm, v, Backbone)->
   mocks = window.mockLibrary["UI/board/NominatedAssetOverlayViewModel"]
   suite("NominatedAssetOverlayViewModel", ()->
+    naovm = null
+    setup(()->
+      naovm = new NominatedAssetOverlayViewModel()
+      naovm.set("ships",
+        new Backbone.Collection([
+          modelId:"MODEL 1"
+        ,
+          modelId:"MODEL 2"
+        ,
+          modelId:"MODEL 3"
+        ])
+      )
+    )
     suite("setAsset", ()->
+
       suite("has valid ships collection", ()->
-        naovm = null
-        setup(()->
-          naovm = new NominatedAssetOverlayViewModel()
-          naovm.set("ships",
-            new Backbone.Collection([
-              modelId:"MODEL 1"
-            ,
-              modelId:"MODEL 2"
-            ,
-              modelId:"MODEL 3"
-            ])
-          )
-        )
         suite("called with id matching modeld of ship in collection", ()->
 
           test("adds ship to nominated assets collection", ()->
@@ -86,6 +87,16 @@ define(["isolate!UI/board/NominatedAssetOverlayViewModel", "matchers", "operator
         ,
           m.raisesAnything()
         )
+      )
+    )
+    suite("getAsset", ()->
+      test("Asset set - returns first asset in nominated assets collection", ()->
+        naovm.setAsset("MODEL 2")
+        a(naovm.getAsset(), naovm.get("ships").at(1))
+      )
+
+      test("Asset not set - returns nothing", ()->
+        a(naovm.getAsset(), m.nil())
       )
     )
   )
