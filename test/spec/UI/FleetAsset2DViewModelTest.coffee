@@ -18,14 +18,14 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
                   get:JsMockito.mockFunction()
                   on:JsMockito.mockFunction()
 
-                JsMockito.when(mockModel.get)(JsHamcrest.Matchers.anything()).then(
+                JsMockito.when(mockModel.get)(m.anything()).then(
                   (att)->
                     switch att
                       when "position"
                         mockPos
                 )
 
-                JsMockito.when(mockPos.get)(JsHamcrest.Matchers.anything()).then(
+                JsMockito.when(mockPos.get)(m.anything()).then(
                   (att)->
                     switch att
                       when "x"
@@ -40,22 +40,22 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     )
   )
 )
-define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
-  mocks=window.mockLibrary['UI/FleetAsset2DViewModel']
+define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat", "jsMockito", "verifiers"], (FleetAsset2DViewModel, m, o, a, jm, v)->
+  mocks=window.mockLibrary["UI/FleetAsset2DViewModel"]
   mockModel =
     id:"MOCKMODEL_UUID"
-    get:JsMockito.mockFunction()
-    on:JsMockito.mockFunction()
+    get:jm.mockFunction()
+    on:jm.mockFunction()
 
   mockPos =
-    get:JsMockito.mockFunction()
-    on:JsMockito.mockFunction()
+    get:jm.mockFunction()
+    on:jm.mockFunction()
   mockDim =
-    get:JsMockito.mockFunction()
-    on:JsMockito.mockFunction()
+    get:jm.mockFunction()
+    on:jm.mockFunction()
 
 
-  JsMockito.when(mockModel.get)(JsHamcrest.Matchers.anything()).then(
+  jm.when(mockModel.get)(m.anything()).then(
     (att)->
       switch att
         when "position"
@@ -64,7 +64,7 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
           mockDim
   )
 
-  JsMockito.when(mockPos.get)(JsHamcrest.Matchers.anything()).then(
+  jm.when(mockPos.get)(m.anything()).then(
     (att)->
       switch att
         when "x"
@@ -74,7 +74,7 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
         when "bearing"
           45
   )
-  JsMockito.when(mockDim.get)(JsHamcrest.Matchers.anything()).then(
+  jm.when(mockDim.get)(m.anything()).then(
     (att)->
       switch att
         when "length"
@@ -88,11 +88,11 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
 
       origWatch = FleetAsset2DViewModel.prototype.watch
       setup(()->
-        FleetAsset2DViewModel.prototype.watch = JsMockito.mockFunction()
+        FleetAsset2DViewModel.prototype.watch = jm.mockFunction()
       )
       test("watches model", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        JsMockito.verify(fa2dvm.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.equivalentMap(
+        jm.verify(fa2dvm.watch)(m.hasItem(m.equivalentMap(
           model:mockModel
           attributes:[
             "position"
@@ -101,7 +101,7 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
       )
       test("Watches model position", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        JsMockito.verify(fa2dvm.watch)(JsHamcrest.Matchers.hasItem(JsHamcrest.Matchers.equivalentMap(
+        jm.verify(fa2dvm.watch)(m.hasItem(m.equivalentMap(
           model:mockModel.get("position")
           attributes:[
             "x"
@@ -112,27 +112,27 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
       )
       test("Sets ClassList", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("classList"),"view-model-item fleet-asset-2d")
+        a(fa2dvm.get("classList"),"view-model-item fleet-asset-2d")
       )
       test("Sets XPos", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("xpx"),"123")
+        a(fa2dvm.get("xpx"),"123")
       )
       test("Sets YPos", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("ypx"),"321")
+        a(fa2dvm.get("ypx"),"321")
       )
       test("Sets length", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("length"),"1337")
+        a(fa2dvm.get("length"),"1337")
       )
       test("Sets width", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("width"),"666")
+        a(fa2dvm.get("width"),"666")
       )
       test("Sets transform", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("transformDegrees"),"45")
+        a(fa2dvm.get("transformDegrees"),"45")
       )
       teardown(()->
         FleetAsset2DViewModel.prototype.watch = origWatch
@@ -147,20 +147,20 @@ define(['isolate!UI/FleetAsset2DViewModel'], (FleetAsset2DViewModel)->
         on:()->
       test("Sets XPos", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("xpx"),"123")
+        a(fa2dvm.get("xpx"),"123")
       )
       test("Sets YPos", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("ypx"),"321")
+        a(fa2dvm.get("ypx"),"321")
       )
       test("Sets transform", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
-        chai.assert.equal(fa2dvm.get("transformDegrees"),"45")
+        a(fa2dvm.get("transformDegrees"),"45")
       )
       test("Different model id - does not update model id", ()->
         fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
         fa2dvm.onModelUpdated(mockOtherModel)
-        chai.assert.equal(fa2dvm.get("classList"),"view-model-item fleet-asset-2d")
+        a(fa2dvm.get("classList"),"view-model-item fleet-asset-2d")
       )
     )
   )

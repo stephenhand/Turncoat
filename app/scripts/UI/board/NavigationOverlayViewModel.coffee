@@ -11,6 +11,7 @@ define(["underscore", "backbone", "UI/board/NominatedAssetOverlayViewModel"], (_
       @set('plannedActions', new Backbone.Collection())
 
     updatePreview:(x, y)->
+      @getAsset().calculateClosestMoveAction(x,y)
 
 
   NavigationOverlayViewModel

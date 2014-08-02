@@ -30,6 +30,10 @@ define(['underscore', 'backbone', 'crypto', 'AppState', 'UI/component/ObservingV
       @set("xpx",pos.get("x"))
       @set("ypx",pos.get("y"))
       @set("transformDegrees",pos.get("bearing"))
+      @calculateClosestMoveAction=(x, y)->
+
+
+
 
     #Executed in owner object context
     onModelUpdated:(model)->
