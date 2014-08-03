@@ -162,6 +162,96 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
         fa2dvm.onModelUpdated(mockOtherModel)
         a(fa2dvm.get("classList"),"view-model-item fleet-asset-2d")
       )
+      test("Sets calculateClosestMoveAction method.", ()->
+        fa2dvm = new FleetAsset2DViewModel(null, model:mockModel)
+        a(fa2dvm.calculateClosestMoveAction, m.func())
+      )
+      suite("calculateClosestMoveAction", ()->
+        mockRuleBook = null
+        mockRule = null
+        fa2dvm = null
+        model = null
+        setup(()->
+          mockRule =
+            calculateTurnActionRequired:jm.mockFunction()
+          mockRuleBook =
+            lookUp:jm.mockFunction()
+
+          jm.when(mockRuleBook.lookUp)("ships.actions.move").then((path)->
+            getRule:()->
+              mockRule
+          )
+
+          model = new Backbone.Model(
+            position:new Backbone.Model()
+            dimensions:new Backbone.Model()
+            actions:new Backbone.Collection([
+              new Backbone.Model(
+                name:"move"
+
+              )
+            ])
+          )
+          model._root=
+            getRuleBook:()->
+              mockRuleBook
+          fa2dvm = new FleetAsset2DViewModel(null, model:model)
+
+        )
+        suite("Model has move action type defined.", ()->
+          moveType = null
+          setup(()->
+            moveType = new Backbone.Model(
+              name:"MOCK MOVE TYPE"
+              turns:new Backbone.Collection([])
+            )
+            model.get("actions").at(0).set("types", new Backbone.Collection([
+              moveType
+            ]))
+          )
+          suite("Model has single turn type defined", ()->
+            turn = null
+            setup(()->
+              turn = new Backbone.Model()
+              moveType.get("turns").push(turn)
+            )
+            test("Looks up move rules in rulebook",()->
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
+              jm.verify(mockRuleBook.lookUp)("ships.actions.move")
+            )
+            test("Queries rulebook's calculateTurnActionRequired method with ship's position, turn data and coordinates",()->
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
+              jm.verify(mockRule.calculateTurnActionRequired)(model, turn, 1337, 666)
+            )
+            test("Returns nothing - returns nothing", ()->
+              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
+              a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), m.nil())
+            )
+            test("Returns no action - returns nothing", ()->
+              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                {}
+              )
+              a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), m.nil())
+            )
+            test("Returns action with no shortfall - returns action", ()->
+              action = {}
+              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                action:action
+              )
+              a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), action)
+            )
+            test("Returns action with shortfall - still returns action", ()->
+              action = {}
+              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                action:action
+                shortfall:20
+              )
+              a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), action)
+            )
+          )
+
+        )
+      )
     )
   )
 

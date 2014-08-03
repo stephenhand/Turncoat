@@ -79,7 +79,7 @@
 																	{
 																		"maxBearing":45,
 																		"minBeforeMove":"SHIP_LENGTH/2",
-																		"minAfterMove":2,
+																		"minAfterMove":"2-SHIP_LENGTH/2",
 																		"cost":2
 																	},
 																	{
