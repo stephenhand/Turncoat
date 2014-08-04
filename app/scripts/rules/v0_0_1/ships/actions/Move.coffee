@@ -6,9 +6,15 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
 
     calculateTurnActionRequired:(asset, moveType, turn, x, y)->
       currentPos = asset.get("position")
+      rotateX = currentPos.get("x")
+      rotateY = currentPos.get("y")
+      if turn.get("beforeMove")
+        v =TransformBearings.bearingAndDistanceToVector(currentPos.get("bearing"),turn.get("beforeMove"))
+        rotateX += v.x
+        rotateY += v.y
       bd = TransformBearings.vectorToBearingAndDistance(
-          x:x-currentPos.get("x")
-          y:y-currentPos.get("y")
+          x:x-rotateX
+          y:y-rotateY
       )
       idealRotation = TransformBearings.rotationBetweenBearings(currentPos.get("bearing"),bd.bearing)
       rotation = Math.min(idealRotation, turn.get("maxRotation"))

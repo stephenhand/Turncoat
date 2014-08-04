@@ -82,6 +82,38 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               a(ret.shortfall, -45)
             )
           )
+          suite("Turn has required prior move but no post move", ()->
+            setup(()->
+              asset.get("position").set("bearing", 90)
+              turn=  new Backbone.Model(
+                name:"MOCK TURN TYPE"
+                maxRotation:90,
+                beforeMove:1,
+                afterMove:0,
+                cost:2
+              )
+            )
+            test("Requested position is within maximum rotation after required move - returns action with asset id, move type, turn type and angle delta", ()->
+              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 3, 2)
+              a(ret.action.get("rotation"), 45)
+              a(ret.shortfall, 0)
+            )
+            test("Requested position is within maximum rotation anticlockwise - returns action with asset id, move type, turn type and angle delta", ()->
+              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 3, 0)
+              a(ret.action.get("rotation"), -45)
+              a(ret.shortfall, 0)
+            )
+            test("Requested position is outside maximum rotation - returns action with rotation at maximum rotation for turn and the shortfall in a 'shortfall' attribute", ()->
+              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 1, 2)
+              a(ret.action.get("rotation"), 90)
+              a(ret.shortfall, 45)
+            )
+            test("Requested position is outside maximum rotation anticlockwise - returns action with rotation at maximum negative rotation for turn and the shortfall in a 'shortfall' attribute", ()->
+              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 1, 0)
+              a(ret.action.get("rotation"), -90)
+              a(ret.shortfall, -45)
+            )
+          )
         )
       )
     )
