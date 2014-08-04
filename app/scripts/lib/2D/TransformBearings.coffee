@@ -1,4 +1,4 @@
-define([], ()->
+define(["fmod"], (fmod)->
   DEGREES_TO_RADIANS = Math.PI / 180
 
   TransformBearings =
@@ -51,9 +51,19 @@ define([], ()->
         baseBearing = 270
         adjacent = -vector.x
         opposite = -vector.y
-      return {
-        bearing : baseBearing + (Math.atan(opposite/adjacent)/DEGREES_TO_RADIANS)
-        distance : Math.sqrt((opposite*opposite)+(adjacent*adjacent))
-      }
+
+      bearing : baseBearing + (Math.atan(opposite/adjacent)/DEGREES_TO_RADIANS)
+      distance : Math.sqrt((opposite*opposite)+(adjacent*adjacent))
+
+    rotateBearing:(start, rotation)->
+      if (typeof start isnt "number") || (typeof rotation isnt "number") then throw Error("Start bearing and rotation values must be numeric")
+      fmod(start+rotation, 360)
+
+    rotationBetweenBearings:(start, end)->
+      if (typeof start isnt "number") || (typeof end isnt "number") then throw Error("Start and end bearings must be numeric")
+      val = fmod(end-start, 360)
+      if val>180 then val-=360
+      val
+
   TransformBearings
 )

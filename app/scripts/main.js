@@ -12,6 +12,7 @@ require.config({
     text: 'vendor/text',
     uuid:'vendor/uuid',
     sprintf: 'vendor/sprintf',
+		fmod: 'vendor/fmod',
     moment:'vendor/moment',
     templates : '../templates',
     data : '../data',

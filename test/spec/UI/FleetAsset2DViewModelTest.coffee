@@ -168,6 +168,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
       )
       suite("calculateClosestMoveAction", ()->
         mockRuleBook = null
+        mockRuleEntry = null
         mockRule = null
         fa2dvm = null
         model = null
@@ -177,11 +178,14 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
           mockRuleBook =
             lookUp:jm.mockFunction()
 
+          mockRuleEntry =
+            getRule:jm.mockFunction()
           jm.when(mockRuleBook.lookUp)("ships.actions.move").then((path)->
-            getRule:()->
-              mockRule
+            mockRuleEntry
           )
-
+          jm.when(mockRuleEntry.getRule)().then(()->
+            mockRule
+          )
           model = new Backbone.Model(
             position:new Backbone.Model()
             dimensions:new Backbone.Model()
@@ -203,21 +207,27 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
           setup(()->
             moveType = new Backbone.Model(
               name:"MOCK MOVE TYPE"
-              turns:new Backbone.Collection([])
+              turns:new Backbone.Collection([
+                new Backbone.Model()
+              ])
             )
             model.get("actions").at(0).set("types", new Backbone.Collection([
               moveType
             ]))
           )
+          test("Looks up move rules in rulebook",()->
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
+            jm.verify(mockRuleBook.lookUp)("ships.actions.move")
+          )
+          test("Gets rule from entry providing current game (retrieved from ship model)",()->
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
+            jm.verify(mockRuleEntry.getRule)(model._root)
+          )
           suite("Model has single turn type defined", ()->
             turn = null
             setup(()->
               turn = new Backbone.Model()
-              moveType.get("turns").push(turn)
-            )
-            test("Looks up move rules in rulebook",()->
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
-              jm.verify(mockRuleBook.lookUp)("ships.actions.move")
+              moveType.get("turns").reset([turn])
             )
             test("Queries rulebook's calculateTurnActionRequired method with ship's position, turn data and coordinates",()->
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
