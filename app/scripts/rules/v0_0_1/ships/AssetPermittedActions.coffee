@@ -1,6 +1,6 @@
 define(["underscore", "backbone", "lib/turncoat/Action", "lib/turncoat/RuleBookEntry"], (_, Backbone, Action, RuleBookEntry)->
   AssetPermittedActions = new RuleBookEntry()
-  AssetPermittedActions.getRule = ()->
+  AssetPermittedActions.getActionRules = ()->
     getPermittedActionsForAsset:(asset, game)->
       ret = []
       for action in asset.get("actions")?.models ? []

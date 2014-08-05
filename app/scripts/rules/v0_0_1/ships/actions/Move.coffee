@@ -1,7 +1,7 @@
 define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/RuleBookEntry", "lib/turncoat/Action"], (_, Backbone, TransformBearings, RuleBookEntry, Action)->
 
   move = new RuleBookEntry()
-  move.getRule = (game)->
+  move.getActionRules = (game)->
     if !game? then throw new Error('A game must be supplied to retrieve rules')
 
     calculateTurnActionRequired:(asset, moveType, turn, x, y)->
@@ -22,7 +22,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       shortfall = idealRotation - rotation
       action:new Action(
           asset:asset.get("id")
-          type:"move"
+          rule:"ships.actions.move"
           move:moveType
           turn:turn.get("name")
           rotation:rotation
@@ -33,6 +33,37 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
     calculateMoveRemaining:(asset, moveType)->
 
     resolveAction:(action, resolveNonDeterministic)->
+      action.reset()
+      assets = game.searchGameStateModels((gsm)->
+        gsm?.get? and gsm.get("id") is action.get("asset")
+      )
+      if assets.length>1 then throw new Error("Duplicate asset id's found in game, this is not valid")
+      if assets.length is 0 then throw new Error("Asset not found")
+      asset = assets[0]
+      move = asset.get("actions").findWhere(name:"move").get("types").findWhere(name:action.get("move"))
+      if action.get("turn")?
+        turn = move.get("turns").findWhere(name:action.get("turn"))
+        pos = asset.get("position")
+        x = pos.get("x")
+        y = pos.get("y")
+        bearing = pos.get("bearing")
+        if turn.get("beforeMove")?
+          v = TransformBearings.bearingAndDistanceToVector(bearing, turn.get("beforeMove"))
+          x+=v.x
+          y+=v.y
+
+        bearing = TransformBearings.rotateBearing(bearing, action.get("rotation"))
+
+        if turn.get("afterMove")?
+          v = TransformBearings.bearingAndDistanceToVector(bearing, turn.get("afterMove"))
+          x+=v.x
+          y+=v.y
+
+        action.get("events").push()
+
+
+  move.getEventRules=(game)->
+
 
 
 

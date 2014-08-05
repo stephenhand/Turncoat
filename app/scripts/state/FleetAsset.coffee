@@ -10,7 +10,7 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/T
     getAvailableActions:()->
       @getRoot().getRuleBook()
         .lookUp("ships.permitted-actions")
-        .getRule()
+        .getActionRules()
         .getPermittedActionsForAsset(@, @getRoot())
 
 

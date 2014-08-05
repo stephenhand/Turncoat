@@ -10,9 +10,9 @@ define(["isolate!rules/v0_0_1/ships/AssetPermittedActions", "matchers", "operato
   mocks = window.mockLibrary["rules/v0_0_1/ships/AssetPermittedActions"]
 
   suite("AssetPermittedActions", ()->
-    suite("getRule", ()->
+    suite("getActionRules", ()->
       test("Returns object with getPermittedActionsForAsset method", ()->
-        a(AssetPermittedActions.getRule(), m.hasMember("getPermittedActionsForAsset", m.func()))
+        a(AssetPermittedActions.getActionRules(), m.hasMember("getPermittedActionsForAsset", m.func()))
       )
       suite("rule's getPermittedActionsForAsset", ()->
         game = null
@@ -22,14 +22,14 @@ define(["isolate!rules/v0_0_1/ships/AssetPermittedActions", "matchers", "operato
         setup(()->
           game = new Backbone.Model()
           ruleEntry =
-            getRule:jm.mockFunction()
+            getActionRules:jm.mockFunction()
           ruleBook =
             lookUp:jm.mockFunction()
           game.getRuleBook = ()->
             ruleBook
           jm.when(ruleBook.lookUp)(m.anything()).then((input)->ruleEntry)
-          jm.when(ruleEntry.getRule)(m.anything()).then((input)->"LOOKED UP RULE")
-          apar = AssetPermittedActions.getRule()
+          jm.when(ruleEntry.getActionRules)(m.anything()).then((input)->"LOOKED UP RULE")
+          apar = AssetPermittedActions.getActionRules()
         )
         test("Asset has no actions collection - returns array with backbone model named 'finish' only", ()->
           acts = apar.getPermittedActionsForAsset(new Backbone.Model(), game)

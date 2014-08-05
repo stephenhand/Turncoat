@@ -11,13 +11,13 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
   mocks = window.mockLibrary["rules/v0_0_1/ships/actions/Move"]
   suite("Move", ()->
 
-    suite("getRule", ()->
+    suite("getActionRules", ()->
       test("Game supplied - returns object", ()->
-        a(Move.getRule({}), m.object())
+        a(Move.getActionRules({}), m.object())
       )
       test("Game not supplied - throws", ()->
         a(()->
-          Move.getRule()
+          Move.getActionRules()
         ,
           m.raisesAnything())
       )
@@ -26,7 +26,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
         game = null
         setup(()->
           game = {}
-          rule = Move.getRule(game)
+          rule = Move.getActionRules(game)
         )
         suite("calculateTurnActionRequired", ()->
           asset = null
@@ -55,6 +55,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 2, 2)
               a(ret.action, m.instanceOf(mocks["lib/turncoat/Action"]))
               a(ret.action.attributes, m.allOf(
+                  m.hasMember("rule","ships.actions.move")
                   m.hasMember("turn","MOCK TURN TYPE"),
                   m.hasMember("move","MOCK MOVE TYPE"),
                   m.hasMember("asset","MOCK ASSET ID")
@@ -114,6 +115,151 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               a(ret.shortfall, -45)
             )
           )
+        )
+        suite("resolveAction",()->
+          action = null
+          asset = null
+          checker = null
+          setup(()->
+            action = new Backbone.Model(
+              asset:"MOCK ASSET ID"
+              move:"MOCK MOVE TYPE"
+            )
+            action.reset=jm.mockFunction()
+            asset = new Backbone.Model(
+              actions:new Backbone.Collection([
+                new Backbone.Model(
+                  name:"move"
+                  types:new Backbone.Collection([
+                    new Backbone.Model(
+                      name:"MOCK MOVE TYPE"
+                    )
+                  ])
+                )
+              ])
+            )
+            game.searchGameStateModels = jm.mockFunction()
+            jm.when(game.searchGameStateModels)(m.func()).then((f)->
+              checker = f
+              [asset]
+            )
+          )
+          test("Resets action.", ()->
+            rule.resolveAction(action, false)
+            jm.verify(action.reset)()
+          )
+          test("Calls searchGameStateModels on game to locate asset", ()->
+            rule.resolveAction(action, false)
+            jm.verify(game.searchGameStateModels)(m.func())
+          )
+          suite("searchGameStateModels checker function", ()->
+            test("Returns true if passed a Backbone Model with an ID same as that specified in action's asset attribute", ()->
+              a(checker(
+                get:(key)->
+                  if key is "id" then "MOCK ASSET ID"
+              ), true)
+            )
+            test("Returns false otherwise", ()->
+              a(checker(
+                get:(key)->
+                  if key is "id" then "NOT MOCK ASSET ID"
+              ), false)
+              a(checker(
+                get:(key)->
+              ), false)
+              a(checker({}), false)
+              a(checker(), false)
+            )
+          )
+          test("searchGameStateModels returns no asset - throws", ()->
+            jm.when(game.searchGameStateModels)(m.func()).then((f)->
+              []
+            )
+            a(()->
+              rule.resolveAction(action, false)
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("searchGameStateModels returns multiple assets - throws", ()->
+            jm.when(game.searchGameStateModels)(m.func()).then((f)->
+              [{},{}]
+            )
+            a(()->
+              rule.resolveAction(action, false)
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("asset located has no actions - throws", ()->
+            asset.unset("actions")
+            a(()->
+              rule.resolveAction(action, false)
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("asset located has actions but no move actions - throws", ()->
+            asset.set("actions", new Backbone.Collection([
+              name:"NOT MOVE"
+              types:new Backbone.Collection([
+                name:"MOCK MOVE TYPE"
+              ])
+            ,
+              name:"ALSO NOT MOVE"
+              types:new Backbone.Collection([
+                name:"MOCK MOVE TYPE"
+              ])
+            ]))
+            a(()->
+              rule.resolveAction(action, false)
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("asset located has move action but no type matching that specified in cation - throws", ()->
+            asset.set("actions", new Backbone.Collection([
+              name:"NOT MOVE"
+              types:new Backbone.Collection([
+                name:"MOCK MOVE TYPE"
+              ])
+            ,
+              name:"move"
+              types:new Backbone.Collection([
+                name:"NOT MOCK MOVE TYPE"
+              ,
+                name:"ALSO NOT MOCK MOVE TYPE"
+              ])
+            ]))
+            a(()->
+              rule.resolveAction(action, false)
+            ,
+              m.raisesAnything()
+            )
+          )
+          suite("Asset has move action with matching type", ()->
+            suite("Turn specified in action", ()->
+              turn = null
+              setup(()->
+                turn = new Backbone.Model(
+                  name:"MOCK TURN TYPE"
+                )
+                action.set("turn", "MOCK TURN TYPE")
+                asset.get("actions").at(0).get("types").at(0).set("turns", new Backbone.Collection([
+                  turn
+                ]))
+              )
+              test("move type has no turns - throws", ()->
+                asset.get("actions").at(0).get("types").at(0).get("turns").reset()
+                a(()->
+                  rule.resolveAction(action, false)
+                ,
+                  m.raisesAnything()
+                )
+              )
+            )
+          )
+
         )
       )
     )

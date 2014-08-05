@@ -53,9 +53,6 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
       if @get("_eventLog")?
         @get("_eventLog").find((l)->(!name? || name is l.get("name")))
 
-
-
-
     getHeaderForUser:(@userId)->
       header = new GameHeader(
         id:@get("id")

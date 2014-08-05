@@ -2,6 +2,8 @@ define(['underscore','backbone'], (_,Backbone)->
   Action = Backbone.Model.extend(
     initialise:(m, options)->
       @set("events", @get("events") ? new Backbone.Collection())
+    reset:()->
+      @get("events").reset()
 
     preview:(game)->
       throw new Error("Not implemented")

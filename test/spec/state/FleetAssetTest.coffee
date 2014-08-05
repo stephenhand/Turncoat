@@ -64,8 +64,8 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
           "AVAILABLE_ACTIONS"
         )
         ruleEntry =
-          getRule : jm.mockFunction()
-        jm.when(ruleEntry.getRule)().then(()->
+          getActionRules : jm.mockFunction()
+        jm.when(ruleEntry.getActionRules)().then(()->
           rule
         )
         rb =
@@ -85,7 +85,7 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
       )
       test("Gets rule from looke up entry, calls getPermittedActionsForAsset on it with itselef and game and returns result", ()->
         acts = fa.getAvailableActions()
-        jm.verify(ruleEntry.getRule)()
+        jm.verify(ruleEntry.getActionRules)()
         jm.verify(rule.getPermittedActionsForAsset)(fa, game)
         a(acts, "AVAILABLE_ACTIONS")
       )

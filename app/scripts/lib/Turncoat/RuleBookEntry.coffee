@@ -4,8 +4,10 @@ define(["underscore", "backbone"], (_, RuleBookEntry)->
       @subEntries = subEntries ? {}
     getDescription:()->
       throw new Error("RuleBook entries must implement getDescription")
-    getRule:()->
-      throw new Error("RuleBook entries must implement getRule")
+    getEventRules:()->
+      throw new Error("RuleBook entries must implement getEventRules")
+    getActionRules:()->
+      throw new Error("RuleBook entries must implement getEventRules")
 
     lookUp:(rulePath)->
       dotPos = rulePath.indexOf(".")

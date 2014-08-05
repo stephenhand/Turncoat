@@ -179,11 +179,11 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             lookUp:jm.mockFunction()
 
           mockRuleEntry =
-            getRule:jm.mockFunction()
+            getActionRules:jm.mockFunction()
           jm.when(mockRuleBook.lookUp)("ships.actions.move").then((path)->
             mockRuleEntry
           )
-          jm.when(mockRuleEntry.getRule)().then(()->
+          jm.when(mockRuleEntry.getActionRules)().then(()->
             mockRule
           )
           model = new Backbone.Model(
@@ -221,7 +221,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
           )
           test("Gets rule from entry providing current game (retrieved from ship model)",()->
             fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
-            jm.verify(mockRuleEntry.getRule)(model._root)
+            jm.verify(mockRuleEntry.getActionRules)(model._root)
           )
           suite("Model has single turn type defined", ()->
             turn = null

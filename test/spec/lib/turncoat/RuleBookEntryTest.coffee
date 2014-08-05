@@ -10,9 +10,14 @@ define(["isolate!lib/turncoat/RuleBookEntry", "matchers", "operators", "assertTh
         a(new RuleBookEntry().getDescription, m.raisesAnything())
       )
     )
-    suite("getRule", ()->
+    suite("getActionRules", ()->
       test("throws", ()->
-        a(new RuleBookEntry().getRule, m.raisesAnything())
+        a(new RuleBookEntry().getActionRules, m.raisesAnything())
+      )
+    )
+    suite("getEventRules", ()->
+      test("throws", ()->
+        a(new RuleBookEntry().getEventRules, m.raisesAnything())
       )
     )
     suite("lookUp", ()->
