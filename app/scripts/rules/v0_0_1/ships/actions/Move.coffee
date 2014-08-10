@@ -1,33 +1,37 @@
-define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/RuleBookEntry", "lib/turncoat/Action"], (_, Backbone, TransformBearings, RuleBookEntry, Action)->
+define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/RuleBookEntry", "lib/turncoat/Action", "lib/turncoat/Event"], (_, Backbone, TransformBearings, RuleBookEntry, Action, Event)->
 
   move = new RuleBookEntry()
   move.getActionRules = (game)->
     if !game? then throw new Error('A game must be supplied to retrieve rules')
 
-    calculateTurnActionRequired:(asset, moveType, turn, x, y)->
+    calculateManeuverRequired:(asset, moveType, maneuver, x, y)->
       currentPos = asset.get("position")
       rotateX = currentPos.get("x")
       rotateY = currentPos.get("y")
-      if turn.get("beforeMove")
-        v =TransformBearings.bearingAndDistanceToVector(currentPos.get("bearing"),turn.get("beforeMove"))
-        rotateX += v.x
-        rotateY += v.y
-      bd = TransformBearings.vectorToBearingAndDistance(
-          x:x-rotateX
-          y:y-rotateY
-      )
-      idealRotation = TransformBearings.rotationBetweenBearings(currentPos.get("bearing"),bd.bearing)
-      rotation = Math.min(idealRotation, turn.get("maxRotation"))
-      rotation = Math.max(rotation, -turn.get("maxRotation"))
-      shortfall = idealRotation - rotation
-      action:new Action(
-          asset:asset.get("id")
-          rule:"ships.actions.move"
-          move:moveType
-          turn:turn.get("name")
-          rotation:rotation
-        )
-      shortfall:shortfall
+      for step in maneuver.get("sequence").models
+        if step.get("type") is "move"
+          v =TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(currentPos.get("bearing"),(step.get("direction") ? 0)),step.get("distance")||0)
+          rotateX += v.x
+          rotateY += v.y
+        else if step.get("type") is "rotate"
+          bd = TransformBearings.vectorToBearingAndDistance(
+            x:x-rotateX
+            y:y-rotateY
+          )
+          idealRotation = TransformBearings.rotationBetweenBearings(currentPos.get("bearing"),bd.bearing)
+          rotation = Math.min(idealRotation, step.get("maxRotation"))
+          rotation = Math.max(rotation, -step.get("maxRotation"))
+          shortfall = idealRotation - rotation
+          ret =
+            action:new Action(
+                asset:asset.get("id")
+                rule:"ships.actions.move"
+                move:moveType
+                maneuver:maneuver.get("name")
+              )
+            shortfall:shortfall
+          ret.action.set(step.get("rotationAttribute"), rotation)
+          return ret
 
 
     calculateMoveRemaining:(asset, moveType)->
@@ -41,25 +45,35 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       if assets.length is 0 then throw new Error("Asset not found")
       asset = assets[0]
       move = asset.get("actions").findWhere(name:"move").get("types").findWhere(name:action.get("move"))
-      if action.get("turn")?
-        turn = move.get("turns").findWhere(name:action.get("turn"))
-        pos = asset.get("position")
-        x = pos.get("x")
-        y = pos.get("y")
-        bearing = pos.get("bearing")
-        if turn.get("beforeMove")?
-          v = TransformBearings.bearingAndDistanceToVector(bearing, turn.get("beforeMove"))
-          x+=v.x
-          y+=v.y
+      pos = asset.get("position")
+      x = pos.get("x")
+      y = pos.get("y")
+      bearing = pos.get("bearing")
+      if action.get("maneuver")?
+        maneuver = move.get("maneuvers").findWhere(name:action.get("maneuver"))
 
-        bearing = TransformBearings.rotateBearing(bearing, action.get("rotation"))
+        for step in maneuver.get("sequence").models
+          switch step.get("type")
+            when "move"
+              v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (step.get("direction") ? 0)), step.get("distance"))
+              x+=v.x
+              y+=v.y
+            when "rotate"
+              bearing = TransformBearings.rotateBearing(bearing, action.get(step.get("rotationAttribute")))
 
-        if turn.get("afterMove")?
-          v = TransformBearings.bearingAndDistanceToVector(bearing, turn.get("afterMove"))
-          x+=v.x
-          y+=v.y
+        action.get("events").push(new Event(
+          rule:"ships.actions.move"
+          name:"changePosition"
+          position:new Backbone.Model(
+            x:x
+            y:y
+            bearing:bearing
+          )
+        ))
+      else
+        v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (action.get("direction") ? 0)), action.get("distance"))
+        move.get("distance")
 
-        action.get("events").push()
 
 
   move.getEventRules=(game)->

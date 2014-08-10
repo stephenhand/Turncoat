@@ -31,8 +31,8 @@ define(['underscore', 'backbone', 'crypto', 'AppState', 'UI/component/ObservingV
       @set("ypx",pos.get("y"))
       @set("transformDegrees",pos.get("bearing"))
       @calculateClosestMoveAction=(moveType, x, y)->
-        turns = model.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType).get("turns")
-        model._root.getRuleBook().lookUp("ships.actions.move").getActionRules(model._root).calculateTurnActionRequired(model,turns.at(0), x, y)?.action
+        maneuvers = model.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType).get("maneuvers")
+        model._root.getRuleBook().lookUp("ships.actions.move").getActionRules(model._root).calculateManeuverRequired(model,maneuvers.at(0), x, y)?.action
 
 
 

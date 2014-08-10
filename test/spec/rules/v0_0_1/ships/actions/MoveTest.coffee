@@ -4,13 +4,17 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
       Backbone.Model.extend({})
     )
   )
+  Isolate.mapAsFactory("lib/turncoat/Event", "rules/v0_0_1/ships/actions/Move", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      Backbone.Model.extend({})
+    )
+  )
 )
 
 define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "assertThat", "jsMockito", "verifiers"],
 (Move, m, o, a, jm, v)->
   mocks = window.mockLibrary["rules/v0_0_1/ships/actions/Move"]
   suite("Move", ()->
-
     suite("getActionRules", ()->
       test("Game supplied - returns object", ()->
         a(Move.getActionRules({}), m.object())
@@ -28,9 +32,9 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
           game = {}
           rule = Move.getActionRules(game)
         )
-        suite("calculateTurnActionRequired", ()->
+        suite("calculateManeuverRequired", ()->
           asset = null
-          turn = null
+          maneuver = null
           setup(()->
             asset = new Backbone.Model(
               id:"MOCK ASSET ID"
@@ -41,80 +45,136 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               )
             )
           )
-          suite("Turn has no minimum prior move or post move", ()->
+          test("Maneuver has no sequence - throws", ()->
+            a(rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", new Backbone.Model(
+              name:"MOCK TURN TYPE"
+              sequence:new Backbone.Collection([
+                type:"move"
+                distance:1
+                direction:-45
+              ,
+                type:"move"
+                distance:1
+              ,
+                type:"move"
+                distance:1
+                direction:135
+              ,
+
+              ]),
+              cost:2
+            ), 2, 2),m.nil())
+          )
+          test("Maneuver has empty sequence - returns nothing", ()->
+            a(rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", new Backbone.Model(
+              name:"MOCK TURN TYPE"
+              sequence:new Backbone.Collection([]),
+              cost:2
+            ), 2, 2),m.nil())
+          )
+          suite("Maneuver is one rotation", ()->
             setup(()->
-              turn=  new Backbone.Model(
+              maneuver=  new Backbone.Model(
                 name:"MOCK TURN TYPE"
-                maxRotation:90,
-                beforeMove:0,
-                afterMove:0,
+                sequence:new Backbone.Collection([
+                  type:"rotate"
+                  maxRotation:90
+                  rotationAttribute:"MOCK_ROTATION"
+                ]),
                 cost:2
               )
             )
-            test("Returns action object with asset id, move and turn types supplied", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 2, 2)
+            test("Returns action object with asset id, move and maneuver types supplied", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 2, 2)
               a(ret.action, m.instanceOf(mocks["lib/turncoat/Action"]))
               a(ret.action.attributes, m.allOf(
                   m.hasMember("rule","ships.actions.move")
-                  m.hasMember("turn","MOCK TURN TYPE"),
+                  m.hasMember("maneuver","MOCK TURN TYPE"),
                   m.hasMember("move","MOCK MOVE TYPE"),
                   m.hasMember("asset","MOCK ASSET ID")
                 )
               )
             )
-            test("Requested position is within maximum rotation - returns action with asset id, move type, turn type and angle delta", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 2, 1)
-              a(ret.action.get("rotation"), 45)
+            test("Requested position is within maximum rotation - returns required rotation in attribute named as specified in rotationAttribute.", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 2, 1)
+              a(ret.action.get("MOCK_ROTATION"), 45)
               a(ret.shortfall, 0)
             )
-            test("Requested position is within maximum rotation anticlockwise - returns action with asset id, move type, turn type and angle delta", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 1, 0)
-              a(ret.action.get("rotation"), -45)
+            test("Requested position is within maximum rotation anticlockwise - returns required rotation as a negative", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 1, 0)
+              a(ret.action.get("MOCK_ROTATION"), -45)
               a(ret.shortfall, 0)
             )
-            test("Requested position is outside maximum rotation - returns action with rotation at maximum rotation for turn and the shortfall in a 'shortfall' attribute", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 1, 2)
-              a(ret.action.get("rotation"), 90)
+            test("Requested position is outside maximum rotation - returns action with rotation at maximum rotation for maneuver and the shortfall in a 'shortfall' attribute", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 1, 2)
+              a(ret.action.get("MOCK_ROTATION"), 90)
               a(ret.shortfall, 45)
             )
-            test("Requested position is outside maximum rotation anticlockwise - returns action with rotation at maximum negative rotation for turn and the shortfall in a 'shortfall' attribute", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 0, 1)
-              a(ret.action.get("rotation"), -90)
+            test("Requested position is outside maximum rotation anticlockwise - returns action with rotation at maximum negative rotation for maneuver and the shortfall in a 'shortfall' attribute", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 0, 1)
+              a(ret.action.get("MOCK_ROTATION"), -90)
               a(ret.shortfall, -45)
             )
           )
-          suite("Turn has required prior move but no post move", ()->
+          suite("Turn has required prior move step but no post move step", ()->
             setup(()->
               asset.get("position").set("bearing", 90)
-              turn=  new Backbone.Model(
+              maneuver=  new Backbone.Model(
                 name:"MOCK TURN TYPE"
-                maxRotation:90,
-                beforeMove:1,
-                afterMove:0,
+                sequence:new Backbone.Collection([
+                  type:"move"
+                  distance:1
+                ,
+                  type:"rotate"
+                  maxRotation:90
+                  rotationAttribute:"MOCK_ROTATION"
+                ])
                 cost:2
               )
             )
-            test("Requested position is within maximum rotation after required move - returns action with asset id, move type, turn type and angle delta", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 3, 2)
-              a(ret.action.get("rotation"), 45)
+            test("Requested position is within maximum rotation after required move - returns action with asset id, move type, maneuver type and angle delta", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 3, 2)
+              a(ret.action.get("MOCK_ROTATION"), 45)
               a(ret.shortfall, 0)
             )
-            test("Requested position is within maximum rotation anticlockwise - returns action with asset id, move type, turn type and angle delta", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 3, 0)
-              a(ret.action.get("rotation"), -45)
+            test("Requested position is within maximum rotation anticlockwise - returns rotation required as attribute specified in rotationValueAttribute", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 3, 0)
+              a(ret.action.get("MOCK_ROTATION"), -45)
               a(ret.shortfall, 0)
             )
-            test("Requested position is outside maximum rotation - returns action with rotation at maximum rotation for turn and the shortfall in a 'shortfall' attribute", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 1, 2)
-              a(ret.action.get("rotation"), 90)
+            test("Requested position is outside maximum rotation - returns action with maximum rotation and the shortfall in a 'shortfall' attribute", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 1, 2)
+              a(ret.action.get("MOCK_ROTATION"), 90)
               a(ret.shortfall, 45)
             )
-            test("Requested position is outside maximum rotation anticlockwise - returns action with rotation at maximum negative rotation for turn and the shortfall in a 'shortfall' attribute", ()->
-              ret = rule.calculateTurnActionRequired(asset, "MOCK MOVE TYPE", turn, 1, 0)
-              a(ret.action.get("rotation"), -90)
+            test("Requested position is outside maximum rotation anticlockwise - returns action with rotation at maximum negative rotation for maneuver and the shortfall in a 'shortfall' attribute", ()->
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 1, 0)
+              a(ret.action.get("MOCK_ROTATION"), -90)
               a(ret.shortfall, -45)
             )
+            test("Starting move has direction specified - moves asset in direction specified in degrees then calculates rotation", ()->
+              maneuver.get("sequence").at(0).set("direction",-90)
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 2, 1)
+              a(ret.action.get("MOCK_ROTATION"), 45)
+              a(ret.shortfall, 0)
+            )
+            test("Maneuver has multiple move steps prior to rotation - executes them all to calculate required rotation", ()->
+              maneuver.get("sequence").unshift(
+                direction:90
+                type:"move"
+                distance:1
+              )
+              maneuver.get("sequence").unshift(
+                direction:180
+                type:"move"
+                distance:1
+              )
+              ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 2, 3)
+              a(ret.action.get("MOCK_ROTATION"), 45)
+              a(ret.shortfall, 0)
+            )
           )
+
         )
         suite("resolveAction",()->
           action = null
@@ -124,9 +184,16 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
             action = new Backbone.Model(
               asset:"MOCK ASSET ID"
               move:"MOCK MOVE TYPE"
+
+              events:new Backbone.Collection()
             )
             action.reset=jm.mockFunction()
             asset = new Backbone.Model(
+              position:new Backbone.Model(
+                bearing:0
+                x:0
+                y:0
+              )
               actions:new Backbone.Collection([
                 new Backbone.Model(
                   name:"move"
@@ -142,6 +209,22 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
             jm.when(game.searchGameStateModels)(m.func()).then((f)->
               checker = f
               [asset]
+            )
+          )
+          test("Asset has no position - throws", ()->
+            asset.unset("position")
+            a(()->
+              rule.resolveAction(action, false)
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("Asset has position missing x, y or bearing - throws", ()->
+            asset.get("position").unset("bearing")
+            a(()->
+              rule.resolveAction(action, false)
+            ,
+              m.raisesAnything()
             )
           )
           test("Resets action.", ()->
@@ -217,7 +300,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               m.raisesAnything()
             )
           )
-          test("asset located has move action but no type matching that specified in cation - throws", ()->
+          test("asset located has move action but no type matching that specified in action - throws", ()->
             asset.set("actions", new Backbone.Collection([
               name:"NOT MOVE"
               types:new Backbone.Collection([
@@ -238,24 +321,157 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
             )
           )
           suite("Asset has move action with matching type", ()->
-            suite("Turn specified in action", ()->
-              turn = null
+            suite("Maneuver specified in action", ()->
+              maneuver = null
               setup(()->
-                turn = new Backbone.Model(
+                maneuver = new Backbone.Model(
                   name:"MOCK TURN TYPE"
+                  sequence:new Backbone.Collection([
+                    type:"rotate"
+                    maxRotation:"90"
+                    rotationAttribute:"mockRotationValue"
+
+                  ])
+                  cost:2
+
                 )
-                action.set("turn", "MOCK TURN TYPE")
-                asset.get("actions").at(0).get("types").at(0).set("turns", new Backbone.Collection([
-                  turn
+                action.set("maneuver", "MOCK TURN TYPE")
+                action.set("mockRotationValue", -45)
+                asset.get("actions").at(0).get("types").at(0).set("maneuvers", new Backbone.Collection([
+                  maneuver
                 ]))
+                asset.set("position", new Backbone.Model(
+                  x:3
+                  y:5
+                  bearing:180
+                ))
               )
-              test("move type has no turns - throws", ()->
-                asset.get("actions").at(0).get("types").at(0).get("turns").reset()
+              test("move type has no maneuvers - throws", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").reset()
                 a(()->
                   rule.resolveAction(action, false)
                 ,
                   m.raisesAnything()
                 )
+              )
+              test("move type has maneuvers but none match the name specified in the action - throws", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").reset([
+                  new Backbone.Model(
+                    name:"NOT MOCK TURN TYPE"
+                    sequence:new Backbone.Collection()
+                  ),
+                  new Backbone.Model(
+                    name:"ALSO NOT MOCK TURN TYPE"
+                    sequence:new Backbone.Collection()
+                  )
+                ])
+                a(()->
+                  rule.resolveAction(action, false)
+                ,
+                  m.raisesAnything()
+                )
+              )
+              test("move type has matching maneuver but no sequence - throws", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).unset("sequence")
+                a(()->
+                  rule.resolveAction(action, false)
+                ,
+                  m.raisesAnything()
+                )
+              )
+              test("maneuver sequence has at least one step - returns event with rule as ships.actions.move, name changePosition and a position model", ()->
+                rule.resolveAction(action, false)
+                event = action.get("events").at(0)
+                a(event,  m.instanceOf(mocks["lib/turncoat/Event"]))
+                a(event.get("rule"), "ships.actions.move")
+                a(event.get("name"), "changePosition")
+                a(event.get("position"), m.instanceOf(Backbone.Model))
+
+              )
+              test("maneuver sequence has single rotation step - adds single changePosition event that rotates asset on the spot", ()->
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 1)
+                event = action.get("events").at(0)
+                a(event.get("position").get("x"), 3)
+                a(event.get("position").get("y"), 5)
+                a(event.get("position").get("bearing"), 135)
+
+              )
+              test("maneuver sequence has single rotation step but action doesn't have rotationAttribute specified in move - throws", ()->
+                action.unset("mockRotationValue")
+                a(()->
+                  rule.resolveAction(action, false)
+                ,
+                  m.raisesAnything()
+                )
+
+              )
+              test("maneuver sequence has single move without direction followed by single rotation step - adds single changePosition event that moves asset forwards by distance specified and rotates it.", ()->
+                maneuver.get("sequence").reset([
+                  type:"move"
+                  distance:1
+                ,
+                  type:"rotate"
+                  maxRotation:"90"
+                  rotationAttribute:"mockRotationValue"
+
+                ])
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 1)
+                event = action.get("events").at(0)
+                a(event.get("position").get("x"), 3)
+                a(event.get("position").get("y"), 6)
+                a(event.get("position").get("bearing"), 135)
+
+              )
+              test("maneuver sequence has single move with direction followed by single rotation step - adds single changePosition event that moves asset in direction specified by distance specified and rotates it.", ()->
+                maneuver.get("sequence").reset([
+                  type:"move"
+                  distance:1
+                  direction:180
+                ,
+                  type:"rotate"
+                  maxRotation:"90"
+                  rotationAttribute:"mockRotationValue"
+
+                ])
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 1)
+                event = action.get("events").at(0)
+                a(event.get("position").get("x"), 3)
+                a(event.get("position").get("y"), 4)
+                a(event.get("position").get("bearing"), 135)
+
+              )
+              test("maneuver sequence has several moves and rotations - applies them all to final new position", ()->
+                action.set("mockRotationValue2", 45)
+                maneuver.get("sequence").reset([
+                  type:"move"
+                  distance:3
+                  direction:-90
+                ,
+                  type:"rotate"
+                  maxRotation:90
+                  rotationAttribute:"mockRotationValue"
+                ,
+                  type:"move"
+                  distance:2
+                  direction:-45
+                ,
+                  type:"rotate"
+                  maxRotation:"90"
+                  rotationAttribute:"mockRotationValue2"
+                ,
+                  type:"move"
+                  distance:4
+                ])
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 1)
+                event = action.get("events").at(0)
+                a(event.get("position").get("x"), 8)
+                a(event.get("position").get("y"), 9)
+                a(event.get("position").get("bearing"), 180)
+
               )
             )
           )

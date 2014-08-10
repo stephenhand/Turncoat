@@ -174,7 +174,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
         model = null
         setup(()->
           mockRule =
-            calculateTurnActionRequired:jm.mockFunction()
+            calculateManeuverRequired:jm.mockFunction()
           mockRuleBook =
             lookUp:jm.mockFunction()
 
@@ -207,7 +207,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
           setup(()->
             moveType = new Backbone.Model(
               name:"MOCK MOVE TYPE"
-              turns:new Backbone.Collection([
+              maneuvers:new Backbone.Collection([
                 new Backbone.Model()
               ])
             )
@@ -227,32 +227,32 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             turn = null
             setup(()->
               turn = new Backbone.Model()
-              moveType.get("turns").reset([turn])
+              moveType.get("maneuvers").reset([turn])
             )
-            test("Queries rulebook's calculateTurnActionRequired method with ship's position, turn data and coordinates",()->
+            test("Queries rulebook's calculateManeuverRequired method with ship's position, turn data and coordinates",()->
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
-              jm.verify(mockRule.calculateTurnActionRequired)(model, turn, 1337, 666)
+              jm.verify(mockRule.calculateManeuverRequired)(model, turn, 1337, 666)
             )
             test("Returns nothing - returns nothing", ()->
-              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
+              jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
               a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), m.nil())
             )
             test("Returns no action - returns nothing", ()->
-              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+              jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
                 {}
               )
               a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), m.nil())
             )
             test("Returns action with no shortfall - returns action", ()->
               action = {}
-              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+              jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
                 action:action
               )
               a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), action)
             )
             test("Returns action with shortfall - still returns action", ()->
               action = {}
-              jm.when(mockRule.calculateTurnActionRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+              jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
                 action:action
                 shortfall:20
               )

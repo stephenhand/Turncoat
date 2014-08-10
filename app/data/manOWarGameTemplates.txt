@@ -58,47 +58,60 @@
                   {
                       "_type":"FleetAsset",
                       "actions":[
-													{
-												 		"name":"move",
-														"types":[
-															{
-																"name":"sail",
-																"rule":"ships.actions.move"
-															},
-															{
-																"name":"oars",
-                                "rule":"ships.actions.move",
-																"distance":4,
-																"modifiers":[
-																	{
-																		"condition":"NO_TURN",
-																		"modifier":2
-																	}
-																],
-																"turns":[
-																	{
-																		"maxRotation":45,
-																		"beforeMove":"SHIP_LENGTH/2",
-																		"afterMove":"2-SHIP_LENGTH/2",
-																		"cost":2
-																	},
-																	{
-																		"maxRotation":90,
-																		"beforeMove":0,
-																		"afterMove":0,
-																		"cost":2
-																	},
-																	{
-																		"maxRotation":180,
-																		"beforeMove":0,
-																		"afterMove":0,
-																		"cost":4
-																	}
-																]
-															}
-														]
-												 	}
-                      	]
+												{
+													"name":"move",
+													"types":[
+														{
+															"name":"sail",
+															"rule":"ships.actions.move"
+														},
+														{
+															"name":"oars",
+															"rule":"ships.actions.move",
+															"distance":4,
+															"modifiers":[
+																{
+																	"condition":"NO_TURN",
+																	"modifier":2
+																}
+															],
+
+															"maneuvers":[
+																{
+																	"name":"bank",
+																	"sequence":[
+																		{"type":"movement", "distance":"SHIP_LENGTH/2"},
+																		{"type":"rotation", "maxRotation":45},
+																		{"type":"movement", "distance":"2-SHIP_LENGTH/2"}
+																	],
+																	"cost":2
+																},
+																{
+																	"name":"rotate90",
+																	"sequence":[
+																		{"type":"rotation", "maxRotation":90},
+																	],
+																	"cost":2
+																},
+																{
+																	"name":"rotate180",
+																	"sequence":[
+																		{"type":"rotation", "maxRotation":180},
+																	],
+																	"cost":4
+																},
+																{
+																	"name":"backwater",
+																	"sequence":[
+																		{"type":"movement", "maxDistance":"2", "direction":180}
+																	],
+																	"cost":4
+																}
+															]
+														}
+													]
+												}
+                      ]
                       ,
                       "position":{
                           "_type":"AssetPosition",
@@ -139,23 +152,35 @@
 																	"modifier":2
 																}
 															],
-															"turns":[
+															"maneuvers":[
 																{
-																	"maxBearing":45,
-																	"minBeforeMove":"SHIP_LENGTH/2",
-																	"minAfterMove":2,
+																	"name":"bank",
+																	"sequence":[
+																		{"type":"movement", "distance":"SHIP_LENGTH/2"},
+																		{"type":"rotation", "maxRotation":45, rotationAttribute:"rotation"},
+																		{"type":"movement", "distance":"2-SHIP_LENGTH/2"}
+																	],
 																	"cost":2
 																},
 																{
-																	"maxBearing":90,
-																	"minBeforeMove":0,
-																	"minAfterMove":0,
+																	"name":"rotate90",
+																	"sequence":[
+																		{"type":"rotation", "maxRotation":90},
+																	],
 																	"cost":2
 																},
 																{
-																	"maxBearing":180,
-																	"minBeforeMove":0,
-																	"minAfterMove":0,
+																	"name":"rotate180",
+																	"sequence":[
+																		{"type":"rotation", "maxRotation":180},
+																	],
+																	"cost":4
+																},
+																{
+																	"name":"backwater",
+																	"sequence":[
+																		{"type":"movement", "maxDistance":"2", "direction":180}
+																	],
 																	"cost":4
 																}
 															]
