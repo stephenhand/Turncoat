@@ -5,8 +5,11 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
         constructor:()->
           super()
           @superSetGame = JsMockito.mockFunction()
+          @superSetAsset = JsMockito.mockFunction()
         setGame:(game)->
           @superSetGame(game)
+        setAsset:(ass)->
+          @superSetAsset(ass)
         getAsset:()->
         initialize:()->
       ret
@@ -32,6 +35,53 @@ define(["isolate!UI/board/NavigationOverlayViewModel", "matchers", "operators", 
         novm.setGame(game)
         jm.verify(game.ghost)()
         jm.verify(novm.superSetGame)(ghost)
+      )
+    )
+    suite("setAsset", ()->
+      novm = null
+      model = {}
+      setup(()->
+        novm = new NavigationOverlayViewModel()
+      )
+      test("calls parent implementation with input", ()->
+        novm.setAsset(model)
+        jm.verify(novm.superSetAsset)(model)
+      )
+      test("creates planned actions collection", ()->
+        a(novm.get("plannedActions"), m.nil())
+        novm.setAsset(model)
+        a(novm.get("plannedActions"), m.instanceOf(Backbone.Collection))
+      )
+    )
+    suite("setAction", ()->
+      novm = null
+      model = {}
+      setup(()->
+        novm = new NavigationOverlayViewModel()
+      )
+      test("sets moveType with the name of the command model provided", ()->
+        novm.setAction(new Backbone.Model(
+          name:"AN ACTION"
+        ))
+        a(novm.get("moveType"),"AN ACTION")
+      )
+      test("model has no action name - sets no move type", ()->
+        novm.setAction(new Backbone.Model())
+        a(novm.get("moveType"),m.nil())
+      )
+      test("input is not model - throws", ()->
+        a(()->
+          novm.setAction({})
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("no input - throws", ()->
+        a(()->
+          novm.setAction()
+        ,
+          m.raisesAnything()
+        )
       )
     )
     suite("updatePreview", ()->

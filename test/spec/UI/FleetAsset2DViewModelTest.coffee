@@ -223,15 +223,15 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
             jm.verify(mockRuleEntry.getActionRules)(model._root)
           )
-          suite("Model has single turn type defined", ()->
-            turn = null
+          suite("Model has single maneuver defined", ()->
+            maneuver = null
             setup(()->
-              turn = new Backbone.Model()
-              moveType.get("maneuvers").reset([turn])
+              maneuver = new Backbone.Model()
+              moveType.get("maneuvers").reset([maneuver])
             )
-            test("Queries rulebook's calculateManeuverRequired method with ship's position, turn data and coordinates",()->
+            test("Queries rulebook's calculateManeuverRequired method with ship, moveType selected, maneuver and coordinates",()->
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
-              jm.verify(mockRule.calculateManeuverRequired)(model, turn, 1337, 666)
+              jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 1337, 666)
             )
             test("Returns nothing - returns nothing", ()->
               jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)

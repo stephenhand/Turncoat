@@ -8,7 +8,10 @@ define(["underscore", "backbone", "UI/board/NominatedAssetOverlayViewModel"], (_
 
     setAsset:(id)->
       super(id)
-      @set('plannedActions', new Backbone.Collection())
+      @set("plannedActions", new Backbone.Collection())
+
+    setAction:(command)->
+      @set("moveType", command.get("name"))
 
     updatePreview:(x, y)->
       @getAsset().calculateClosestMoveAction(x,y)

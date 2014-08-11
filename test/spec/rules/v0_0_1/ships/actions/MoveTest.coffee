@@ -397,6 +397,11 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("bearing"), 135)
 
               )
+              test("maneuver sequence has single rotation step - sets no waypoints", ()->
+                rule.resolveAction(action, false)
+                a(action.get("events").at(0).get("waypoints").length, 0)
+
+              )
               test("maneuver sequence has single rotation step but action doesn't have rotationAttribute specified in move - throws", ()->
                 action.unset("mockRotationValue")
                 a(()->
@@ -443,6 +448,23 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("bearing"), 135)
 
               )
+              test("maneuver sequence has single move followed by single rotation step - sets single waypoint.", ()->
+                maneuver.get("sequence").reset([
+                  type:"move"
+                  distance:1
+                  direction:180
+                ,
+                  type:"rotate"
+                  maxRotation:"90"
+                  rotationAttribute:"mockRotationValue"
+
+                ])
+                rule.resolveAction(action, false)
+                waypoints = action.get("events").at(0).get("waypoints")
+                a(waypoints.length, 1)
+                a(waypoints.at(0).get("x"), 3)
+                a(waypoints.at(0).get("y"), 4)
+              )
               test("maneuver sequence has several moves and rotations - applies them all to final new position", ()->
                 action.set("mockRotationValue2", 45)
                 maneuver.get("sequence").reset([
@@ -472,6 +494,38 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("y"), 9)
                 a(event.get("position").get("bearing"), 180)
 
+              )
+              test("maneuver sequence has several moves and rotations - sets correct waypoints on event", ()->
+                action.set("mockRotationValue2", 45)
+                maneuver.get("sequence").reset([
+                  type:"move"
+                  distance:3
+                  direction:-90
+                ,
+                  type:"rotate"
+                  maxRotation:90
+                  rotationAttribute:"mockRotationValue"
+                ,
+                  type:"move"
+                  distance:2
+                  direction:-45
+                ,
+                  type:"rotate"
+                  maxRotation:90
+                  rotationAttribute:"mockRotationValue2"
+                ,
+                  type:"move"
+                  distance:4
+                ])
+                rule.resolveAction(action, false)
+                waypoints = action.get("events").at(0).get("waypoints")
+                a(waypoints.length, 3)
+                a(waypoints.at(0).get("x"), 6)
+                a(waypoints.at(0).get("y"), 5)
+                a(waypoints.at(1).get("x"), 8)
+                a(waypoints.at(1).get("y"), 5)
+                a(waypoints.at(2).get("x"), 8)
+                a(waypoints.at(2).get("y"), 9)
               )
             )
           )

@@ -42,6 +42,7 @@ define(["underscore", "backbone", "UI/widgets/GameBoardViewModel", "AppState","U
                 @activateOverlay(command.get("overlay"), "overlays")
                 actionOverlayModel = @get("gameBoard").get("overlays").get(command.get("overlay")).get("overlayModel")
                 actionOverlayModel.setAsset(command.get("target").get("modelId"))
+                actionOverlayModel.setAction(command)
             )
           )
 

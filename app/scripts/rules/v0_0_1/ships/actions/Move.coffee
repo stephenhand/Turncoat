@@ -50,6 +50,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       y = pos.get("y")
       bearing = pos.get("bearing")
       if action.get("maneuver")?
+        waypoints = new Backbone.Collection([])
         maneuver = move.get("maneuvers").findWhere(name:action.get("maneuver"))
 
         for step in maneuver.get("sequence").models
@@ -58,6 +59,10 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
               v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (step.get("direction") ? 0)), step.get("distance"))
               x+=v.x
               y+=v.y
+              waypoints.push(
+                x:x
+                y:y
+              )
             when "rotate"
               bearing = TransformBearings.rotateBearing(bearing, action.get(step.get("rotationAttribute")))
 
@@ -69,6 +74,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
             y:y
             bearing:bearing
           )
+          waypoints:waypoints
         ))
       else
         v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (action.get("direction") ? 0)), action.get("distance"))
