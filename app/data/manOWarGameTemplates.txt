@@ -81,7 +81,7 @@
 																	"name":"bank",
 																	"sequence":[
 																		{"type":"movement", "distance":"SHIP_LENGTH/2"},
-																		{"type":"rotation", "maxRotation":45},
+																		{"type":"rotation", "maxRotation":45, "rotationAttribute":"rotation"},
 																		{"type":"movement", "distance":"2-SHIP_LENGTH/2"}
 																	],
 																	"cost":2
@@ -89,14 +89,14 @@
 																{
 																	"name":"rotate90",
 																	"sequence":[
-																		{"type":"rotation", "maxRotation":90},
+																		{"type":"rotation", "maxRotation":90}
 																	],
 																	"cost":2
 																},
 																{
 																	"name":"rotate180",
 																	"sequence":[
-																		{"type":"rotation", "maxRotation":180},
+																		{"type":"rotation", "maxRotation":180}
 																	],
 																	"cost":4
 																},
@@ -157,7 +157,7 @@
 																	"name":"bank",
 																	"sequence":[
 																		{"type":"movement", "distance":"SHIP_LENGTH/2"},
-																		{"type":"rotation", "maxRotation":45, rotationAttribute:"rotation"},
+																		{"type":"rotation", "maxRotation":45, "rotationAttribute":"rotation"},
 																		{"type":"movement", "distance":"2-SHIP_LENGTH/2"}
 																	],
 																	"cost":2
@@ -165,14 +165,14 @@
 																{
 																	"name":"rotate90",
 																	"sequence":[
-																		{"type":"rotation", "maxRotation":90},
+																		{"type":"rotation", "maxRotation":90}
 																	],
 																	"cost":2
 																},
 																{
 																	"name":"rotate180",
 																	"sequence":[
-																		{"type":"rotation", "maxRotation":180},
+																		{"type":"rotation", "maxRotation":180}
 																	],
 																	"cost":4
 																},

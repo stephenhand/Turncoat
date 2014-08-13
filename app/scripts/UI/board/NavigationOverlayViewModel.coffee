@@ -14,7 +14,9 @@ define(["underscore", "backbone", "UI/board/NominatedAssetOverlayViewModel"], (_
       @set("moveType", command.get("name"))
 
     updatePreview:(x, y)->
-      @getAsset().calculateClosestMoveAction(x,y)
+      if !@get("moveType")? then throw new Error("moveType must be set.")
+      act = @getAsset().calculateClosestMoveAction(@get("moveType"), x,y)
+      @set("queriedAction", act)
 
 
   NavigationOverlayViewModel

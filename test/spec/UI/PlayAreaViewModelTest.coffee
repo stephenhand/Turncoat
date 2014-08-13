@@ -260,6 +260,7 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
                       when "target" then new Backbone.Model(modelId:"MOCK SHIP ID")
                 aovm =
                   setAsset : jm.mockFunction()
+                  setAction: jm.mockFunction()
                 jm.when(getter)("MOCK ACTION OVERLAY").then((vw)->
                   get:(x)->
                     if x is "overlayModel" then aovm
@@ -284,6 +285,10 @@ define(["isolate!UI/PlayAreaViewModel", "matchers", "operators", "assertThat", "
               test("Activation adds overlay to collection correctly - setAsset is then called on overlay", ()->
                 selectedCommandListener.call(pavm, {}, command)
                 jm.verify(aovm.setAsset)("MOCK SHIP ID")
+              )
+              test("Activation adds overlay to collection correctly - setAction is then called on overlay with command", ()->
+                selectedCommandListener.call(pavm, {}, command)
+                jm.verify(aovm.setAction)(command)
               )
               test("Activation fails to add overlay to collection correctly - throws", ()->
                 jm.when(getter)("MOCK ACTION OVERLAY").then((vw)->

@@ -93,10 +93,20 @@ define(["isolate!UI/board/NavigationOverlayViewModel", "matchers", "operators", 
         nominated.calculateClosestMoveAction = jm.mockFunction()
         novm.getAsset = jm.mockFunction()
         jm.when(novm.getAsset)().then(()->nominated)
+        novm.set("moveType", "MOCK MOVE TYPE")
       )
-      test("Calls calculateClosestMoveAction on move rule with nominatedAsset, with coordinates", ()->
+      test("Calls calculateClosestMoveAction on move rule with nominatedAsset, with moveType and coordinates", ()->
         novm.updatePreview(1337, 666)
-        jm.verify(nominated.calculateClosestMoveAction)(1337, 666)
+        jm.verify(nominated.calculateClosestMoveAction)("MOCK MOVE TYPE", 1337, 666)
+      )
+      test("no move type - throws", ()->
+        novm.unset("moveType")
+        jm.when(novm.getAsset)().then(()->)
+        a(()->
+          novm.updatePreview(1337, 666)
+        ,
+          m.raisesAnything()
+        )
       )
       test("no nominated asset - throws", ()->
         jm.when(novm.getAsset)().then(()->)
