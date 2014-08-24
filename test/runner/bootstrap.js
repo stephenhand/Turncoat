@@ -92,7 +92,8 @@ require(["isolate","configureIsolate"], function(Isolate){
 
 require(["vendor/log4javascript_uncompressed","spec/AppHostTest",
     "spec/AppStateTest",
-    "spec/UI/RivetsExtensionsTest",
+    "spec/UI/rivets/BindersTest",
+		"spec/UI/rivets/FormattersTest",
     "spec/UI/rivets/binders/FeedItemTest",
     "spec/UI/rivets/AdapterTest",
     "spec/UI/routing/RouteTest",

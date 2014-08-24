@@ -72,7 +72,8 @@ require([
 require(['AppHost',
          'backbone',
          'state/ManOWarGameState',
-         'UI/RivetsExtensions'
+         'UI/rivets/Binders',
+			   'UI/rivets/Formatters'
 ], function(AppHost, backbone,  state, rivetsExt) {
   // use app here
 
