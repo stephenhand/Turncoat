@@ -8,7 +8,7 @@ require.config({
     jqModal: 'vendor/jqModal',
     underscore: 'vendor/underscore',
     backbone: 'vendor/backbone',
-    rivets: 'vendor/rivets-0.5.13',
+    rivets: 'vendor/rivets-0.6.9',
     text: 'vendor/text',
     uuid:'vendor/uuid',
     sprintf: 'vendor/sprintf',
@@ -67,7 +67,7 @@ require([
   config = JSON.parse(configText)
   Factory.setDefaultMarshaller(config.defaultMarshaller);
   Factory.setDefaultPersister(config.defaultPersister);
-   Factory.setDefaultTransport(config.defaultTransport)
+  Factory.setDefaultTransport(config.defaultTransport)
 });
 require(['AppHost',
          'backbone',

@@ -14,13 +14,13 @@
     </g>
     <g class="play-area-layer" id="sceneryLayer"></g>
     <g class="play-area-layer" id="UIUnderlayLayer">
-        <g data-rv-each-underlay=".gameBoard.underlays" class="play-area-layer underlay" data-rv-id="underlay.id"></g>
+        <g rv-each-underlay=".gameBoard.underlays" class="play-area-layer underlay" rv-id="underlay.id"></g>
     </g>
     <g class="play-area-layer" id="shipsLayer">
-        <rect data-rv-each-ship=".gameBoard.ships" data-rv-id="ship.UUID" data-rv-height="ship.length" data-rv-width="ship.width" data-rv-class="ship.classList" data-rv-x="ship | centroid xpx width" data-rv-y="ship | centroid ypx length" data-rv-style_transform="ship.transformDegrees | rotateCss"></rect>
+        <rect rv-each-ship=".gameBoard.ships" rv-id="ship.UUID" rv-height="ship.length" rv-width="ship.width" rv-class="ship.classList" rv-x="ship | centroid xpx width" rv-y="ship | centroid ypx length" rv-style_transform="ship.transformDegrees | rotateCss"></rect>
     </g>
     <g class="play-area-layer" id="flyersLayer"></g>
     <g class="play-area-layer" id="UIOverlayLayer">
-        <g data-rv-each-overlay=".gameBoard.overlays" class="play-area-layer overlay" data-rv-id="overlay.id"></g>
+        <g rv-each-overlay=".gameBoard.overlays" class="play-area-layer overlay" rv-id="overlay.id"></g>
     </g>
 </svg>

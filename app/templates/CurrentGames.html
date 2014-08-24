@@ -1,24 +1,24 @@
-<div data-rv-class-right-panel-open=".selectedGame">
+<div rv-class-right-panel-open=".selectedGame">
     <div class="list-view left-panel panel-list">
-        <div data-rv-feeditem-game-id=".games" data-rv-id="game.id" class="list-item animatable" data-rv-class-selected="game.selected" data-rv-class-new="game.new" data-rv-style_top="game.ordinal | multiplier 70 %spx">
-            <div class="tag" data-rv-text="game.createdText"></div><span class="info-panel large" data-rv-text="game.label"></span><br/> <span class="list-comment" data-rv-text="game.statusText"></span>
+        <div rv-feeditem-game-id="games" rv-id="game.id" class="list-item animatable" rv-class-selected="game.selected" rv-class-new="game.new" rv-style_top="game.ordinal | multiplier 70 %spx">
+            <div class="tag" rv-text="game.createdText"></div><span class="info-panel large" rv-text="game.label"></span><br/> <span class="list-comment" rv-text="game.statusText"></span>
         </div>
     </div>
-    <div class="list-view right-panel" data-rv-class-current-user-controlling=".isCurrentUserControlling">
+    <div class="list-view right-panel" rv-class-current-user-controlling=".isCurrentUserControlling">
         <div class="current-game">
             <div class="scenario-info">
-                <span class="heading" data-rv-text=".selectedGame.label < .selectedGame"></span><br/>
+                <span class="heading" rv-text=".selectedGame.label < .selectedGame"></span><br/>
             </div>
             <div class="player-selection">
                 <span class="large">Player Roster: </span>
 
-                <div data-rv-each-player=".playerList < .selectedGame .playerList" class="list-item" data-rv-class-selected-player="player.selectedForUser">
+                <div rv-each-player=".playerList < .selectedGame .playerList" class="list-item" rv-class-selected-player="player.selectedForUser">
                     <div class="small-info-panel">
-                        <span data-rv-text="player.name" class="large" /><br/>
-                        <span data-rv-text="player.description" />
+                        <span rv-text="player.name" class="large" /><br/>
+                        <span rv-text="player.description" />
                     </div>
-                    <div class="current-turn-marker" data-rv-classappend="player.status"></div>
-                    <div class="small-user-info">Played By: <span data-rv-text="player.user.id < player.user"></span>&nbsp;<span class="selected-player-only"> (you)</span></div>
+                    <div class="current-turn-marker" rv-classappend="player.status"></div>
+                    <div class="small-user-info">Played By: <span rv-text="player.user.id < player.user"></span>&nbsp;<span class="selected-player-only"> (you)</span></div>
 
                 </div>
             </div>

@@ -1,10 +1,7 @@
 define(["backbone","rivets", "jqModal", "UI/rivets/Adapter", "UI/routing/Route", "UI/routing/Router", "AppState", "UI/ManOWarTableTopView"], (Backbone, rivets, modal, Adapter, Route, Router, AppState , ManOWarTableTopView)->
   configureRivets = ()->
-    rivets.configure(
-      prefix:"rv"
-      adapter:Adapter
-
-    )
+    rivets.adapters[':']=rivets.adapters['.']
+    rivets.adapters['.']=Adapter
 
   AppHost =
 

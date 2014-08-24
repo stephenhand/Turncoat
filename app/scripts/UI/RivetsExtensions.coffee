@@ -29,7 +29,10 @@ define(["jquery", "underscore", "backbone", "sprintf", "rivets", "lib/2D/Transfo
           vals = [input]
         else
           for attr,idx in arguments when idx>1
-            val = Rivets.config.adapter.read(input, attr)
+            path = attr.split(".")
+            val = input
+            for section in path
+              val = Rivets.adapters["."].read(val, section)
             if typeof val is "number" then vals.push(val) else throw new Error("All inputs to calc formatter must be numeric.")
 
         vals.unshift(mask)

@@ -64,7 +64,7 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
           player.set("user",
             new Backbone.Model(id:AppState.get("currentUser").get("id")))
         else
-          if player.get("selectedForUser") is true then player.unset("user")
+          if player.get("selectedForUser") is true then player.get("user").unset("id")
           player.unset("selectedForUser")
 
     validate:()->

@@ -2,9 +2,10 @@
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("rivets","AppHost", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      rivetConfig = null
       stubRivets =
         configure:JsMockito.mockFunction()
+        adapters:
+          ".":{}
         binders:{}
         formatters:{}
       stubRivets
@@ -59,106 +60,107 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
+define(["isolate!AppHost", "matchers", "operators", "assertThat","jsMockito", "verifiers"],(AppHost, m, o, a, jm, v)->
     mocks = window.mockLibrary["AppHost"]
 
     suite("AppHost", ()->
       setup(()->
-        mocks["setInterval"]=JsMockito.mockFunction()
-        mocks["rivets"].configure=JsMockito.mockFunction()
+        mocks["setInterval"]=jm.mockFunction()
+        mocks["rivets"].configure=jm.mockFunction()
       )
       suite("initialise",()->
         setup(()->
-          mocks["UI/routing/Router"].on=JsMockito.mockFunction()
-          mocks["UI/routing/Router"].setSubRoute=JsMockito.mockFunction()
-          mocks["UI/routing/Router"].getSubRoute=JsMockito.mockFunction()
-          mocks["AppState"].on = JsMockito.mockFunction()
-          mocks["AppState"].trigger = JsMockito.mockFunction()
+          mocks["UI/routing/Router"].on=jm.mockFunction()
+          mocks["UI/routing/Router"].setSubRoute=jm.mockFunction()
+          mocks["UI/routing/Router"].getSubRoute=jm.mockFunction()
+          mocks["AppState"].on = jm.mockFunction()
+          mocks["AppState"].trigger = jm.mockFunction()
         )
-        test("configuresRivetsWithAdapter", ()->
+        test("Moves default rivets dot adapter to colon", ()->
+          defaultDotAdapter = mocks["rivets"].adapters["."]
           AppHost.initialise()
-          JsMockito.verify(mocks["rivets"].configure)(JsHamcrest.Matchers.hasMember("adapter", mocks["UI/rivets/Adapter"]))
-
+          a(mocks["rivets"].adapters[":"], defaultDotAdapter)
+          a(mocks["rivets"].adapters["."], m.not(defaultDotAdapter))
         )
-        test("configuresRivetsWithPrefix", ()->
+        test("Sets dot adapter to custom adapter", ()->
           AppHost.initialise()
-          JsMockito.verify(mocks["rivets"].configure)(JsHamcrest.Matchers.hasMember("prefix", JsHamcrest.Matchers.string()))
+          a(mocks["rivets"].adapters["."], mocks["UI/rivets/Adapter"])
         )
         test("Binds to Router Navigate event", ()->
           AppHost.initialise()
-          JsMockito.verify(mocks["UI/routing/Router"].on)("navigate", JsHamcrest.Matchers.func())
+          jm.verify(mocks["UI/routing/Router"].on)("navigate", m.func())
 
         )
         test("Binds to AppState gameDataRequired event", ()->
           AppHost.initialise()
-          JsMockito.verify(mocks["AppState"].on)("gameDataRequired", JsHamcrest.Matchers.func())
+          jm.verify(mocks["AppState"].on)("gameDataRequired", m.func())
 
         )
         suite("gameDataRequired handler", ()->
           gdrHandler = null
           setup(()->
-            JsMockito.when(mocks["AppState"].on)("gameDataRequired",  JsHamcrest.Matchers.func()).then((name, h)->
+            jm.when(mocks["AppState"].on)("gameDataRequired",  m.func()).then((name, h)->
               gdrHandler = h
             )
             AppHost.initialise()
           )
           test("Router already has administration dialog subRoute - does nothing", ()->
-            JsMockito.when(mocks["UI/routing/Router"].getSubRoute)("administrationDialogue").then(()->
+            jm.when(mocks["UI/routing/Router"].getSubRoute)("administrationDialogue").then(()->
               {}
             )
             gdrHandler()
-            JsMockito.verify(mocks["UI/routing/Router"].setSubRoute, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.anything())
+            jm.verify(mocks["UI/routing/Router"].setSubRoute, v.never())(m.anything(), m.anything())
 
           )
           test("Router has no administration dialog subRoute - sets administrationDialogue to default", ()->
-            JsMockito.when(mocks["UI/routing/Router"].getSubRoute)("administrationDialogue").then(()->)
+            jm.when(mocks["UI/routing/Router"].getSubRoute)("administrationDialogue").then(()->)
             gdrHandler()
-            JsMockito.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", "default")
+            jm.verify(mocks["UI/routing/Router"].setSubRoute)("administrationDialogue", "default")
 
           )
         )
         suite("Router navigate handler", ()->
           handler = null
           setup(()->
-            mocks["AppState"].createGame = JsMockito.mockFunction()
-            mocks["AppState"].loadUser = JsMockito.mockFunction()
-            mocks["AppState"].trigger = JsMockito.mockFunction()
-            mocks["AppState"].activate = JsMockito.mockFunction()
+            mocks["AppState"].createGame = jm.mockFunction()
+            mocks["AppState"].loadUser = jm.mockFunction()
+            mocks["AppState"].trigger = jm.mockFunction()
+            mocks["AppState"].activate = jm.mockFunction()
 
-            JsMockito.when(mocks["AppState"].createGame)().then(()->
+            jm.when(mocks["AppState"].createGame)().then(()->
               @game =
                 get:(key)->
                   if key is "state" then {}
                   undefined
             )
-            AppHost.trigger = JsMockito.mockFunction()
-            JsMockito.when(mocks["UI/routing/Router"].on)("navigate", JsHamcrest.Matchers.func()).then((name, h)-> handler = h)
+            AppHost.trigger = jm.mockFunction()
+            jm.when(mocks["UI/routing/Router"].on)("navigate", m.func()).then((name, h)-> handler = h)
             AppHost.initialise()
           )
           suite("No first (player) part", ()->
             test("triggersUserDataRequired", ()->
               handler(parts:[])
-              JsMockito.verify(mocks.AppState.trigger)("userDataRequired")
+              jm.verify(mocks.AppState.trigger)("userDataRequired")
             )
 
           )
           suite("First part but no second (game) part", ()->
             test("Loads player", ()->
               handler(parts:["MOCK_USER"])
-              JsMockito.verify(mocks.AppState.loadUser)("MOCK_USER")
+              jm.verify(mocks.AppState.loadUser)("MOCK_USER")
             )
             suite("No rootView set", ()->
               test("Calls render", ()->
                 r = AppHost.render
                 try
                   AppHost.rootView = undefined
-                  AppHost.render = JsMockito.mockFunction()
-                  JsMockito.when(AppHost.render)().then(()->
+                  AppHost.render = jm.mockFunction()
+                  jm.when(AppHost.render)().then(()->
                     AppHost.rootView =
                       routeChanged:()->
                   )
                   handler(parts:["MOCK_USER"])
-                  JsMockito.verify(AppHost.render)()
+                  jm.verify(AppHost.render)()
                 finally
                   AppHost.render = r
               )
@@ -166,17 +168,17 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
               test("Activates AppState", ()->
                 AppHost.rootView = undefined
                 AppHost.launch("MOCK_USER","MOCK_GAME")
-                JsMockito.verify(mocks.AppState.activate)()
+                jm.verify(mocks.AppState.activate)()
               )
             )
             test("Passes route down to rootView routeChanged", ()->
-              AppHost.rootView.routeChanged = JsMockito.mockFunction()
+              AppHost.rootView.routeChanged = jm.mockFunction()
               r =
                 parts:["MOCK_USER"]
                 subRoutes:
                   administrationDialogue:{}
               handler(r)
-              JsMockito.verify(AppHost.rootView.routeChanged)(r)
+              jm.verify(AppHost.rootView.routeChanged)(r)
 
             )
 
@@ -184,7 +186,7 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
           suite("First (player) and second (game) parts", ()->
             test("withPlayerAndGameId_createsGameFromState", ()->
               handler(parts:["MOCK_USER","MOCK_GAME"])
-              JsMockito.verify(mocks.AppState.createGame)()
+              jm.verify(mocks.AppState.createGame)()
             )
           )
 
@@ -195,12 +197,12 @@ define(["isolate!AppHost", "backbone"],(AppHost, Backbone)->
         test("setsRootViewToManOWarTableTopView", ()->
           AppHost.initialise()
           AppHost.render()
-          chai.assert.equal(AppHost.rootView.mockId, "MOCK_MANOWARTABLETOPVIEW")
+          a(AppHost.rootView.mockId, "MOCK_MANOWARTABLETOPVIEW")
         )
         test("callsRenderOnRootView", ()->
           AppHost.initialise()
           AppHost.render()
-          JsMockito.verify(AppHost.rootView.render)()
+          jm.verify(AppHost.rootView.render)()
         )
       )
     )

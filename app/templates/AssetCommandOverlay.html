@@ -1,42 +1,42 @@
 
 <g>
-    <g data-rv-hide=".selectedCommand" data-rv-each-nominated=".nominatedAssets">
+    <g rv-hide=".selectedCommand" rv-each-nominated=".nominatedAssets">
 
-    <animateTransform data-rv-class="nominated.UUID | sprintf %s-animate-show" restart="whenNotActive"
-                      attributeName="transform" attributeType="XML" type="rotate" data-rv-from="nominated | calc '300,%f,%f' xpx ypx"
-                      data-rv-to="nominated | calc '360,%f,%f' xpx ypx" dur="0.3s" fill="freeze" begin="indefinite"></animateTransform>
+    <animateTransform rv-class="nominated.UUID | sprintf %s-animate-show" restart="whenNotActive"
+                      attributeName="transform" attributeType="XML" type="rotate" rv-from="nominated | calc '300,%f,%f' xpx ypx"
+                      rv-to="nominated | calc '360,%f,%f' xpx ypx" dur="0.3s" fill="freeze" begin="indefinite"></animateTransform>
         <circle class="asset-selection-highlight"
-                data-rv-r="nominated.length | multiplier 0.8" data-rv-cx="nominated.xpx" data-rv-cy="nominated.ypx"
-                data-rv-class="nominated.classList" data-rv-asset-id="nominated.UUID" fill="transparent"
-                pointer-events="all" stroke="black" data-rv-stroke-width="nominated.length | multiplier 0.05">
-            <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
+                rv-r="nominated.length | multiplier 0.8" rv-cx="nominated.xpx" rv-cy="nominated.ypx"
+                rv-class="nominated.classList" rv-asset-id="nominated.UUID" fill="transparent"
+                pointer-events="all" stroke="black" rv-stroke-width="nominated.length | multiplier 0.05">
+            <animate rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
                      attributeType="XML"
                      attributeName="r"
                      restart="whenNotActive"
-                     data-rv-to="nominated.length | multiplier 2"
+                     rv-to="nominated.length | multiplier 2"
                      fill="freeze"
                      dur="0.3s"/>
-            <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
+            <animate rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
                      attributeType="XML"
                      attributeName="r"
                      restart="whenNotActive"
-                     data-rv-to="nominated.length | multiplier 0.8"
+                     rv-to="nominated.length | multiplier 0.8"
                      fill="freeze"
                      dur="0.3s"/>
         </circle>
 
         <circle  class="asset-selection-highlight"
-                 data-rv-r="nominated.length | multiplier 0.8" data-rv-cx="nominated.xpx" data-rv-cy="nominated.ypx"
-                 data-rv-class="nominated.classList" data-rv-asset-id="nominated.UUID" fill="transparent"
-                 pointer-events="all" stroke="black" data-rv-stroke-width="nominated.length | multiplier 0.05">
+                 rv-r="nominated.length | multiplier 0.8" rv-cx="nominated.xpx" rv-cy="nominated.ypx"
+                 rv-class="nominated.classList" rv-asset-id="nominated.UUID" fill="transparent"
+                 pointer-events="all" stroke="black" rv-stroke-width="nominated.length | multiplier 0.05">
         </circle>
-        <g data-rv-each-command=".commands" data-rv-transform="command | calc 'rotate('+((360/%f)*(%f))+','+%f+','+%f+')' _length _indexOf target.xpx target.ypx">
-            <g opacity="0" data-rv-transform="command | calc 'rotate('+(360-((360/%f)/2))+','+%f+','+%f+')' _length target.xpx target.ypx">
-                <path data-rv-title="command.label" data-rv-id="command._indexOf | sprintf commandHotspot%s" data-rv-d="command | calc 'M'+%f+','+(%f-(%f*0.8))+'A'+(%f*0.8)+','+(%f*0.8)+',0,0,1,'+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).x+%f)+','+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).y+%f)+'l'+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).x+','+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).y+'A'+(%f*2)+','+(%f*2)+',0,0,0,'+%f+','+(%f-(%f*2))+'z' target.xpx target.ypx target.length target.length target.length _length target.length target.xpx _length target.length target.ypx _length target.length _length target.length target.length target.length target.xpx target.ypx target.length"
-                      data-rv-stroke-width="nominated.length | multiplier 0.05"  fill="#DFDFDF" stroke="transparent" data-rv-on-click="command.select">
+        <g rv-each-command=".commands" rv-transform="command | calc 'rotate('+((360/%f)*(%f))+','+%f+','+%f+')' _length _indexOf target.xpx target.ypx">
+            <g opacity="0" rv-transform="command | calc 'rotate('+(360-((360/%f)/2))+','+%f+','+%f+')' _length target.xpx target.ypx">
+                <path rv-title="command.label" rv-id="command._indexOf | sprintf commandHotspot%s" rv-d="command | calc 'M'+%f+','+(%f-(%f*0.8))+'A'+(%f*0.8)+','+(%f*0.8)+',0,0,1,'+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).x+%f)+','+(bearings.bearingAndDistanceToVector((360/%f),%f*0.8).y+%f)+'l'+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).x+','+bearings.bearingAndDistanceToVector((360/%f),%f*1.2).y+'A'+(%f*2)+','+(%f*2)+',0,0,0,'+%f+','+(%f-(%f*2))+'z' target.xpx target.ypx target.length target.length target.length _length target.length target.xpx _length target.length target.ypx _length target.length _length target.length target.length target.length target.xpx target.ypx target.length"
+                      rv-stroke-width="nominated.length | multiplier 0.05"  fill="#DFDFDF" stroke="transparent" rv-on-click="command.select">
 
                 </path>
-                <animate data-rv-begin="command._indexOf | sprintf commandHotspot%s.mouseover"
+                <animate rv-begin="command._indexOf | sprintf commandHotspot%s.mouseover"
                          attributeType="XML"
                          attributeName="opacity"
                          restart="whenNotActive"
@@ -44,7 +44,7 @@
                          to="1"
                          fill="freeze"
                          dur="0.3s"/>
-                <animate data-rv-begin="command._indexOf | sprintf commandHotspot%s.mouseout"
+                <animate rv-begin="command._indexOf | sprintf commandHotspot%s.mouseout"
                          attributeType="XML"
                          attributeName="opacity"
                          restart="whenNotActive"
@@ -54,25 +54,25 @@
                          dur="0.3s"/>
             </g>
             <line
-                    data-rv-x1="command.target.xpx"
-                    data-rv-y1="command | calc %f+(%f*0.8) target.ypx target.length"
-                    data-rv-x2="command.target.xpx"
-                    data-rv-y2="command | calc %f+(%f*0.8) target.ypx target.length"
-                    data-rv-stroke-width="nominated.length | multiplier 0.05"
+                    rv-x1="command.target.xpx"
+                    rv-y1="command | calc %f+(%f*0.8) target.ypx target.length"
+                    rv-x2="command.target.xpx"
+                    rv-y2="command | calc %f+(%f*0.8) target.ypx target.length"
+                    rv-stroke-width="nominated.length | multiplier 0.05"
                     stroke="black">
 
-                <animate data-rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
+                <animate rv-class="nominated.UUID | sprintf %s-animate-show" begin="indefinite"
                          attributeType="XML"
                          attributeName="y2"
                          restart="whenNotActive"
-                         data-rv-to="command | calc %f+(%f*2) target.ypx target.length"
+                         rv-to="command | calc %f+(%f*2) target.ypx target.length"
                          fill="freeze"
                          dur="0.3s"/>
-                <animate data-rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
+                <animate rv-class="nominated.UUID | sprintf %s-animate-hide" begin="indefinite"
                          attributeType="XML"
                          attributeName="y2"
                          restart="whenNotActive"
-                         data-rv-to="command | calc %f+(%f*0.8) target.ypx target.length"
+                         rv-to="command | calc %f+(%f*0.8) target.ypx target.length"
                          fill="freeze"
                          dur="0.3s"/>
 

@@ -1,20 +1,20 @@
 
 
 <g>
-    <circle data-rv-hide="ship.nominated" class="asset-selection-highlight" data-rv-visibility="ship.friendly | toggle visible hidden"
-            data-rv-each-ship=".ships" data-rv-r="ship.length | multiplier 0.8"
-            data-rv-class="ship.classList" data-rv-cx="ship.xpx"
-            data-rv-cy="ship.ypx" fill="url(#underlight)"
-            stroke="transparent" data-rv-stroke-width="ship.length | multiplier 0.05">
+    <circle rv-hide="ship.nominated" class="asset-selection-highlight" rv-visibility="ship.friendly | toggle visible hidden"
+            rv-each-ship=".ships" rv-r="ship.length | multiplier 0.8"
+            rv-class="ship.classList" rv-cx="ship.xpx"
+            rv-cy="ship.ypx" fill="url(#underlight)"
+            stroke="transparent" rv-stroke-width="ship.length | multiplier 0.05">
 
-        <animate data-rv-id="ship.UUID | sprintf %s-animateover" data-rv-begin="ship.UUID | sprintf %shotspot.mouseover"
+        <animate rv-id="ship.UUID | sprintf %s-animateover" rv-begin="ship.UUID | sprintf %shotspot.mouseover"
                  attributeType="XML"
                  attributeName="stroke"
                  restart="whenNotActive"
                  to="black"
                  fill="freeze"
                  dur="0.3s"/>
-        <animate data-rv-id="ship.UUID | sprintf %s-animateover" data-rv-begin="ship.UUID | sprintf %shotspot.mouseout"
+        <animate rv-id="ship.UUID | sprintf %s-animateover" rv-begin="ship.UUID | sprintf %shotspot.mouseout"
                  attributeType="XML"
                  attributeName="stroke"
                  restart="whenNotActive"
@@ -23,7 +23,7 @@
                  dur="0.3s"/>
         <animate
             attributeType="CSS"
-            data-rv-begin="ship.UUID | sprintf %shotspot.mouseover"
+            rv-begin="ship.UUID | sprintf %shotspot.mouseover"
             attributeName="fill-opacity"
             restart="whenNotActive"
             dur="0.3s"
@@ -31,7 +31,7 @@
             fill="freeze"/>
         <animate
                 attributeType="CSS"
-                data-rv-begin="ship.UUID | sprintf %shotspot.mouseout"
+                rv-begin="ship.UUID | sprintf %shotspot.mouseout"
                 attributeName="fill-opacity"
                 restart="whenNotActive"
                 dur="0.3s"

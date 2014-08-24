@@ -1,31 +1,31 @@
-<div data-rv-class-right-panel-open=".selectedChallenge">
+<div rv-class-right-panel-open=".selectedChallenge">
     <div class="list-view left-panel panel-list">
-        <div data-rv-feeditem-challenge-id=".challenges" data-rv-id="challenge.id" class="list-item animatable" data-rv-class-selected="challenge.selected" data-rv-class-new="challenge.new" data-rv-style_top="challenge.ordinal | multiplier 70 %spx">
-            <div class="tag" data-rv-text="challenge.createdText"></div><span class="info-panel large" data-rv-text="challenge.label"></span><br/> <span class="list-comment" data-rv-text="challenge.statusText"></span>
+        <div rv-feeditem-challenge-id="challenges" rv-id="challenge.id" class="list-item animatable" rv-class-selected="challenge.selected" rv-class-new="challenge.new" rv-style_top="challenge.ordinal | multiplier 70 %spx">
+            <div class="tag" rv-text="challenge.createdText"></div><span class="info-panel large" rv-text="challenge.label"></span><br/> <span class="list-comment" rv-text="challenge.statusText"></span>
         </div>
     </div>
 
     <div class="list-view right-panel">
         <div class="current-game">
             <div class="scenario-info">
-                <span class="heading" data-rv-text=".selectedChallenge.label < .selectedChallenge"></span><br/>
-                <span data-rv-text=".selectedChallenge.description < .selectedChallenge"></span>
+                <span class="heading" rv-text=".selectedChallenge.label < .selectedChallenge"></span><br/>
+                <span rv-text=".selectedChallenge.description < .selectedChallenge"></span>
             </div>
             <div class="player-selection">
                 <span class="large">Player Roster: </span>
 
-                <div data-rv-each-player=".challengePlayerList < .selectedChallenge .challengePlayerList" class="list-item" data-rv-class-selected-player="player.selectedForUser">
+                <div rv-each-player=".challengePlayerList < .selectedChallenge .challengePlayerList" class="list-item" rv-class-selected-player="player.selectedForUser">
                     <div class="small-info-panel">
-                        <span data-rv-text="player.name" class="large" /><br/>
-                        <span data-rv-text="player.description" />
+                        <span rv-text="player.name" class="large" /><br/>
+                        <span rv-text="player.description" />
                     </div>
-                    <div class="challenge-response-marker" data-rv-classappend="player.user.status"><input type="button" data-rv-id="player.user.id < player.user" class="issue-challenge not-challenged-only" value="Issue"></invite></div>
-                    <div class="small-user-info">Played By: <span data-rv-text="player.user.id < player.user"></span>&nbsp;<span class="selected-player-only"> (you)</span></div>
+                    <div class="challenge-response-marker" rv-classappend="player.user.status"><input type="button" rv-id="player.user.id < player.user" class="issue-challenge not-challenged-only" value="Issue"></invite></div>
+                    <div class="small-user-info">Played By: <span rv-text="player.user.id < player.user"></span>&nbsp;<span class="selected-player-only"> (you)</span></div>
 
                 </div>
             </div>
         </div>
-        <div class="button-row" data-rv-classappend=".selectedChallengeUserStatus">
+        <div class="button-row" rv-classappend=".selectedChallengeUserStatus">
             <input type="button" class="challenged-only" id="accept-challenge" value="Accept"/>
             <input type="button" class="challenged-only" id="reject-challenge" value="Reject"/>
         </div>

@@ -4,7 +4,7 @@ define(["rivets"], (rivets)->
 
     bind: (el) ->
       unless @marker?
-        attr = ['data', @view.config.prefix, @type].join('-').replace '--', '-'
+        attr = [@view.config.prefix, @type].join('-').replace '--', '-'
         @marker = document.createComment " rivets: #{@type} "
         @iterated = []
 
@@ -16,8 +16,9 @@ define(["rivets"], (rivets)->
       view.unbind() for view in @iterated if @iterated?
 
     routine: (el, collection) ->
-      modelName = @args[0]
-      modelIdentifierAttribute = @args[1]
+      args = @args[0].split('-')
+      modelName = args[0]
+      modelIdentifierAttribute = args[1]
       collection = collection or []
       lookup = {}
 
@@ -78,10 +79,11 @@ define(["rivets"], (rivets)->
       @iterated = newIterated
 
     update: (models) ->
+      args = @args[0].split('-')
       data = {}
 
       for key, model of models
-        data[key] = model unless key is @args[0]
+        data[key] = model unless key is args[0]
 
       item.view.update data for item in @iterated
 
