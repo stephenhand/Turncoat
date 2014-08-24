@@ -15,7 +15,6 @@ define(["underscore", "backbone"], (_, Backbone)->
 
     read:(obj,keypath)->
       val = null
-      console.log(keypath)
       switch keypath
         when "_indexOf"
           if obj.collection? then val = obj.collection.indexOf(obj) else val = -1

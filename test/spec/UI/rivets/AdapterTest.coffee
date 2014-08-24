@@ -51,61 +51,40 @@ define(["isolate!UI/rivets/adapter", "matchers", "operators", "assertThat", "jsM
           )
           a(Adapter.read(mod,"MOCK_ATTRIBUTE"),"MOCK_VALUE")
         )
-        test("Backbone Collection - Reads as models", ()->
-          mod= new Backbone.Collection([
-            a:3
-          ,
-            a:5
-          ,
-            a:9
-          ])
-          a(Adapter.read(mod)[0].get("a"),3)
-          a(Adapter.read(mod)[1].get("a"),5)
-          a(Adapter.read(mod)[2].get("a"),9)
-        )
-        test("Chained Backbone Model - reads attribute", ()->
+        test("Attribute exists as direct property - uses property", ()->
           mod= new Backbone.Model(
-            MOCK_SUBMODEL:new Backbone.Model(
-              MOCK_FURTHER_SUBMODEL:new Backbone.Model(
-                MOCK_ATTRIBUTE:"MOCK_NESTED_VALUE"
-              )
-            )
+          )
+          mod.MOCK_ATTRIBUTE="MOCK_PROPERTY_VALUE"
+          a(Adapter.read(mod,"MOCK_ATTRIBUTE"),"MOCK_PROPERTY_VALUE")
+        )
+        test("Attribute exists as direct property and backbone attribute - uses property in preference", ()->
+          mod= new Backbone.Model(
             MOCK_ATTRIBUTE:"MOCK_VALUE"
           )
-          a(Adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_ATTRIBUTE"),"MOCK_NESTED_VALUE")
+          mod.MOCK_ATTRIBUTE="MOCK_PROPERTY_VALUE"
+          a(Adapter.read(mod,"MOCK_ATTRIBUTE"),"MOCK_PROPERTY_VALUE")
         )
-        test("Missing Chain Link - returns undefined", ()->
-          mod= new Backbone.Model(
-
-          )
-          a(Adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_ATTRIBUTE"), m.nil())
-        )
-        test("Chained Backbone Collection - Reads As Models", ()->
-          mod= new Backbone.Model(
-            MOCK_SUBMODEL:new Backbone.Model(
-              MOCK_FURTHER_SUBMODEL:new Backbone.Model(
-                MOCK_COLLECTION:new Backbone.Collection([
-                  a:2
-                ,
-                  a:4
-                ,
-                  a:8
-                ])
-              )
-            )
-            MOCK_ATTRIBUTE:"MOCK_VALUE"
-            MOCK_COLLECTION:new Backbone.Collection([
+        test("Attribute specified points to Backbone Collection - returns collection's models array", ()->
+          mod= new Backbone.Model(a:new Backbone.Collection([
               a:3
             ,
               a:5
             ,
               a:9
             ])
-
           )
-          a(Adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_COLLECTION")[0].get("a"),2)
-          a(Adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_COLLECTION")[1].get("a"),4)
-          a(Adapter.read(mod,"MOCK_SUBMODEL.MOCK_FURTHER_SUBMODEL.MOCK_COLLECTION")[2].get("a"),8)
+          a(Adapter.read(mod, "a"), mod.get("a").models)
+        )
+        test("Property specified points to Backbone Collection - returns collection's models array", ()->
+          mod= new Backbone.Model()
+          mod.a=new Backbone.Collection([
+            a:3
+          ,
+            a:5
+          ,
+            a:9
+          ])
+          a(Adapter.read(mod, "a"), mod.a.models)
         )
         suite("_indexOf reserved key", ()->
           test("Model has collection property - returns index of model in collection", ()->
