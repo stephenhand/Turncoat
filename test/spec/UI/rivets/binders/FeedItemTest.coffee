@@ -1,24 +1,24 @@
 
 
 
-define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem, _, rivets)->
+define(["isolate!UI/rivets/binders/FeedItem", "matchers", "operators", "assertThat", "jsMockito", "verifiers", "underscore", "rivets"], (FeedItem, m, o, a, jm, v, _, rivets)->
   class FakeRivetsView
     constructor:(@template, @data, @options)->
       @template.withData = data
       @template.view = @
       @els=[template]
-      @bind=JsMockito.mockFunction()
-      @unbind=JsMockito.mockFunction()
-      @update=JsMockito.mockFunction()
+      @bind=jm.mockFunction()
+      @unbind=jm.mockFunction()
+      @update=jm.mockFunction()
 
 
 
   class FakeDOMElement
     constructor:(stuff)->
       _.extend(@, stuff)
-    removeChild:JsMockito.mockFunction()
-    insertBefore:JsMockito.mockFunction()
-    removeAttribute:JsMockito.mockFunction()
+    removeChild:jm.mockFunction()
+    insertBefore:jm.mockFunction()
+    removeAttribute:jm.mockFunction()
     cloneNode:(deep)->
       if deep then new FakeDOMElement(fromCloneNodeDeep:@) else new FakeDOMElement(fromCloneNodeShallow:@)
 
@@ -37,9 +37,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           View:FakeRivetsView
         fi = new FeedItem()
         fi.args=[
-          "MOCK_ITEM_TYPE"
-        ,
-          "MOCK_ATTRIBUTE"
+          "MOCK_ITEM_TYPE-MOCK_ATTRIBUTE"
         ]
         fi.view = new FakeRivetsView({},{},{})
         fi.view.options =
@@ -81,8 +79,8 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
     suite("routine", ()->
       setup(()->
 
-        fi.marker.parentNode.removeChild = JsMockito.mockFunction()
-        fi.marker.parentNode.insertBefore = JsMockito.mockFunction()
+        fi.marker.parentNode.removeChild = jm.mockFunction()
+        fi.marker.parentNode.insertBefore = jm.mockFunction()
       )
       test("withoutBindingFirst_throws", ()->
         #reinitialise test binder without binding or setting marker
@@ -99,29 +97,31 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           config:
             prop1:'A'
             prop2:'B'
-        chai.assert.throws(()->
+        a(()->
           fi.routine(el,[
             MOCK_ATTRIBUTE:"MOCK_VAL1"
           ,
             MOCK_ATTRIBUTE:"MOCK_VAL2"
 
           ])
+        ,
+          m.raisesAnything()
         )
       )
       test("emptyExistingEmptyNew_doesntChangeDOM", ()->
         fi.routine(el,[])
-        JsMockito.verify(fi.marker.parentNode.removeChild, JsMockito.Verifiers.never())(
-          JsHamcrest.Matchers.anything()
+        jm.verify(fi.marker.parentNode.removeChild, v.never())(
+          m.anything()
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore, JsMockito.Verifiers.never())(
-          JsHamcrest.Matchers.anything()
+        jm.verify(fi.marker.parentNode.insertBefore, v.never())(
+          m.anything()
         ,
           fi.marker.nextSibling.nextSibling
         )
       )
       test("emptyExistingEmptyNew_LeavesIteratedEmpty", ()->
         fi.routine(el,[])
-        chai.assert.equal(0, fi.iterated.length)
+        a(0, fi.iterated.length)
       )
       test("emptyExistingPopulatedNew_createsNewElementPerModel", ()->
         fi.bind()
@@ -131,15 +131,15 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.removeChild, JsMockito.Verifiers.never())(
-          JsHamcrest.Matchers.anything()
+        jm.verify(fi.marker.parentNode.removeChild, v.never())(
+          m.anything()
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL1" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -148,12 +148,12 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL2" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -170,9 +170,9 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        chai.assert.equal(2, fi.iterated.length)
-        chai.assert.equal("MOCK_VAL1", fi.iterated[0].identifier)
-        chai.assert.equal("MOCK_VAL2", fi.iterated[1].identifier)
+        a(2, fi.iterated.length)
+        a("MOCK_VAL1", fi.iterated[0].identifier)
+        a("MOCK_VAL2", fi.iterated[1].identifier)
       )
       test("populatedExistingEmptyNew_removesAndUnbindsExistingDOM", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -185,16 +185,16 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           view:itView2
         ]
         fi.routine(el,[])
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView1.els[0]
         )
-        JsMockito.verify(itView1.unbind)()
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(itView1.unbind)()
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView2.els[0]
         )
-        JsMockito.verify(itView2.unbind)()
-        JsMockito.verify(fi.marker.parentNode.insertBefore, JsMockito.Verifiers.never())(
-          JsHamcrest.Matchers.anything()
+        jm.verify(itView2.unbind)()
+        jm.verify(fi.marker.parentNode.insertBefore, v.never())(
+          m.anything()
         ,
           fi.marker.nextSibling.nextSibling
         )
@@ -210,7 +210,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           view:itView2
         ]
         fi.routine(el,[])
-        chai.assert.equal(0, fi.iterated.length)
+        a(0, fi.iterated.length)
       )
       test("populatedExistingSameElementsInNew_OnlyUpdatesNoAddsRemovesOrRebinds", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -228,18 +228,18 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.removeChild, JsMockito.Verifiers.never())(
-          JsHamcrest.Matchers.anything()
+        jm.verify(fi.marker.parentNode.removeChild, v.never())(
+          m.anything()
         )
-        JsMockito.verify(itView1.unbind, JsMockito.Verifiers.never())()
-        JsMockito.verify(itView2.unbind, JsMockito.Verifiers.never())()
-        JsMockito.verify(fi.marker.parentNode.insertBefore, JsMockito.Verifiers.never())(
-          JsHamcrest.Matchers.anything()
+        jm.verify(itView1.unbind, v.never())()
+        jm.verify(itView2.unbind, v.never())()
+        jm.verify(fi.marker.parentNode.insertBefore, v.never())(
+          m.anything()
         ,
-          JsHamcrest.Matchers.anything()
+          m.anything()
         )
-        JsMockito.verify(itView1.update)(JsHamcrest.Matchers.hasMember("MOCK_ITEM_TYPE", JsHamcrest.Matchers.hasMember("MOCK_ATTRIBUTE","MOCK_VAL1")))
-        JsMockito.verify(itView2.update)(JsHamcrest.Matchers.hasMember("MOCK_ITEM_TYPE", JsHamcrest.Matchers.hasMember("MOCK_ATTRIBUTE","MOCK_VAL2")))
+        jm.verify(itView1.update)(m.hasMember("MOCK_ITEM_TYPE", m.hasMember("MOCK_ATTRIBUTE","MOCK_VAL1")))
+        jm.verify(itView2.update)(m.hasMember("MOCK_ITEM_TYPE", m.hasMember("MOCK_ATTRIBUTE","MOCK_VAL2")))
       )
       test("populatedExistingSameElementsInNew_leavesIteratedViewsTheSame", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -257,11 +257,11 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        chai.assert.equal(2, fi.iterated.length)
-        chai.assert.equal("MOCK_VAL1", fi.iterated[0].identifier)
-        chai.assert.equal("MOCK_VAL2", fi.iterated[1].identifier)
-        chai.assert.equal(itView1, fi.iterated[0].view)
-        chai.assert.equal(itView2, fi.iterated[1].view)
+        a(2, fi.iterated.length)
+        a("MOCK_VAL1", fi.iterated[0].identifier)
+        a("MOCK_VAL2", fi.iterated[1].identifier)
+        a(itView1, fi.iterated[0].view)
+        a(itView2, fi.iterated[1].view)
       )
       test("populatedExistingDifferentElementsInNew_ReplacesAndRebinds", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -279,21 +279,21 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL4"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView1.els[0]
         )
-        JsMockito.verify(itView1.unbind)()
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(itView1.unbind)()
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView2.els[0]
         )
-        JsMockito.verify(itView2.unbind)()
+        jm.verify(itView2.unbind)()
 
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL3" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -302,12 +302,12 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL4" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -315,8 +315,8 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling.nextSibling
         )
-        JsMockito.verify(itView1.update, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
-        JsMockito.verify(itView2.update, JsMockito.Verifiers.never())(JsHamcrest.Matchers.anything())
+        jm.verify(itView1.update, v.never())(m.anything())
+        jm.verify(itView2.update, v.never())(m.anything())
       )
       test("populatedExistingSameElementsInNew_leavesIteratedViewsTheSame", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -334,11 +334,11 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL4"
 
         ])
-        chai.assert.equal(2, fi.iterated.length)
-        chai.assert.equal("MOCK_VAL3", fi.iterated[0].identifier)
-        chai.assert.equal("MOCK_VAL4", fi.iterated[1].identifier)
-        chai.assert.notEqual(itView1, fi.iterated[0].view)
-        chai.assert.notEqual(itView2, fi.iterated[1].view)
+        a(2, fi.iterated.length)
+        a("MOCK_VAL3", fi.iterated[0].identifier)
+        a("MOCK_VAL4", fi.iterated[1].identifier)
+        a(itView1, m.not(fi.iterated[0].view))
+        a(itView2, m.not(fi.iterated[1].view))
       )
       test("populatedExistingPartialOverlapInNew_UpdatesExistingCreatesNewDeletesMissing", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -356,21 +356,21 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL3"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView1.els[0]
         )
-        JsMockito.verify(itView1.unbind)()
-        JsMockito.verify(fi.marker.parentNode.removeChild, JsMockito.Verifiers.never())(
+        jm.verify(itView1.unbind)()
+        jm.verify(fi.marker.parentNode.removeChild, v.never())(
           itView2.els[0]
         )
-        JsMockito.verify(itView2.unbind,JsMockito.Verifiers.never())()
+        jm.verify(itView2.unbind,v.never())()
 
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL3" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -379,7 +379,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling.nextSibling
         )
-        JsMockito.verify(itView2.update)()
+        jm.verify(itView2.update)()
       )
       test("populatedExistingPartialOverlapInNew_MakesIteratedLikeNewPreservingThoseRetained", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -397,10 +397,10 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL3"
 
         ])
-        chai.assert.equal(2, fi.iterated.length)
-        chai.assert.equal("MOCK_VAL2", fi.iterated[0].identifier)
-        chai.assert.equal("MOCK_VAL3", fi.iterated[1].identifier)
-        chai.assert.equal(itView2, fi.iterated[0].view)
+        a(2, fi.iterated.length)
+        a("MOCK_VAL2", fi.iterated[0].identifier)
+        a("MOCK_VAL3", fi.iterated[1].identifier)
+        a(itView2, fi.iterated[0].view)
       )
 
       test("populatedExistingPartialOverlapInNewWithAdditionsAndSubtractionsInMiddle_UpdatesExistingCreatesNewDeletesMissing", ()->
@@ -432,21 +432,21 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL6"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView1.els[0]
         )
-        JsMockito.verify(itView1.unbind)()
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(itView1.unbind)()
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView4.els[0]
         )
-        JsMockito.verify(itView4.unbind)()
+        jm.verify(itView4.unbind)()
 
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL3" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -455,12 +455,12 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL6" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -469,8 +469,8 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling.nextSibling.nextSibling.nextSibling
         )
-        JsMockito.verify(itView2.update)()
-        JsMockito.verify(itView5.update)()
+        jm.verify(itView2.update)()
+        jm.verify(itView5.update)()
       )
       test("populatedExistingPartialOverlapInNewWithAdditionsAndSubtractionsInMiddle_preservesUpdatedViewsInIteratedAndPreservesOrdering", ()->
         itView1 = new FakeRivetsView({b:2},{},{})
@@ -501,13 +501,13 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL6"
 
         ])
-        chai.assert.equal(4, fi.iterated.length)
-        chai.assert.equal("MOCK_VAL2", fi.iterated[0].identifier)
-        chai.assert.equal("MOCK_VAL3", fi.iterated[1].identifier)
-        chai.assert.equal("MOCK_VAL5", fi.iterated[2].identifier)
-        chai.assert.equal("MOCK_VAL6", fi.iterated[3].identifier)
-        chai.assert.equal(itView2, fi.iterated[0].view)
-        chai.assert.equal(itView5, fi.iterated[2].view)
+        a(4, fi.iterated.length)
+        a("MOCK_VAL2", fi.iterated[0].identifier)
+        a("MOCK_VAL3", fi.iterated[1].identifier)
+        a("MOCK_VAL5", fi.iterated[2].identifier)
+        a("MOCK_VAL6", fi.iterated[3].identifier)
+        a(itView2, fi.iterated[0].view)
+        a(itView5, fi.iterated[2].view)
       )
 
       test("elementsReordered_preservesElemenrtsAsEncounteredInOriginalOrderingAndRecreatesTheRest", ()->
@@ -539,21 +539,21 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL3"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView2.els[0]
         )
-        JsMockito.verify(itView2.unbind)()
-        JsMockito.verify(fi.marker.parentNode.removeChild)(
+        jm.verify(itView2.unbind)()
+        jm.verify(fi.marker.parentNode.removeChild)(
           itView4.els[0]
         )
-        JsMockito.verify(itView4.unbind)()
+        jm.verify(itView4.unbind)()
 
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL2" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -562,12 +562,12 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               if template.withData?.MOCK_ITEM_TYPE?.MOCK_ATTRIBUTE is "MOCK_VAL4" then false
               try
-                JsMockito.verify(template.view.bind)()
+                jm.verify(template.view.bind)()
                 true
               catch e
                 false
@@ -576,8 +576,8 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling.nextSibling.nextSibling
         )
-        JsMockito.verify(itView1.update)()
-        JsMockito.verify(itView3.update)()
+        jm.verify(itView1.update)()
+        jm.verify(itView3.update)()
       )
 
       test("elementsReordered_reordersAndPreservesTheSameInIteratedAsElements", ()->
@@ -609,15 +609,15 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL3"
 
         ])
-        chai.assert.equal(4, fi.iterated.length)
-        chai.assert.equal("MOCK_VAL2", fi.iterated[0].identifier)
-        chai.assert.equal("MOCK_VAL1", fi.iterated[1].identifier)
-        chai.assert.equal("MOCK_VAL4", fi.iterated[2].identifier)
-        chai.assert.equal("MOCK_VAL3", fi.iterated[3].identifier)
-        chai.assert.equal(itView1, fi.iterated[1].view)
-        chai.assert.equal(itView3, fi.iterated[3].view)
-        chai.assert.notEqual(itView2, fi.iterated[0].view)
-        chai.assert.notEqual(itView4, fi.iterated[2].view)
+        a(4, fi.iterated.length)
+        a("MOCK_VAL2", fi.iterated[0].identifier)
+        a("MOCK_VAL1", fi.iterated[1].identifier)
+        a("MOCK_VAL4", fi.iterated[2].identifier)
+        a("MOCK_VAL3", fi.iterated[3].identifier)
+        a(itView1, fi.iterated[1].view)
+        a(itView3, fi.iterated[3].view)
+        a(itView2, m.not(fi.iterated[0].view))
+        a(itView4, m.not(fi.iterated[2].view))
       )
 
       test("populatedNew_copiesConfigSettingsFromBinderViewToNewViews", ()->
@@ -628,7 +628,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.options.config.prop1 is "A" and template.view.options.config.prop2 is "B"
@@ -637,7 +637,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.options.config.prop1 is "A" and template.view.options.config.prop2 is "B"
@@ -655,7 +655,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.options.config.preloadData is true
@@ -664,7 +664,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.options.config.preloadData is true
@@ -686,7 +686,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.data.A is 1 and template.view.data.B is 2 and template.view.data.C is 3
@@ -694,7 +694,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.data.A is 1 and template.view.data.B is 2 and template.view.data.C is 3
@@ -716,7 +716,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.data.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL1"
@@ -724,7 +724,7 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
         ,
           fi.marker.nextSibling
         )
-        JsMockito.verify(fi.marker.parentNode.insertBefore)(
+        jm.verify(fi.marker.parentNode.insertBefore)(
           new JsHamcrest.SimpleMatcher(
             matches:(template)->
               template.view.data.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL2"
@@ -754,11 +754,11 @@ define(["isolate!UI/rivets/binders/FeedItem", "underscore", "rivets"], (FeedItem
           MOCK_ATTRIBUTE:"MOCK_VAL2"
 
         ])
-        JsMockito.verify(itView1.update)(new JsHamcrest.SimpleMatcher(
+        jm.verify(itView1.update)(new JsHamcrest.SimpleMatcher(
           matches:(d)->
             d.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL1" and !d.A? and !d.B? and !d.C?
         ))
-        JsMockito.verify(itView2.update)(new JsHamcrest.SimpleMatcher(
+        jm.verify(itView2.update)(new JsHamcrest.SimpleMatcher(
           matches:(d)->
             d.MOCK_ITEM_TYPE.MOCK_ATTRIBUTE is "MOCK_VAL2" and !d.A? and !d.B? and !d.C?
         ))
