@@ -29,10 +29,20 @@ define(["jquery", "underscore", "backbone", "sprintf", "rivets", "lib/2D/Transfo
           vals = [input]
         else
           for attr,idx in arguments when idx>1
-            path = attr.split(".")
+            adapter = Rivets.adapters[Rivets.config.rootInterface]
+            sectionStart = 0
+            sectionEnd = 0
             val = input
-            for section in path
-              val = Rivets.adapters["."].read(val, section)
+            currentChar = 1
+            while currentChar
+              currentChar = attr.charAt(sectionEnd)
+              if !currentChar or Rivets.adapters[currentChar]
+                if sectionStart<sectionEnd
+                  val = adapter.read(val, attr.substring(sectionStart, sectionEnd))
+                adapter = Rivets.adapters[currentChar]
+                sectionStart = sectionEnd+1
+              sectionEnd++
+
             if typeof val is "number" then vals.push(val) else throw new Error("All inputs to calc formatter must be numeric.")
 
         vals.unshift(mask)

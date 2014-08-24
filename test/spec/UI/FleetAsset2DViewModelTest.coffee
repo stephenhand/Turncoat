@@ -197,7 +197,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               )
             ])
           )
-          model._root=
+          model.getRoot=()->
             getRuleBook:()->
               mockRuleBook
           fa2dvm = new FleetAsset2DViewModel(null, model:model)
