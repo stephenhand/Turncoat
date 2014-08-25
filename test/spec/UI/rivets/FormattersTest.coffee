@@ -5,11 +5,14 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
         binders:{}
         formatters:{}
         config:
-          adapter:
+          rootInterface:'*'
+        adapters:
+          '*':
             read:JsMockito.mockFunction()
-      JsMockito.when(stubRivets.config.adapter.read)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((obj, key)->
-        obj[key]
-      )
+          '.':
+            read:JsMockito.mockFunction()
+          ':':
+            read:JsMockito.mockFunction()
 
       stubRivets
     )
@@ -98,7 +101,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
       setup(()->
         origSPF = mocks["sprintf"].func
         mocks["sprintf"].func=jm.mockFunction()
-        JsMockito.when(mocks["sprintf"].func)(m.anything(),m.anything()).then(
+        jm.when(mocks["sprintf"].func)(m.anything(),m.anything()).then(
           (a,b)->
             mask:a
             value:b
@@ -155,12 +158,30 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
         )
       )
       suite("input is not a number", ()->
+        asteriskAdapterResult = null
+        dotAdapterResult = null
+        colonAdapterResult = null
         model = null
         setup(()->
+          asteriskAdapterResult =
+            propA:12
+            propB:-16
+            propC:20.5
+          dotAdapterResult =
+            propA:112
+            propB:-116
+            propC:120.5
+          colonAdapterResult =
+            propA:212
+            propB:-216
+            propC:220.5
           model =
             propA:12
             propB:-16
             propC:20.5
+          jm.when(mocks["rivets"].adapters["*"].read)(m.anything(), m.anything()).then((m, path)->asteriskAdapterResult[path])
+          jm.when(mocks["rivets"].adapters["."].read)(m.anything(), m.anything()).then((m, path)->dotAdapterResult[path])
+          jm.when(mocks["rivets"].adapters[":"].read)(m.anything(), m.anything()).then((m, path)->colonAdapterResult[path])
 
         )
         test("No mask, returns unmodified input", ()->
@@ -177,12 +198,33 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
             Formatters.calc(model, "Math.floor(%d*3)")
           ,m.raisesAnything())
         )
-        test("Calls rivets adapter read method using input and attribute name", ()->
+        test("Calls rivets adapter read method using input and attribute name using rootInterface adapter if none specified", ()->
           Formatters.calc(model, "Math.floor(%d*3)", "propA")
-          jm.verify(mocks["rivets"].config.adapter.read)(model,"propA")
+          jm.verify(mocks["rivets"].adapters["*"].read)(model,"propA")
+        )
+        test("Calls rivets adapter read method using input and attribute name using appropriate adapter if specified", ()->
+          Formatters.calc(model, "Math.floor(%d*3)", ":propA")
+          jm.verify(mocks["rivets"].adapters[":"].read)(model,"propA")
+        )
+        test("Chains rivets adapter read calls using each value in next adapter if chain specified", ()->
+          Formatters.calc(model, "Math.floor(%d*3)", ":propA.propB*propA.propC")
+          jm.verify(mocks["rivets"].adapters[":"].read)(model,"propA")
+          jm.verify(mocks["rivets"].adapters["."].read)(212,"propB")
+          jm.verify(mocks["rivets"].adapters["*"].read)(-116,"propA")
+          jm.verify(mocks["rivets"].adapters["."].read)(12,"propC")
+        )
+        test("Keypath chains can still omit start adapter at start and use default", ()->
+          Formatters.calc(model, "Math.floor(%d*3)", "propA.propB*propC.propC")
+          jm.verify(mocks["rivets"].adapters["*"].read)(model,"propA")
+          jm.verify(mocks["rivets"].adapters["."].read)(12,"propB")
+          jm.verify(mocks["rivets"].adapters["*"].read)(-116,"propC")
+          jm.verify(mocks["rivets"].adapters["."].read)(20.5,"propC")
         )
         test("Single attribute specified, single substitution specified in mask - calculates using value as read by rivets adapter of input using attribute name", ()->
           a(Formatters.calc(model, "Math.floor(%d*3)", "propA"),36)
+        )
+        test("Uses last value in keypath chain for substitution", ()->
+          a(Formatters.calc(model, "Math.floor(%f*3)", "propA.propB*propA.propC"),361)
         )
         test("Multiple attributes specified, same number of substitutions specified in mask - calculates substituting placeholders with attributes in order parameters are spoecified", ()->
           a(Formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA"),-10)
@@ -196,27 +238,33 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           ,m.raisesAnything())
         )
         test("Any attributes are non numeric - throws", ()->
-          model.propB="THREE"
+          asteriskAdapterResult.propB="THREE"
           a(()->
             Formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA")
-          ,m.raisesAnything())
+          ,
+            m.raisesAnything()
+          )
         )
         test("Any attributes are missing - throws", ()->
           a(()->
             Formatters.calc(model, "%d+Math.sqrt(%d*3)", "notPropB", "propA")
-          ,m.raisesAnything())
+          ,
+            m.raisesAnything()
+          )
         )
         test("Any unused attributes are missing or non numeric - throws", ()->
           a(()->
             Formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "notPropB")
-          ,m.raisesAnything())
-          model.propC="THREE"
+          ,
+            m.raisesAnything()
+          )
+          asteriskAdapterResult.propC="THREE"
           a(()->
             Formatters.calc(model, "%d+Math.sqrt(%d*3)", "propB", "propA", "propC")
           ,m.raisesAnything())
         )
         test("Rivets adapter throws - throws", ()->
-          JsMockito.when(mocks["rivets"].config.adapter.read)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((obj, key)->
+          JsMockito.when(mocks["rivets"].adapters['*'].read)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((obj, key)->
             throw new Error()
           )
           a(()->
