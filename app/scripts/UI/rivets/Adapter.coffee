@@ -36,7 +36,8 @@ define(["underscore", "backbone"], (_, Backbone)->
             return val
 
     publish: (obj, keypath, value)->
-        obj.set(keypath,value)
+      console.log("PUBLISHING: "+keypath+"="+value)
+      obj.set(keypath,value)
 
 
   Adapter

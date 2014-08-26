@@ -24,11 +24,11 @@
                 </div>
                 <div class="select-box"><div class="selected-player-marker" rv-id="player.id"/></div>
                 <div class="user-info"><span class="selected-player-only">You will play this player.</span><span class="other-player-only">Select to play or send invite to <span rv-text="selectedGameSetupType.userIdentifierTitle"></span> :
-                    <input type="text" rv-name="player.id" rv-value="player.user.id"></input></span>
+                    <input type="text" rv-name="player.id" rv-value="player.user.id < selectedGameType"></input></span>
                 </div>
 
             </div>
         </div>
     </div>
-    <div class="button-row"><input type="button" id="confirm-create-game" value="Create Game & Issue Challenges"/></div>
+    <div class="button-row"><input type="button" id="confirm-create-game" value="Create Game & Issue Challenges" rv-on-click=":confirmCreateGameClicked"/></div>
 </div>

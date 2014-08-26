@@ -264,7 +264,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           ,m.raisesAnything())
         )
         test("Rivets adapter throws - throws", ()->
-          JsMockito.when(mocks["rivets"].adapters['*'].read)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((obj, key)->
+          JsMockito.when(mocks["rivets"].adapters["*"].read)(JsHamcrest.Matchers.anything(),JsHamcrest.Matchers.anything()).then((obj, key)->
             throw new Error()
           )
           a(()->

@@ -11,8 +11,9 @@ define(['underscore', 'backbone', 'UI/component/BaseView', "UI/administration/Cr
 
     events:
       'click .selected-player-marker':'selectedPlayerMarker_clicked'
-      'click #confirm-create-game':'confirmCreateGame_clicked'
-
+      'change input':'c'
+    c:(c)->
+      console.log("INPUT CHANGED: "+event.target.value)
 
     setTab:(@tabModel)->
 
@@ -20,6 +21,7 @@ define(['underscore', 'backbone', 'UI/component/BaseView', "UI/administration/Cr
       @model.selectUsersPlayer(event.target.id)
 
     confirmCreateGame_clicked:()->
+      console.log("CREATE CLICKED")
       if (@model.validate())
         @model.createGame()
 

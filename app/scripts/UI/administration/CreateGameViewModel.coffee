@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCollection', 'AppState'], (_, Backbone, sprintf, BackboneViewModelCollection, AppState)->
+define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCollection', 'AppState', 'state/Player'], (_, Backbone, sprintf, BackboneViewModelCollection, AppState, Player)->
 
   CreateGameViewModel = Backbone.Model.extend(
     initialize:()->
@@ -24,7 +24,7 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
         @selectedGameType.set("template",AppState.loadGameTemplate(@selectedGameType.get("id")))
         playerList = new Backbone.Collection(
           for player in @selectedGameType.get("template").get("players").models
-            new Backbone.Model(
+            new Player(
               id:player.get("id")
               name:player.get("name")
               description:player.get("description")
@@ -56,6 +56,15 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
         ))
       )
       @selectedGameSetupType.set("id", @gameSetupTypes.at(0)?.get("id"))
+      @confirmCreateGameClicked=()=>
+        console.log("CREATE CLICKED")
+        window.setTimeout(()=>
+          console.log("VALIDATING")
+          if (@validate())
+            @createGame()
+
+        )
+
 
     selectUsersPlayer:(id)->
       for player in @selectedGameType.get("playerList").models
@@ -83,6 +92,7 @@ define(['underscore', 'backbone', 'sprintf', 'UI/component/ObservingViewModelCol
         )
       )
       AppState.createGameFromTemplate(@selectedGameType.get("template"))
+
 
   )
 
