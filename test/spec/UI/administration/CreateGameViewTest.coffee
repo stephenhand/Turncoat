@@ -15,28 +15,28 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 )
 
 
-define(['isolate!UI/administration/CreateGameView','backbone'], (CreateGameView, Backbone)->
+define(["isolate!UI/administration/CreateGameView", "matchers", "operators", "assertThat", "jsMockito", "verifiers"], (CreateGameView, m, o, a, jm, v)->
   suite("CreateGameView", ()->
     suite("constructor", ()->
       test("setsRootSelectorIfNotSet", ()->
         cgv = new CreateGameView()
-        chai.assert.isString(cgv.rootSelector)
+        a(cgv.rootSelector, m.string())
       )
       test("setsRootSelectorToOptionIfSet", ()->
         cgv = new CreateGameView(rootSelector:"MOCK_ROOT_SELECTOR")
-        chai.assert.equal(cgv.rootSelector, "MOCK_ROOT_SELECTOR")
+        a(cgv.rootSelector, "MOCK_ROOT_SELECTOR")
       )
       test("setsTemplate", ()->
         cgv = new CreateGameView()
-        chai.assert.isString(cgv.template)
+        a(cgv.template, m.string())
       )
     )
     suite("createModel", ()->
       test("createsModel", ()->
         cgv = new CreateGameView()
         cgv.createModel()
-        chai.assert.equal(cgv.model, mockModelInstance)
-        chai.assert.isNotNull(cgv.model)
+        a(cgv.model, mockModelInstance)
+        a(cgv.model)
       )
     )
     suite("selectedPlayerMarker_clicked", ()->
@@ -47,7 +47,7 @@ define(['isolate!UI/administration/CreateGameView','backbone'], (CreateGameView,
           target:
               id:"MOCK_TARGET_ID"
         )
-        JsMockito.verify(cgv.model.selectUsersPlayer)("MOCK_TARGET_ID")
+        jm.verify(cgv.model.selectUsersPlayer)("MOCK_TARGET_ID")
       )
       test("eventTargetIdUndefined_callsModelsSelectUsersPlayerWithNothing", ()->
         cgv = new CreateGameView()
@@ -55,43 +55,25 @@ define(['isolate!UI/administration/CreateGameView','backbone'], (CreateGameView,
         cgv.selectedPlayerMarker_clicked(
           target:{}
         )
-        JsMockito.verify(cgv.model.selectUsersPlayer)(JsHamcrest.Matchers.nil())
+        jm.verify(cgv.model.selectUsersPlayer)(m.nil())
       )
       test("eventTargetUndefined_throws", ()->
         cgv = new CreateGameView()
         cgv.createModel()
-        chai.assert.throws(()->
-          cgv.selectedPlayerMarker_clicked({})
+        a(()->
+          cgv.selectedPlayerMarker_clicked()
+        ,
+          m.raisesAnything()
         )
       )
       test("eventUndefined_throws", ()->
         cgv = new CreateGameView()
         cgv.createModel()
-        chai.assert.throws(()->
+        a(()->
           cgv.selectedPlayerMarker_clicked()
+        ,
+          m.raisesAnything()
         )
-      )
-    )
-    suite("confirmCreateGame_clicked", ()->
-      test("validatesModel", ()->
-        cgv = new CreateGameView()
-        cgv.createModel()
-        cgv.confirmCreateGame_clicked()
-        JsMockito.verify(cgv.model.validate)()
-      )
-      test("validModel_callsModelCreateGame", ()->
-        cgv = new CreateGameView()
-        cgv.createModel()
-        JsMockito.when(cgv.model.validate)().then(()->true)
-        cgv.confirmCreateGame_clicked()
-        JsMockito.verify(cgv.model.createGame)()
-      )
-      test("invalidModel_neverCallsModelCreateGame", ()->
-        cgv = new CreateGameView()
-        cgv.createModel()
-        JsMockito.when(cgv.model.validate)().then(()->false)
-        cgv.confirmCreateGame_clicked()
-        JsMockito.verify(cgv.model.createGame, JsMockito.Verifiers.never())()
       )
     )
   )

@@ -73,7 +73,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
 )
 
 
-define(['isolate!UI/administration/CreateGameViewModel', "matchers", "operators", "assertThat", "jsMockito", "verifiers", 'backbone'], (CreateGameViewModel, m, o, a, jm, v, Backbone)->
+define(['isolate!UI/administration/CreateGameViewModel', "matchers", "operators", "assertThat", "jsMockito", "verifiers", "backbone"], (CreateGameViewModel, m, o, a, jm, v, Backbone)->
   mocks=window.mockLibrary['UI/administration/CreateGameViewModel']
   suite("CreateGameViewModel", ()->
     setup(()->
@@ -265,7 +265,7 @@ define(['isolate!UI/administration/CreateGameViewModel', "matchers", "operators"
         )
       )
     )
-    suite("validate", ()->
+    suite("confirmCreateGameClicked", ()->
       cgvm = null
       setup(()->
         cgvm=new CreateGameViewModel()
@@ -279,39 +279,28 @@ define(['isolate!UI/administration/CreateGameViewModel', "matchers", "operators"
           ])
         )
       )
-      test("playerHasEmptyUser_Fails",()->
+      test("Player has empty user - does nothing",()->
         cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
         cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
         cgvm.selectedGameType.get("playerList").at(2).unset("user")
-        a(cgvm.validate(), false)
+        cgvm.confirmCreateGameClicked()
+        jm.verify(mocks["AppState"].createGameFromTemplate, v.never())(m.anything())
       )
-      test("playerHasEmptyUserId_Fails",()->
+      test("playerHasEmptyUserId - does nothing",()->
         cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
         cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
         cgvm.selectedGameType.get("playerList").at(2).set("user", new Backbone.Model())
-        a(cgvm.validate(), false)
+        cgvm.confirmCreateGameClicked()
+        jm.verify(mocks["AppState"].createGameFromTemplate, v.never())(m.anything())
       )
-      test("anyPlayersHaveSameUserIds_Fails",()->
+      test("anyPlayersHaveSameUserIds - does nothing",()->
         cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
         cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
         cgvm.selectedGameType.get("playerList").at(2).set("user", new Backbone.Model(id:"AN_ID"))
-        a(cgvm.validate(), false)
+        cgvm.confirmCreateGameClicked()
+        jm.verify(mocks["AppState"].createGameFromTemplate, v.never())(m.anything())
       )
-      test("allPlayersHaveDifferentUserIds_Passes",()->
-        cgvm.selectedGameType.get("playerList").at(0).set("user", new Backbone.Model(id:"AN_ID"))
-        cgvm.selectedGameType.get("playerList").at(1).set("user", new Backbone.Model(id:"ANOTHER_ID"))
-        cgvm.selectedGameType.get("playerList").at(2).set("user", new Backbone.Model(id:"YET_ANOTHER_ID"))
-        a(cgvm.validate(), true)
-      )
-
-    )
-
-    suite("createGame", ()->
-      cgvm = null
-      setup(()->
-        cgvm=new CreateGameViewModel()
-      )
-      suite("Valid player list", ()->
+      suite("All players have different user Ids _Passes",()->
         setup(()->
           cgvm.selectedGameType =  new Backbone.Model(
             template:new Backbone.Model(
@@ -338,35 +327,37 @@ define(['isolate!UI/administration/CreateGameViewModel', "matchers", "operators"
           )
         )
         test("Creates user list at top level of game containing all users assigned to players", ()->
-          cgvm.createGame()
+          cgvm.confirmCreateGameClicked()
           jm.verify(mocks["AppState"].createGameFromTemplate)(new JsHamcrest.SimpleMatcher(
             describeTo: (d)->
               d.append("user list")
             matches:(t)->
               t.get("users").at(0).get("id") is cgvm.selectedGameType.get("playerList").at(0).get("user").get("id") &&
-              t.get("users").at(1).get("id") is cgvm.selectedGameType.get("playerList").at(1).get("user").get("id")
+                t.get("users").at(1).get("id") is cgvm.selectedGameType.get("playerList").at(1).get("user").get("id")
           ))
         )
         test("Assigns 'playerId' property to each user matching the id of the player they were assigned to", ()->
-          cgvm.createGame()
+          cgvm.confirmCreateGameClicked()
           jm.verify(mocks["AppState"].createGameFromTemplate)(new JsHamcrest.SimpleMatcher(
             describeTo: (d)->
               d.append("user list")
             matches:(t)->
               t.get("users").at(0).get("playerId") is "PLAYER2" &&
-              t.get("users").at(1).get("playerId") is "PLAYER1"
+                t.get("users").at(1).get("playerId") is "PLAYER1"
           ))
+
         )
-      )
-      test("Calls AppState CreateGame with template", ()->
-        cgvm.selectedGameType = new Backbone.Model(
-          template:new Backbone.Model(
-            players:new Backbone.Collection()
+
+        test("Calls AppState CreateGame with template", ()->
+          cgvm.selectedGameType = new Backbone.Model(
+            template:new Backbone.Model(
+              players:new Backbone.Collection()
+            )
+            playerList:new Backbone.Collection()
           )
-          playerList:new Backbone.Collection()
+          cgvm.confirmCreateGameClicked()
+          jm.verify(mocks["AppState"].createGameFromTemplate)(cgvm.selectedGameType.get("template"))
         )
-        cgvm.createGame()
-        jm.verify(mocks["AppState"].createGameFromTemplate)(cgvm.selectedGameType.get("template"))
       )
     )
   )
