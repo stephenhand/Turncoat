@@ -1,6 +1,6 @@
 define(['underscore','backbone'], (_,Backbone)->
   Action = Backbone.Model.extend(
-    initialise:(m, options)->
+    initialize:(m, options)->
       @set("events", @get("events") ? new Backbone.Collection())
     reset:()->
       @get("events").reset()

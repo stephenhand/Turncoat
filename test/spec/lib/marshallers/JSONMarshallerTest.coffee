@@ -7,11 +7,18 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       m
     )
   )
+  Isolate.mapAsFactory("lib/turncoat/GameStateModel", "lib/marshallers/JSONMarshaller", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      m=Backbone.Model.extend({})
+      m
+    )
+  )
 )
 
 
 define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "assertThat", "jsMockito",
         "verifiers",  "underscore", "backbone"], (JSONMarshaller, m, o, a, jm, v, _, Backbone)->
+  mocks = window.mockLibrary["lib/marshallers/JSONMarshaller"]
   #JSONMarshallerTest.coffee test file    
   suite("JSONMarshaller", ()->
     marshaller = {}
@@ -405,12 +412,13 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         a(ut.get, m.func())
         a(ut.attributes, m.object())
       )
-      test("Creates Backbone Model for unknown subType", ()->
+      test("Creates GameStateModel for unknown subType", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
         a(ut.data.unknownObject.set, m.func())
         a(ut.data.unknownObject.unset, m.func())
         a(ut.data.unknownObject.get, m.func())
         a(ut.data.unknownObject.attributes, m.object())
+        a(ut.data.unknownObject, m.instanceOf(mocks["lib/turncoat/GameStateModel"]))
       )
       test("calls registered vivifier for known subType", ()->
         marshaller.unmarshalState(mockMarshalledType)
@@ -422,7 +430,7 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         ))
       )
 
-      test("preservesMarshalledDataInUnknownObject1Deep", ()->
+      test("Preserves marshalled data in unknown object 1 level deep", ()->
         ut = marshaller.unmarshalState(mockMarshalledType)
         a(ut.data.unknownObject.get("propC"),4)
         a(ut.data.unknownObject.get("propD"),"valD")
@@ -582,19 +590,39 @@ define(["isolate!lib/marshallers/JSONMarshaller", "matchers", "operators", "asse
         )
 
       )
-      suite("unmarshalAction",()->
-        test("Proxies to unmarshalState", ()->
-          marshaller.unmarshalState = jm.mockFunction()
-          marshaller.unmarshalAction("A PARAMETER")
-          jm.verify(marshaller.unmarshalState)("A PARAMETER")
-        )
+    )
+    suite("unmarshalAction",()->
+
+      test("Creates Backbone Model.", ()->
+        ut = marshaller.unmarshalAction(mockMarshalledType)
+        a(ut.set, m.func())
+        a(ut.unset, m.func())
+        a(ut.get, m.func())
+        a(ut.attributes, m.object())
       )
-      suite("marshalAction",()->
-        test("Proxies to marshalState", ()->
-          marshaller.marshalState = jm.mockFunction()
-          marshaller.marshalAction("A PARAMETER")
-          jm.verify(marshaller.marshalState)("A PARAMETER")
-        )
+      test("Creates basic Backbone Model rather than GameStateModel for unknown subType", ()->
+        ut = marshaller.unmarshalAction(mockMarshalledType)
+        a(ut.data.unknownObject.set, m.func())
+        a(ut.data.unknownObject.unset, m.func())
+        a(ut.data.unknownObject.get, m.func())
+        a(ut.data.unknownObject.attributes, m.object())
+        a(ut.data.unknownObject, m.not(m.instanceOf(mocks["lib/turncoat/GameStateModel"])))
+      )
+      test("calls registered vivifier for known subType", ()->
+        ut = marshaller.unmarshalAction(mockMarshalledType)
+        jm.verify(mocks["lib/turncoat/TypeRegistry"]["MOCK_TYPE"])(new JsHamcrest.SimpleMatcher(
+          matches:(data)->
+            data._type is "MOCK_TYPE" &&
+              data.propA is "valA" &&
+              data.propB is "valB"
+        ))
+      )
+    )
+    suite("marshalAction",()->
+      test("Proxies to marshalState", ()->
+        marshaller.marshalState = jm.mockFunction()
+        marshaller.marshalAction("A PARAMETER")
+        jm.verify(marshaller.marshalState)("A PARAMETER")
       )
     )
 

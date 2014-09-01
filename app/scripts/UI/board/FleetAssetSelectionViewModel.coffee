@@ -3,7 +3,7 @@ define(["underscore", "backbone", "UI/FleetAsset2DViewModel"], (_, Backbone, Fle
     initialize:(m, options)->
       super(m, options)
       @set("classList", @get("classList")+" asset-selection-highlight")
-      @set("friendly", (options.game.getCurrentControllingPlayer() is options.model.getOwningPlayer(options.game)))
+      @set("friendly", (options.game.getCurrentControllingPlayer() is options.model.getOwningPlayer()))
 
     select:()->
 

@@ -1,4 +1,4 @@
-define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRegistry, Backbone, Factory)->
+define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory", "lib/turncoat/GameStateModel"], (TypeRegistry, Backbone, Factory, GameStateModel)->
   vivify = (rootObject, options)->
     vivifiedRoot = null
     vivifyRecursive = (dataObject)->
@@ -12,7 +12,8 @@ define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRe
         if (!(options?.ignoreTypeInfo) && dataObject._type? && TypeRegistry[dataObject._type]?)
           ret = new TypeRegistry[dataObject._type](dataObject)
         else
-          ret = new Backbone.Model(dataObject)
+          def =  options?.defaultModel ? Backbone.Model
+          ret = new def(dataObject)
       if options?.setRootLinkback and dataObject isnt rootObject then ret.getRoot = ()->
         vivifiedRoot
       ret
@@ -48,14 +49,20 @@ define(["lib/turncoat/TypeRegistry","backbone", "lib/turncoat/Factory"], (TypeRe
 
     unmarshalState:(stateString)->
       dataObject = JSON.parse(stateString)
-      vivify(dataObject, setRootLinkback:true)
+      vivify(dataObject,
+        setRootLinkback:true
+        defaultModel:GameStateModel
+      )
 
 
     marshalAction:(actionObject)->
       @marshalState(actionObject)
 
     unmarshalAction:(actionString)->
-      @unmarshalState(actionString)
+      dataObject = JSON.parse(actionString)
+      vivify(dataObject,
+        setRootLinkback:true
+      )
 
     unmarshalModel:(modelJSON)->
       pojso = JSON.parse(modelJSON)

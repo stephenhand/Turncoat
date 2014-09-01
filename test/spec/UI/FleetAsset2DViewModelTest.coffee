@@ -172,6 +172,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
         mockRule = null
         fa2dvm = null
         model = null
+        modelRoot = null
         setup(()->
           mockRule =
             calculateManeuverRequired:jm.mockFunction()
@@ -197,9 +198,11 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               )
             ])
           )
-          model.getRoot=()->
+          modelRoot =
             getRuleBook:()->
               mockRuleBook
+          model.getRoot=()->
+            modelRoot
           fa2dvm = new FleetAsset2DViewModel(null, model:model)
 
         )
@@ -222,7 +225,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
           )
           test("Gets rule from entry providing current game (retrieved from ship model)",()->
             fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
-            jm.verify(mockRuleEntry.getActionRules)(model._root)
+            jm.verify(mockRuleEntry.getActionRules)(modelRoot)
           )
           suite("Model has single maneuver defined", ()->
             maneuver = null
@@ -275,12 +278,9 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666), action)
             )
           )
-
         )
       )
     )
   )
-
-
 )
 

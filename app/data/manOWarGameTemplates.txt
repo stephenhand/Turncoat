@@ -80,30 +80,30 @@
 																{
 																	"name":"bank",
 																	"sequence":[
-																		{"type":"movement", "distance":"SHIP_LENGTH/2"},
-																		{"type":"rotation", "maxRotation":45, "rotationAttribute":"rotation"},
-																		{"type":"movement", "distance":"2-SHIP_LENGTH/2"}
+																		{"type":"move", "distance":"SHIP_LENGTH/2"},
+																		{"type":"rotate", "maxRotation":45, "rotationAttribute":"rotation"},
+																		{"type":"move", "distance":"2-SHIP_LENGTH/2"}
 																	],
 																	"cost":2
 																},
 																{
 																	"name":"rotate90",
 																	"sequence":[
-																		{"type":"rotation", "maxRotation":90}
+																		{"type":"rotate", "maxRotation":90}
 																	],
 																	"cost":2
 																},
 																{
 																	"name":"rotate180",
 																	"sequence":[
-																		{"type":"rotation", "maxRotation":180}
+																		{"type":"rotate", "maxRotation":180}
 																	],
 																	"cost":4
 																},
 																{
 																	"name":"backwater",
 																	"sequence":[
-																		{"type":"movement", "maxDistance":"2", "direction":180}
+																		{"type":"move", "maxDistance":"2", "direction":180}
 																	],
 																	"cost":4
 																}

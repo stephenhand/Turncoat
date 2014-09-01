@@ -42,7 +42,8 @@ require.config({
         crypto:[
 					"http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5",
 					"lib/cryptoStub",
-				]
+				],
+				mathjs:"http://cdnjs.cloudflare.com/ajax/libs/mathjs/0.27.0/math"
     },
     shim:{
         "jquery":{

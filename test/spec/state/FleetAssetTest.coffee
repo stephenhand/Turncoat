@@ -26,17 +26,17 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
       test("Object whose type is registered as 'Player' is part of ownership chain - returns that object", ()->
         p = new MockPlayer()
         fa.getOwnershipChain = jm.mockFunction()
-        jm.when(fa.getOwnershipChain)(m.anything()).then(()->
+        jm.when(fa.getOwnershipChain)().then(()->
           [{},{},{}, p, {}, {}]
         )
-        a(fa.getOwningPlayer({}), p)
+        a(fa.getOwningPlayer(), p)
       )
       test("No such object is part of ownership chain - returns null", ()->
         fa.getOwnershipChain = jm.mockFunction()
-        jm.when(fa.getOwnershipChain)(m.anything()).then(()->
+        jm.when(fa.getOwnershipChain)().then(()->
           [{},{},{}, {}, {}, {}]
         )
-        a(fa.getOwningPlayer({}), m.nil())
+        a(fa.getOwningPlayer(), m.nil())
       )
       test("Several such object part of ownership chain - returns first", ()->
         p1 = new MockPlayer()
@@ -44,10 +44,10 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
         p3 = new MockPlayer()
         p4 = new MockPlayer()
         fa.getOwnershipChain = jm.mockFunction()
-        jm.when(fa.getOwnershipChain)(m.anything()).then(()->
+        jm.when(fa.getOwnershipChain)().then(()->
           [{}, p3, p4, {}, p1, p2]
         )
-        a(fa.getOwningPlayer({}), p3)
+        a(fa.getOwningPlayer(), p3)
       )
     )
     suite("getAvailableActions", ()->
@@ -92,6 +92,32 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
       test("Rule entry lookup fails - throws", ()->
         jm.when(rb.lookUp)(m.string()).then(()->)
         a(fa.getAvailableActions, m.raisesAnything())
+      )
+    )
+    suite("addContext", ()->
+      fa = null
+      setup(()->
+        fa = new FleetAsset()
+      )
+      test("Called with object - adds dimensions length attribute as SHIP_LENGTH", ()->
+        fa.set("dimensions", new Backbone.Model(length:1337))
+        ctx = {}
+        fa.addContext(ctx)
+        a(ctx.SHIP_LENGTH, 1337)
+      )
+      test("Called without object - throws", ()->
+        fa.set("dimensions", new Backbone.Model(length:1337))
+        a(()->
+          fa.addContext()
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("Called when asset has no dimension - sets SHIP_LENGTH to zero", ()->
+
+        ctx = {}
+        fa.addContext(ctx)
+        a(ctx.SHIP_LENGTH, 0)
       )
     )
   )

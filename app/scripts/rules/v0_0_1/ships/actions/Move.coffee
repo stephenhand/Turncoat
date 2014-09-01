@@ -10,7 +10,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       rotateY = currentPos.get("y")
       for step in maneuver.get("sequence").models
         if step.get("type") is "move"
-          v =TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(currentPos.get("bearing"),(step.get("direction") ? 0)),step.get("distance")||0)
+          v =TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(currentPos.get("bearing"),(step.get("direction") ? 0)),step.evaluate("distance")||0)
           rotateX += v.x
           rotateY += v.y
         else if step.get("type") is "rotate"

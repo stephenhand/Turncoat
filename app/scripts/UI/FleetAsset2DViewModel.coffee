@@ -32,7 +32,7 @@ define(['underscore', 'backbone', 'crypto', 'AppState', 'UI/component/ObservingV
       @set("transformDegrees",pos.get("bearing"))
       @calculateClosestMoveAction=(moveType, x, y)->
         maneuvers = model.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType).get("maneuvers")
-        rules = model.getRoot().getRuleBook().lookUp("ships.actions.move").getActionRules(model._root)
+        rules = model.getRoot().getRuleBook().lookUp("ships.actions.move").getActionRules(model.getRoot())
         act = rules.calculateManeuverRequired(model, moveType, maneuvers.at(0), x, y)?.action
         if act? then rules.resolveAction(act, false)
         act

@@ -1,4 +1,4 @@
-define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelProcessor", "lib/turncoat/Constants", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, moment, Backbone, ModelProcessor, Constants, Factory, LogEntry, GameHeader)->
+define(["underscore", "uuid", "moment",  "backbone", "mathjs", "lib/backboneTools/ModelProcessor", "lib/turncoat/Constants", "lib/turncoat/Factory", "lib/turncoat/LogEntry", "lib/turncoat/GameHeader"], (_, UUID, moment, Backbone, mathjs, ModelProcessor, Constants, Factory, LogEntry, GameHeader)->
 
   GameStateModel = Backbone.Model.extend(
     initialize:(attributes, options)->
@@ -32,15 +32,15 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
         (model instanceof GameStateModel) and (!modelChecker? or modelChecker(model))
       )
 
-    getOwnershipChain:(root)->
+    getOwnershipChain:()->
       chain = []
-      root.searchChildren((model, r)=>
+      @getRoot().searchChildren((model, r)=>
         if model is @ or chain.length
           chain.push(model)
           r.type = ModelProcessor.ABANDONRECURSION
           true
       )
-      if (chain.length) then chain.push(root) else chain = null
+      if (chain.length) then chain.push(@getRoot()) else chain = null
       chain
 
     generateEvent:(eventName, eventData)->
@@ -68,6 +68,14 @@ define(["underscore", "uuid", "moment",  "backbone", "lib/backboneTools/ModelPro
       if allReady && userStatus? then userStatus = Constants.PLAYING_STATE
       header.set("userStatus",userStatus)
       header
+
+    evaluate:(attr)->
+      expr = @get(attr)
+      if (typeof expr is 'number') then return expr
+      context = {}
+      @addContext?(context)
+      parent.addContext(context) for parent in @getOwnershipChain() when parent.addContext?
+      mathjs.eval(expr, context)
   )
 
   generateVerifiable = (game, identifier, field, data, logAttribute)->

@@ -2,7 +2,7 @@
 
 <g>
     <g rv-each-ship=".ships">
-        <circle class="asset-selection-highlight" visibility="hidden" rv-show="ship.friendly"
+        <circle class="asset-selection-highlight" visibility="hidden" rv-if="ship.friendly"
                 rv-r="ship.length | multiplier 0.8" rv-cx="ship.xpx" rv-cy="ship.ypx"
                 rv-class="ship.classList" rv-asset-id="ship.UUID" rv-id="ship.UUID | sprintf %shotspot"
                 pointer-events="all"/>

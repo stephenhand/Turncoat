@@ -1,7 +1,7 @@
 
 
 <g>
-    <circle rv-hide="ship.nominated" class="asset-selection-highlight" rv-visibility="ship.friendly | toggle visible hidden"
+    <circle rv-hide="ship.nominated" class="asset-selection-highlight" rv-if="ship.friendly"
             rv-each-ship=".ships" rv-r="ship.length | multiplier 0.8"
             rv-class="ship.classList" rv-cx="ship.xpx"
             rv-cy="ship.ypx" fill="url(#underlight)"

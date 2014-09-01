@@ -35,7 +35,13 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
         suite("calculateManeuverRequired", ()->
           asset = null
           maneuver = null
+          mockGSM = null
           setup(()->
+            mockGSM = Backbone.Model.extend(
+              initialize:()->
+                @evaluate=jm.mockFunction()
+                jm.when(@evaluate)(m.anything()).then((x)->@get(x))
+            )
             asset = new Backbone.Model(
               id:"MOCK ASSET ID"
               position:new Backbone.Model(
@@ -44,23 +50,28 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 bearing:45
               )
             )
+            asset.evaluate = jm.mockFunction()
           )
-          test("Maneuver has no sequence - throws", ()->
+          test("Maneuver has no sequence - returns nothing", ()->
             a(rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", new Backbone.Model(
               name:"MOCK TURN TYPE"
               sequence:new Backbone.Collection([
-                type:"move"
-                distance:1
-                direction:-45
+                new mockGSM(
+                  type:"move"
+                  distance:1
+                  direction:-45
+                )
               ,
-                type:"move"
-                distance:1
+                new mockGSM(
+                  type:"move"
+                  distance:1
+                )
               ,
-                type:"move"
-                distance:1
-                direction:135
-              ,
-
+                new mockGSM(
+                  type:"move"
+                  distance:1
+                  direction:135
+                )
               ]),
               cost:2
             ), 2, 2),m.nil())
@@ -77,9 +88,11 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               maneuver=  new Backbone.Model(
                 name:"MOCK TURN TYPE"
                 sequence:new Backbone.Collection([
-                  type:"rotate"
-                  maxRotation:90
-                  rotationAttribute:"MOCK_ROTATION"
+                  new mockGSM(
+                    type:"rotate"
+                    maxRotation:90
+                    rotationAttribute:"MOCK_ROTATION"
+                  )
                 ]),
                 cost:2
               )
@@ -122,15 +135,23 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               maneuver=  new Backbone.Model(
                 name:"MOCK TURN TYPE"
                 sequence:new Backbone.Collection([
-                  type:"move"
-                  distance:1
+                  new mockGSM(
+                    type:"move"
+                    distance:1
+                  )
                 ,
-                  type:"rotate"
-                  maxRotation:90
-                  rotationAttribute:"MOCK_ROTATION"
+                  new mockGSM(
+                    type:"rotate"
+                    maxRotation:90
+                    rotationAttribute:"MOCK_ROTATION"
+                  )
                 ])
                 cost:2
               )
+            )
+            test("Evaluates distance", ()->
+              rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 3, 2)
+              jm.verify(maneuver.get("sequence").at(0).evaluate)("distance")
             )
             test("Requested position is within maximum rotation after required move - returns action with asset id, move type, maneuver type and angle delta", ()->
               ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 3, 2)
@@ -160,14 +181,18 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
             )
             test("Maneuver has multiple move steps prior to rotation - executes them all to calculate required rotation", ()->
               maneuver.get("sequence").unshift(
-                direction:90
-                type:"move"
-                distance:1
+                new mockGSM(
+                  direction:90
+                  type:"move"
+                  distance:1
+                )
               )
               maneuver.get("sequence").unshift(
-                direction:180
-                type:"move"
-                distance:1
+                new mockGSM(
+                  direction:180
+                  type:"move"
+                  distance:1
+                )
               )
               ret = rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", maneuver, 2, 3)
               a(ret.action.get("MOCK_ROTATION"), 45)
