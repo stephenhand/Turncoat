@@ -64,7 +64,7 @@ define(["isolate!lib/turncoat/GameStateModel", "matchers", "operators", "assertT
       )
     )
     suite("fromString", ()->
-      test("callsMarshallersUnmarshalState", ()->
+      test("Calls marshallers unmarshalState", ()->
 
         GameStateModel.marshaller = mockMarshaller
         GameStateModel.fromString("MOCK_MARSHALLED_OBJECT")
@@ -80,7 +80,7 @@ define(["isolate!lib/turncoat/GameStateModel", "matchers", "operators", "assertT
       )
     )
     suite("toString", ()->
-      test("callsMarshallersMarshalState", ()->
+      test("calls marshallers marshalState", ()->
         GameStateModel.marshaller = mockMarshaller
         gsm = new GameStateModel()
         gsm.toString()
@@ -317,35 +317,46 @@ define(["isolate!lib/turncoat/GameStateModel", "matchers", "operators", "assertT
       )
     )
     suite("getOwnershipChain", ()->
-      gsmImmediateChild = new GameStateModel()
-      gsmImmediateChild.attributes = {
-        child:new GameStateModel()
-      }
+      gsmImmediateChild = null
+      gsmChildTwoLevelsDeep = null
+      gsmChildThreeLevelsDeep = null
 
-      gsmChildTwoLevelsDeep = new GameStateModel()
-      gsmChildTwoLevelsDeep.attributes = {
-        child:new Backbone.Model()
-      }
-      gsmChildTwoLevelsDeep.get("child").set("child", new GameStateModel())
+      setup(()->
+        gsmImmediateChild = new GameStateModel()
+        gsmImmediateChild.attributes = {
+          child:new GameStateModel()
+        }
+        gsmImmediateChild.get("child").getRoot = ()->
+          gsmImmediateChild
+
+        gsmChildTwoLevelsDeep = new GameStateModel()
+        gsmChildTwoLevelsDeep.attributes = {
+          child:new Backbone.Model()
+        }
+        gsmChildTwoLevelsDeep.get("child").set("child", new GameStateModel())
+        gsmChildTwoLevelsDeep.get("child").get("child").getRoot = ()->
+          gsmChildTwoLevelsDeep
 
 
-      gsmChildThreeLevelsDeep = new GameStateModel()
-      gsmChildThreeLevelsDeep.attributes = {
-        child:new Backbone.Model()
-      }
-      gsmChildThreeLevelsDeep.get("child").set("child", new Backbone.Collection([
-        new GameStateModel()
-      ]))
+        gsmChildThreeLevelsDeep = new GameStateModel()
+        gsmChildThreeLevelsDeep.attributes = {
+          child:new Backbone.Model()
+        }
+        gsmChildThreeLevelsDeep.get("child").set("child", new Backbone.Collection([
+          new GameStateModel()
+        ]))
+        gsmChildThreeLevelsDeep.get("child").get("child").at(0).getRoot = ()->
+          gsmChildThreeLevelsDeep
+      )
 
-      test("directChildSpecified_getsRootAndOwner", ()->
+      test("Direct child specified - gets root and owner", ()->
         res = gsmImmediateChild.attributes.child.getOwnershipChain(gsmImmediateChild)
         a(res.length, 2)
         a(res[0] is gsmImmediateChild.get("child"))
         a(res[1] is gsmImmediateChild)
-
       )
 
-      test("twoLevelChildSpecified_getsRootIntermediateLevelAndOwner", ()->
+      test("Grandchild specified - gets root, intermediate level and owner.", ()->
         res = gsmChildTwoLevelsDeep.get("child").get("child").getOwnershipChain(gsmChildTwoLevelsDeep)
         a(res.length, 3)
         a(res[0] is gsmChildTwoLevelsDeep.get("child").get("child"))
@@ -354,7 +365,7 @@ define(["isolate!lib/turncoat/GameStateModel", "matchers", "operators", "assertT
 
       )
 
-      test("threeLevelChildWithCollectionSpecified_getsRootIntermediateLevelsAndOwner", ()->
+      test("Member of grandchild collection specified - gets root, all intermediate levels and owner", ()->
         res = gsmChildThreeLevelsDeep.get("child").get("child").at(0).getOwnershipChain(gsmChildThreeLevelsDeep)
         a(res.length, 4)
         a(res[0] is gsmChildThreeLevelsDeep.get("child").get("child").at(0))
