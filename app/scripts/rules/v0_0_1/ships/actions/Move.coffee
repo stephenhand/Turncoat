@@ -56,7 +56,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
         for step in maneuver.get("sequence").models
           switch step.get("type")
             when "move"
-              v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (step.get("direction") ? 0)), step.get("distance"))
+              v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (step.get("direction") ? 0)), step.evaluate("distance"))
               x+=v.x
               y+=v.y
               waypoints.push(

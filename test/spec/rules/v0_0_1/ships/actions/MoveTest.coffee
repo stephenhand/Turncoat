@@ -446,12 +446,28 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   rotationAttribute:"mockRotationValue"
 
                 ])
+                maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 a(action.get("events").length, 1)
                 event = action.get("events").at(0)
                 a(event.get("position").get("x"), 3)
                 a(event.get("position").get("y"), 6)
                 a(event.get("position").get("bearing"), 135)
+
+              )
+              test("moves in sequence are evaluated rather than got.", ()->
+                maneuver.get("sequence").reset([
+                  type:"move"
+                  distance:1
+                ,
+                  type:"rotate"
+                  maxRotation:"90"
+                  rotationAttribute:"mockRotationValue"
+                ])
+                maneuver.get("sequence").at(0).evaluate = jm.mockFunction()
+                jm.when(maneuver.get("sequence").at(0).evaluate)(m.anything()).then((x)->@get(x))
+                rule.resolveAction(action, false)
+                jm.verify(maneuver.get("sequence").at(0).evaluate)("distance")
 
               )
               test("maneuver sequence has single move with direction followed by single rotation step - adds single changePosition event that moves asset in direction specified by distance specified and rotates it.", ()->
@@ -465,6 +481,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   rotationAttribute:"mockRotationValue"
 
                 ])
+                maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 a(action.get("events").length, 1)
                 event = action.get("events").at(0)
@@ -484,6 +501,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   rotationAttribute:"mockRotationValue"
 
                 ])
+                maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 waypoints = action.get("events").at(0).get("waypoints")
                 a(waypoints.length, 1)
@@ -512,6 +530,9 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   type:"move"
                   distance:4
                 ])
+                maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
+                maneuver.get("sequence").at(2).evaluate = (x)->@get(x)
+                maneuver.get("sequence").at(4).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 a(action.get("events").length, 1)
                 event = action.get("events").at(0)
@@ -542,6 +563,9 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   type:"move"
                   distance:4
                 ])
+                maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
+                maneuver.get("sequence").at(2).evaluate = (x)->@get(x)
+                maneuver.get("sequence").at(4).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 waypoints = action.get("events").at(0).get("waypoints")
                 a(waypoints.length, 3)
