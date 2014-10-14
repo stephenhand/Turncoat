@@ -65,5 +65,21 @@ define(["fmod"], (fmod)->
       if val>180 then val-=360
       val
 
+    intersectionVectorOf2PointsWithBearings:(pointA, pointB)->
+      if !pointA? or !pointB? then throw new Error("2 points are required")
+      if !pointA.x? or !pointA.y? or !pointB.x? or !pointB.y? then throw new Error("x and y coordinates are required on both points")
+      if !pointA.bearing? or !pointB.bearing? then throw new Error("Bearings are required on both points")
+      betweenAB = TransformBearings.vectorToBearingAndDistance(
+        x:pointB.x - pointA.x
+        y:pointB.y - pointA.y
+      )
+      sideC = betweenAB.distance
+      angleA = Math.abs(TransformBearings.rotationBetweenBearings(pointA.bearing, betweenAB.bearing))
+      angleB = Math.abs(TransformBearings.rotationBetweenBearings(pointB.bearing, TransformBearings.rotateBearing(betweenAB.bearing, 180)))
+      angleC = 180 - angleA - angleB
+      sideB = (sideC/Math.sin(angleC*DEGREES_TO_RADIANS))*Math.sin(angleB*DEGREES_TO_RADIANS)
+      TransformBearings.bearingAndDistanceToVector(pointA.bearing, sideB)
+
+
   TransformBearings
 )

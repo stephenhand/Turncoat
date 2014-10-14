@@ -231,5 +231,211 @@ define(["isolate!lib/2D/TransformBearings", "matchers", "operators", "assertThat
         a(TransformBearings.rotationBetweenBearings(15.1, -720.2),  m.closeTo(-15.3, 0.01))
       )
     )
+    suite("intersectionVectorOf2PointsWithBearings", ()->
+      test("Either point missing - throws", ()->
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:25
+            y:30
+            bearing:45
+          ,
+            x:1
+            y:2
+          )
+        , m.raisesAnything()
+        )
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:25
+            y:30
+          ,
+            x:1
+            y:2
+            bearing:30
+          )
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("Either coordinate missing on either point - throws", ()->
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            y:30
+            bearing:45
+          ,
+            x:1
+            y:2
+            bearing:30
+          )
+        ,
+          m.raisesAnything()
+        )
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:25
+            bearing:45
+          ,
+            x:1
+            y:2
+            bearing:30
+          )
+        , m.raisesAnything()
+        )
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:25
+            y:30
+            bearing:45
+          ,
+            y:2
+            bearing:30
+          )
+        ,
+          m.raisesAnything()
+        )
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            y:30
+            bearing:45
+          ,
+            x:1
+            bearing:30
+          )
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("Bearing missing on either point - throws", ()->
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:25
+            y:30
+            bearing:45
+          ,
+            x:1
+            y:2
+          )
+        ,
+          m.raisesAnything()
+        )
+        a(()->
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:25
+            y:30
+          ,
+            x:1
+            y:2
+            bearing:30
+          )
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("Finds a correct intersection point of 2 points at simple right angles", ()->
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:0
+          y:0
+          bearing:90
+        ,
+          x:4
+          y:3
+          bearing:0
+        )
+        a(p.x, m.closeTo(4,0.01))
+        a(p.y, 0)
+      )
+
+      test("Finds a correct intersection point of 2 points at right angles at all rotations", ()->
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:5
+          y:10
+          bearing:0
+        ,
+          x:20
+          y:5
+          bearing:270
+        )
+        a(p.x, 0)
+        a(p.y, m.closeTo(-5, 0.01))
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:20
+          y:10
+          bearing:0
+        ,
+          x:5
+          y:5
+          bearing:90
+        )
+        a(p.x, 0)
+        a(p.y, m.closeTo(-5, 0.01))
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:5
+          y:5
+          bearing:180
+        ,
+          x:20
+          y:10
+          bearing:270
+        )
+        a(p.x, 0)
+        a(p.y, m.closeTo(5, 0.01))
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:20
+          y:5
+          bearing:180
+        ,
+          x:5
+          y:10
+          bearing:90
+        )
+        a(p.x, 0)
+        a(p.y, m.closeTo(5, 0.01))
+
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:5
+          y:10
+          bearing:90
+        ,
+          x:20
+          y:5
+          bearing:180
+        )
+        a(p.x, m.closeTo(15, 0.01))
+        a(p.y, 0)
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:5
+          y:5
+          bearing:90
+        ,
+          x:20
+          y:10
+          bearing:0
+        )
+        a(p.x, m.closeTo(15, 0.01))
+        a(p.y, 0)
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:20
+          y:10
+          bearing:270
+        ,
+          x:5
+          y:5
+          bearing:180
+        )
+        a(p.x, m.closeTo(-15, 0.01))
+        a(p.y, 0)
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:20
+          y:5
+          bearing:270
+        ,
+          x:5
+          y:10
+          bearing:0
+        )
+        a(p.x, m.closeTo(-15, 0.01))
+        a(p.y, 0)
+      )
+    )
   )
 )

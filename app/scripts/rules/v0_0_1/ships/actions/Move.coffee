@@ -50,7 +50,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       y = pos.get("y")
       bearing = pos.get("bearing")
       if action.get("maneuver")?
-        waypoints = new Backbone.Collection([])
+        waypoints = new Backbone.Collection([pos])
         maneuver = move.get("maneuvers").findWhere(name:action.get("maneuver"))
 
         for step in maneuver.get("sequence").models

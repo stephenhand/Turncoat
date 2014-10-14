@@ -20,6 +20,13 @@ define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_,  spr
       if (isNaN(pos)) then throw new Error("Cannot set centroid to "+posAtt+" because "+posAtt+" is "+input.get(posAtt))
       if (isNaN(posAdjust)) then throw new Error("Cannot set centroid to  "+posAtt+" attribute because  "+dimAtt+" is "+input.get(dimAtt))
       return pos-posAdjust
+
+    pathDefFromActions:(actions)->
+      if not actions instanceof Backbone.Collection then actions = new Backbone.Collection([actions])
+      pathSpec = "m 0 0"
+      #waypoints.
+      pathSpec
+
     calc:(input, mask)->
       if !mask? then return input
       vals = []

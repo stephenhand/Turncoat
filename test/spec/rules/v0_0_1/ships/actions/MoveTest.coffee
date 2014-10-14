@@ -422,9 +422,13 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("bearing"), 135)
 
               )
-              test("maneuver sequence has single rotation step - sets no waypoints", ()->
+              test("maneuver sequence has single rotation step - sets single waypoint marking start position", ()->
                 rule.resolveAction(action, false)
-                a(action.get("events").at(0).get("waypoints").length, 0)
+                waypoints = action.get("events").at(0).get("waypoints")
+                a(waypoints.length, 1)
+                a(waypoints.at(0).get("x"), 3)
+                a(waypoints.at(0).get("y"), 5)
+                a(waypoints.at(0).get("bearing"), 180)
 
               )
               test("maneuver sequence has single rotation step but action doesn't have rotationAttribute specified in move - throws", ()->
@@ -490,7 +494,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("bearing"), 135)
 
               )
-              test("maneuver sequence has single move followed by single rotation step - sets single waypoint.", ()->
+              test("maneuver sequence has single move followed by single rotation step - sets two waypoints with bearing on start.", ()->
                 maneuver.get("sequence").reset([
                   type:"move"
                   distance:1
@@ -504,9 +508,13 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 waypoints = action.get("events").at(0).get("waypoints")
-                a(waypoints.length, 1)
+                a(waypoints.length, 2)
                 a(waypoints.at(0).get("x"), 3)
-                a(waypoints.at(0).get("y"), 4)
+                a(waypoints.at(0).get("y"), 5)
+                a(waypoints.at(0).get("bearing"), 180)
+                a(waypoints.at(1).get("x"), 3)
+                a(waypoints.at(1).get("y"), 4)
+                a(waypoints.at(1).get("bearing"), m.nil())
               )
               test("maneuver sequence has several moves and rotations - applies them all to final new position", ()->
                 action.set("mockRotationValue2", 45)
@@ -541,7 +549,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("bearing"), 180)
 
               )
-              test("maneuver sequence has several moves and rotations - sets correct waypoints on event", ()->
+              test("maneuver sequence has several moves and rotations - sets correct waypoints on event, only specifying bearing at start", ()->
                 action.set("mockRotationValue2", 45)
                 maneuver.get("sequence").reset([
                   type:"move"
@@ -568,13 +576,19 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(4).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 waypoints = action.get("events").at(0).get("waypoints")
-                a(waypoints.length, 3)
-                a(waypoints.at(0).get("x"), 6)
+                a(waypoints.length, 4)
+                a(waypoints.at(0).get("x"), 3)
                 a(waypoints.at(0).get("y"), 5)
-                a(waypoints.at(1).get("x"), 8)
+                a(waypoints.at(0).get("bearing"), 180)
+                a(waypoints.at(1).get("x"), 6)
                 a(waypoints.at(1).get("y"), 5)
+                a(waypoints.at(1).get("bearing"), m.nil())
                 a(waypoints.at(2).get("x"), 8)
-                a(waypoints.at(2).get("y"), 9)
+                a(waypoints.at(2).get("y"), 5)
+                a(waypoints.at(2).get("bearing"), m.nil())
+                a(waypoints.at(3).get("x"), 8)
+                a(waypoints.at(3).get("y"), 9)
+                a(waypoints.at(3).get("bearing"), m.nil())
               )
             )
           )

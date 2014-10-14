@@ -465,6 +465,20 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           m.raisesAnything())
       )
     )
+    suite("pathDefFromActions", ()->
+      setup(()->
+
+      )
+      suite("Single Action", ()->
+        suite("Single changePosition event", ()->
+          test("No waypoints - returns non rendering placeholder",()->
+            a(Formatters.pathDefFromActions(
+              events:new Backbone.Collection()
+            ), "m 0 0")
+          )
+        )
+      )
+    )
   )
 )
 
