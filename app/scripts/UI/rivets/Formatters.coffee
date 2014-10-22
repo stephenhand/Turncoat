@@ -1,6 +1,4 @@
-
-define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_,  sprintf, Rivets, bearings)->
-
+define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_, sprintf, Rivets, TransformBearings)->
 
   Formatters =
     rotateCss:(input)->
@@ -22,9 +20,23 @@ define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_,  spr
       return pos-posAdjust
 
     pathDefFromActions:(actions)->
-      if not actions instanceof Backbone.Collection then actions = new Backbone.Collection([actions])
+      if not (actions instanceof Backbone.Collection) then actions = new Backbone.Collection([actions])
       pathSpec = "m 0 0"
-      #waypoints.
+      currentPosition = null
+      for action in actions.models when action.get("events")
+        for event in action.get("events").models when event.get("name") is "changePosition"
+          currentPosition?=event.get("waypoints")?.at(0)
+          if !currentPosition? then return pathSpec
+          centroid = TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:currentPosition.get("x")
+            y:currentPosition.get("y")
+            bearing:TransformBearings.rotateBearing(currentPosition.get("bearing"), 90)
+          ,
+            x:event.get("position").get("x")
+            y:event.get("position").get("y")
+            bearing:TransformBearings.rotateBearing(event.get("position").get("bearing"), 90)
+          )
+
       pathSpec
 
     calc:(input, mask)->

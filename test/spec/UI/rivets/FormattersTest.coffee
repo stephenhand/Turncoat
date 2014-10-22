@@ -17,6 +17,12 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
       stubRivets
     )
   )
+  Isolate.mapAsFactory("lib/2D/TransformBearings","UI/rivets/Formatters", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      intersectionVectorOf2PointsWithBearings:JsMockito.mockFunction()
+      rotateBearing:actual.rotateBearing
+    )
+  )
   Isolate.mapAsFactory("sprintf","UI/rivets/Formatters", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ret = ()->
@@ -470,11 +476,60 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
 
       )
       suite("Single Action", ()->
+        test("No events - returns non rendering placeholder",()->
+          a(Formatters.pathDefFromActions(
+            events:new Backbone.Collection([])
+          ), "m 0 0")
+        )
         suite("Single changePosition event", ()->
-          test("No waypoints - returns non rendering placeholder",()->
+          test("No waypoints in first event - returns non rendering placeholder",()->
             a(Formatters.pathDefFromActions(
-              events:new Backbone.Collection()
+              events:new Backbone.Collection([
+                name:"changePosition"
+                waypoints:new Backbone.Collection([])
+              ])
             ), "m 0 0")
+          )
+          suite("Any waypoints", ()->
+            action = null
+            setup(()->
+              action = new Backbone.Model(
+                events:new Backbone.Collection([
+                  name:"changePosition"
+                  waypoints:new Backbone.Collection([
+                    x:50
+                    y:40
+                    bearing:100
+                  ])
+                  position:new Backbone.Model(
+                    x:40
+                    y:50
+                    bearing:160
+                  )
+                ])
+              )
+              jm.when(mocks["lib/2D/TransformBearings"].intersectionVectorOf2PointsWithBearings)(m.anything(), m.anything()).then((p1,p2)->
+                x:40
+                y:40
+              )
+
+            )
+            test("attempts to find intersection of lines perpendicular to first waypoint position and event position",()->
+              a(Formatters.pathDefFromActions(action), "m 0 0")
+              jm.verify(mocks["lib/2D/TransformBearings"].intersectionVectorOf2PointsWithBearings)(
+                m.allOf(
+                  m.hasMember("x", 50),
+                  m.hasMember("y", 40),
+                  m.hasMember("bearing", 190)
+                )
+              ,
+                m.allOf(
+                  m.hasMember("x", 40),
+                  m.hasMember("y", 50),
+                  m.hasMember("bearing", 250)
+                )
+              )
+            )
           )
         )
       )

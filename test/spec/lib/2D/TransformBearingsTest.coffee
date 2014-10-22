@@ -449,6 +449,19 @@ define(["isolate!lib/2D/TransformBearings", "matchers", "operators", "assertThat
         a(p.x, m.closeTo(3.854, 0.1))
         a(p.y, m.closeTo(-2.699, 0.1))
       )
+      test("If paths diverge from their points on their bearing, extrapolate intersection point in past", ()->
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:3
+          y:3
+          bearing:(90-35)+180
+        ,
+          x:8
+          y:3
+          bearing:(270+67)-180
+        )
+        a(p.x, m.closeTo(3.854, 0.1))
+        a(p.y, m.closeTo(-2.699, 0.1))
+      )
       test("Finds halfway point between 2 head on colliding paths", ()->
         p = TransformBearings.intersectionVectorOf2PointsWithBearings(
           x:3
@@ -487,60 +500,6 @@ define(["isolate!lib/2D/TransformBearings", "matchers", "operators", "assertThat
             x:25
             y:30
             bearing:45
-          )
-        ,
-          m.raisesAnything()
-        )
-      )
-      test("Throws if paths are diverging to start with", ()->
-        a(()->
-          TransformBearings.intersectionVectorOf2PointsWithBearings(
-            x:1
-            y:1
-            bearing:315
-          ,
-            x:3
-            y:1
-            bearing:45
-          )
-        ,
-          m.raisesAnything()
-        )
-        a(()->
-          TransformBearings.intersectionVectorOf2PointsWithBearings(
-            x:1
-            y:1
-            bearing:315
-          ,
-            x:3
-            y:1
-            bearing:135
-          )
-        ,
-          m.raisesAnything()
-        )
-        a(()->
-          TransformBearings.intersectionVectorOf2PointsWithBearings(
-            x:3
-            y:1
-            bearing:45
-          ,
-            x:1
-            y:1
-            bearing:315
-          )
-        ,
-          m.raisesAnything()
-        )
-        a(()->
-          TransformBearings.intersectionVectorOf2PointsWithBearings(
-            x:3
-            y:1
-            bearing:135
-          ,
-            x:1
-            y:1
-            bearing:315
           )
         ,
           m.raisesAnything()

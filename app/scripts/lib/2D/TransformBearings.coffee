@@ -84,10 +84,14 @@ define(["fmod"], (fmod)->
       sideC = betweenAB.distance
       angleA = Math.abs(rotationBetweenBearings(pointA.bearing, betweenAB.bearing))
       angleB = Math.abs(rotationBetweenBearings(pointB.bearing, rotateBearing(betweenAB.bearing, 180)))
-      if (angleA+angleB)>180 then throw new Error("2 diverging paths will never cross.")
+      vectorBearing = pointA.bearing
+      if (angleA+angleB)>180
+        angleA = Math.abs(rotationBetweenBearings(pointA.bearing, rotateBearing(betweenAB.bearing, 180)))
+        angleB = Math.abs(rotationBetweenBearings(pointB.bearing, betweenAB.bearing))
+        vectorBearing = rotateBearing(pointA.bearing, 180)
       angleC = 180 - angleA - angleB
       sideB = (sideC/Math.sin(angleC*DEGREES_TO_RADIANS))*Math.sin(angleB*DEGREES_TO_RADIANS)
-      bearingAndDistanceToVector(pointA.bearing, sideB)
+      bearingAndDistanceToVector(vectorBearing, sideB)
 
 
   bearingAndDistanceToVector:bearingAndDistanceToVector
