@@ -17,12 +17,6 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
       stubRivets
     )
   )
-  Isolate.mapAsFactory("lib/2D/TransformBearings","UI/rivets/Formatters", (actual, modulePath, requestingModulePath)->
-    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
-      intersectionVectorOf2PointsWithBearings:JsMockito.mockFunction()
-      rotateBearing:actual.rotateBearing
-    )
-  )
   Isolate.mapAsFactory("sprintf","UI/rivets/Formatters", (actual, modulePath, requestingModulePath)->
     Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
       ret = ()->
@@ -471,19 +465,19 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           m.raisesAnything())
       )
     )
-    suite("pathDefFromActions", ()->
+    suite("pathDefinitionFromActions", ()->
       setup(()->
 
       )
       suite("Single Action", ()->
         test("No events - returns non rendering placeholder",()->
-          a(Formatters.pathDefFromActions(
+          a(Formatters.pathDefinitionFromActions(
             events:new Backbone.Collection([])
           ), "m 0 0")
         )
         suite("Single changePosition event", ()->
           test("No waypoints in first event - returns non rendering placeholder",()->
-            a(Formatters.pathDefFromActions(
+            a(Formatters.pathDefinitionFromActions(
               events:new Backbone.Collection([
                 name:"changePosition"
                 waypoints:new Backbone.Collection([])
@@ -508,29 +502,287 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
                   )
                 ])
               )
-              jm.when(mocks["lib/2D/TransformBearings"].intersectionVectorOf2PointsWithBearings)(m.anything(), m.anything()).then((p1,p2)->
-                x:40
-                y:40
-              )
 
             )
-            test("attempts to find intersection of lines perpendicular to first waypoint position and event position",()->
-              a(Formatters.pathDefFromActions(action), "m 0 0")
-              jm.verify(mocks["lib/2D/TransformBearings"].intersectionVectorOf2PointsWithBearings)(
-                m.allOf(
-                  m.hasMember("x", 50),
-                  m.hasMember("y", 40),
-                  m.hasMember("bearing", 190)
-                )
+            test("moves to first waypoint and produces relative cubic Bezier curve finishing in event position",()->
+
+              a(Formatters.pathDefinitionFromActions(action), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10$/))
+            )
+            test("additional waypoints don't affect path definition",()->
+
+              oneWP = Formatters.pathDefinitionFromActions(action);
+              action.get("events").at(0).get("waypoints").add(
+                x:180
+                y:-20
+                bearing:135
+              )
+              a(oneWP, Formatters.pathDefinitionFromActions(action))
+              action.get("events").at(0).get("waypoints").add(
+                x:-1802
+                y:2000
+                bearing:-13
+              )
+              a(oneWP, Formatters.pathDefinitionFromActions(action))
+            )
+            test("Missing position - throws",()->
+              action.get("events").at(0).unset("position")
+              a(()->
+                Formatters.pathDefinitionFromActions(action)
               ,
-                m.allOf(
-                  m.hasMember("x", 40),
-                  m.hasMember("y", 50),
-                  m.hasMember("bearing", 250)
-                )
+                m.raisesAnything()
+              )
+            )
+            test("Missing X position data - throws", ()->
+              action.get("events").at(0).get("position").unset("x")
+              a(()->
+                Formatters.pathDefinitionFromActions(action)
+              ,
+                m.raisesAnything()
+              )
+            )
+            test("Missing Y position data - throws", ()->
+              action.get("events").at(0).get("position").unset("y")
+              a(()->
+                Formatters.pathDefinitionFromActions(action)
+              ,
+                m.raisesAnything()
+              )
+            )
+            test("Missing bearing position data - throws", ()->
+              action.get("events").at(0).get("position").unset("bearing")
+              a(()->
+                Formatters.pathDefinitionFromActions(action)
+              ,
+                m.raisesAnything()
               )
             )
           )
+        )
+        test("Single event of other type - returns non rendering placeholder",()->
+          a(Formatters.pathDefinitionFromActions(
+            events:new Backbone.Collection([
+              name:"not changePosition"
+              waypoints:new Backbone.Collection([
+                x:50
+                y:40
+                bearing:100
+              ])
+              position:new Backbone.Model(
+                x:40
+                y:50
+                bearing:160
+              )
+            ])
+          ), "m 0 0")
+        )
+        suite("Multiple events", ()->
+          action = null
+          setup(()->
+            action = new Backbone.Model(
+              events:new Backbone.Collection([
+                name:"not changePosition"
+                waypoints:new Backbone.Collection([
+                  x:30
+                  y:20
+                  bearing:32
+                ])
+                position:new Backbone.Model(
+                  x:20
+                  y:30
+                  bearing:48
+                )
+              ,
+                name:"changePosition"
+                waypoints:new Backbone.Collection([
+                  x:50
+                  y:40
+                  bearing:100
+                ])
+                position:new Backbone.Model(
+                  x:40
+                  y:50
+                  bearing:160
+                )
+              ,
+                name:"not changePosition"
+                position:new Backbone.Model(
+                  x:160
+                  y:170
+                  bearing:123
+                )
+              ,
+                name:"changePosition"
+                position:new Backbone.Model(
+                  x:60
+                  y:70
+                  bearing:1
+                )
+              ,
+                name:"not changePosition"
+                position:new Backbone.Model(
+                  x:61
+                  y:71
+                  bearing:2
+                )
+              ,
+                name:"changePosition"
+                position:new Backbone.Model(
+                  x:65
+                  y:75
+                  bearing:15
+                )
+              ])
+            )
+          )
+          test("generates first curve from first waypoint to position, then for each subsequent event add another curve ending in the next events position, ignoring any events not named changePosition", ()->
+
+            a(Formatters.pathDefinitionFromActions(action), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5$/))
+          )
+          test("ignores waypoints in subsequent changePosition events completely", ()->
+
+            noWPs = Formatters.pathDefinitionFromActions(action)
+            action.get("events").at(3).set("waypoints", new Backbone.Collection([
+              x:180
+              y:-20
+              bearing:135
+            ]))
+            a(noWPs, Formatters.pathDefinitionFromActions(action))
+            action.get("events").at(5).set("waypoints", new Backbone.Collection([
+              x:-1802
+              y:2000
+              bearing:-13
+            ]))
+            a(noWPs, Formatters.pathDefinitionFromActions(action))
+          )
+        )
+      )
+      suite("Multiple Actions", ()->
+        actions = null
+        setup(()->
+          actions = new Backbone.Collection([
+            events:new Backbone.Collection([
+              name:"not changePosition"
+              waypoints:new Backbone.Collection([
+                x:30
+                y:20
+                bearing:32
+              ])
+              position:new Backbone.Model(
+                x:20
+                y:30
+                bearing:48
+              )
+            ,
+              name:"changePosition"
+              waypoints:new Backbone.Collection([
+                x:50
+                y:40
+                bearing:100
+              ])
+              position:new Backbone.Model(
+                x:40
+                y:50
+                bearing:160
+              )
+            ,
+              name:"not changePosition"
+              position:new Backbone.Model(
+                x:160
+                y:170
+                bearing:123
+              )
+            ,
+              name:"changePosition"
+              position:new Backbone.Model(
+                x:60
+                y:70
+                bearing:1
+              )
+            ,
+              name:"not changePosition"
+              position:new Backbone.Model(
+                x:61
+                y:71
+                bearing:2
+              )
+            ,
+              name:"changePosition"
+              position:new Backbone.Model(
+                x:65
+                y:75
+                bearing:15
+              )
+            ])
+          ,
+            events:new Backbone.Collection([
+              name:"not changePosition"
+              waypoints:new Backbone.Collection([
+                x:30
+                y:20
+                bearing:32
+              ])
+              position:new Backbone.Model(
+                x:20
+                y:30
+                bearing:48
+              )
+            ])
+          ,
+            events:new Backbone.Collection([
+              name:"changePosition"
+              position:new Backbone.Model(
+                x:20
+                y:30
+                bearing:48
+              )
+            ])
+          ,
+            events:new Backbone.Collection([
+              name:"changePosition"
+              position:new Backbone.Model(
+                x:40
+                y:50
+                bearing:160
+              )
+            ,
+              name:"not changePosition"
+              position:new Backbone.Model(
+                x:160
+                y:170
+                bearing:123
+              )
+            ,
+              name:"changePosition"
+              position:new Backbone.Model(
+                x:65
+                y:75
+                bearing:1
+              )
+            ])
+          ])
+        )
+
+        test("generates first curve from waypoint to position of the first event of the first, then for each subsequent event in that action, and all events in all subsequent actions add another curve ending in the next events position, ignoring any events not named changePosition", ()->
+          a(Formatters.pathDefinitionFromActions(actions), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -45 -45 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 25 25$/))
+        )
+        test("ignores first changePosition event's first waypoint in subsequent actions completely", ()->
+          noWPs = Formatters.pathDefinitionFromActions(actions)
+          actions.at(2).get("events").at(0).set("waypoints", new Backbone.Collection([
+            x:180
+            y:-20
+            bearing:135
+          ]))
+          a(noWPs, Formatters.pathDefinitionFromActions(actions))
+          actions.at(3).get("events").at(0).set("waypoints", new Backbone.Collection([
+            x:-1802
+            y:2000
+            bearing:-13
+          ]))
+          a(noWPs, Formatters.pathDefinitionFromActions(actions))
+        )
+        test("Ignores actions with no events collection", ()->
+          actions.at(2).unset("events")
+          a(Formatters.pathDefinitionFromActions(actions), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -25 -25 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 25 25$/))
         )
       )
     )

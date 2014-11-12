@@ -1,5 +1,6 @@
 define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_, sprintf, Rivets, TransformBearings)->
-
+  #alias for use in calc functions
+  bearings = TransformBearings
   Formatters =
     rotateCss:(input)->
       "rotate("+input+"deg)"
@@ -19,24 +20,33 @@ define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_, spri
       if (isNaN(posAdjust)) then throw new Error("Cannot set centroid to  "+posAtt+" attribute because  "+dimAtt+" is "+input.get(dimAtt))
       return pos-posAdjust
 
-    pathDefFromActions:(actions)->
-      if not (actions instanceof Backbone.Collection) then actions = new Backbone.Collection([actions])
+    pathDefinitionFromActions:(actions)->
       pathSpec = "m 0 0"
-      currentPosition = null
-      for action in actions.models when action.get("events")
-        for event in action.get("events").models when event.get("name") is "changePosition"
-          currentPosition?=event.get("waypoints")?.at(0)
-          if !currentPosition? then return pathSpec
-          centroid = TransformBearings.intersectionVectorOf2PointsWithBearings(
-            x:currentPosition.get("x")
-            y:currentPosition.get("y")
-            bearing:TransformBearings.rotateBearing(currentPosition.get("bearing"), 90)
-          ,
-            x:event.get("position").get("x")
-            y:event.get("position").get("y")
-            bearing:TransformBearings.rotateBearing(event.get("position").get("bearing"), 90)
-          )
+      if actions?
+        if not (actions instanceof Backbone.Collection) then actions = new Backbone.Collection([actions])
 
+        currentPosition = null
+        for action in actions.models when action.get("events")
+          for event in action.get("events").models when event.get("name") is "changePosition"
+            if !currentPosition?
+              currentPosition=event.get("waypoints")?.at(0)
+              if currentPosition?
+                pathSpec = sprintf("m %s %s", currentPosition.get("x"), currentPosition.get("y"))
+              else
+                return pathSpec
+            if !event.get("position").get("x")? or !event.get("position").get("y")? or !event.get("position").get("bearing")? then throw new Error("Invalid position data in changePosition event: "+JSON.stringify(event))
+            dist = TransformBearings.vectorToBearingAndDistance(
+                x:event.get("position").get("x")-currentPosition.get("x")
+                y:event.get("position").get("y")-currentPosition.get("y")
+            ).distance/2.5
+            cubicControl1 = TransformBearings.bearingAndDistanceToVector(currentPosition.get("bearing"), dist)
+            cubicControl2 = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(event.get("position").get("bearing"), 180), dist)
+            pathSpec += sprintf(" c %s %s, %s %s, %s %s",
+              cubicControl1.x, cubicControl1.y,
+              (event.get("position").get("x")+cubicControl2.x) - currentPosition.get("x"), (event.get("position").get("y")+cubicControl2.y) - currentPosition.get("y"),
+              event.get("position").get("x")-currentPosition.get("x"),event.get("position").get("y")-currentPosition.get("y")
+            )
+            currentPosition = event.get("position")
       pathSpec
 
     calc:(input, mask)->
