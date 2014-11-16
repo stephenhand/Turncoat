@@ -1,5 +1,7 @@
 define(["fmod"], (fmod)->
   DEGREES_TO_RADIANS = Math.PI / 180
+  CLOCKWISE = "clockwise"
+  ANTICLOCKWISE = "anticlockwise"
 
   bearingAndDistanceToVector=(bearing, distance)->
     if distance is 0 then return {x:0,y:0}
@@ -58,10 +60,10 @@ define(["fmod"], (fmod)->
     if (typeof start isnt "number") || (typeof rotation isnt "number") then throw Error("Start bearing and rotation values must be numeric")
     fmod(start+rotation, 360)
 
-  rotationBetweenBearings=(start, end)->
+  rotationBetweenBearings=(start, end, options)->
     if (typeof start isnt "number") || (typeof end isnt "number") then throw Error("Start and end bearings must be numeric")
     val = fmod(end-start, 360)
-    if val>180 then val-=360
+    if (options?.direction is ANTICLOCKWISE and val) or (options?.direction isnt CLOCKWISE and val>180) then val-=360
     val
 
   intersectionVectorOf2PointsWithBearings=(pointA, pointB)->
@@ -99,4 +101,6 @@ define(["fmod"], (fmod)->
   rotateBearing:rotateBearing
   rotationBetweenBearings:rotationBetweenBearings
   intersectionVectorOf2PointsWithBearings:intersectionVectorOf2PointsWithBearings
+  CLOCKWISE:CLOCKWISE
+  ANTICLOCKWISE:ANTICLOCKWISE
 )

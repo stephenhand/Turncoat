@@ -10,6 +10,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       rotateY = currentPos.get("y")
       for step in maneuver.get("sequence").models
         if step.get("type") is "move"
+
           v =TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(currentPos.get("bearing"),(step.get("direction") ? 0)),step.evaluate("distance")||0)
           rotateX += v.x
           rotateY += v.y
@@ -32,6 +33,50 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
             shortfall:shortfall
           ret.action.set(step.get("rotationAttribute"), rotation)
           return ret
+
+    calculateStraightLineMoveRequired:(asset, moveType, x, y)->
+      moveDefinition = asset.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType)
+      if !moveDefinition? then throw new Error("Specified move type not fouind for this asset")
+      position = asset.get("position")
+      if !position.get("x")? or !position.get("y")? or !position.get("bearing")? then throw new Error("Incomplete position information for asset.")
+      minBearing = TransformBearings.rotateBearing(position.get("bearing"), moveDefinition.get("minDirection") ? 0)
+      maxBearing = TransformBearings.rotateBearing(position.get("bearing"), moveDefinition.get("maxDirection") ? 0)
+      maxDistance = @calculateMoveRemaining(asset, moveType)
+      targetBD = TransformBearings.vectorToBearingAndDistance(
+        x:x-position.get("x")
+        y:y-position.get("y")
+      )
+
+      if TransformBearings.rotationBetweenBearings(targetBD.bearing, minBearing, direction:TransformBearings.CLOCKWISE)>TransformBearings.rotationBetweenBearings(targetBD.bearing, maxBearing, direction:TransformBearings.CLOCKWISE)
+        return new Action(
+          asset:asset.get("id")
+          rule:"ships.actions.move"
+          move:moveType
+          distance:Math.min(targetBD.distance, maxDistance)
+          direction:targetBD.bearing
+        )
+      else if TransformBearings.rotationBetweenBearings(minBearing, maxBearing, direction:TransformBearings.CLOCKWISE)>180 ||
+        (
+            TransformBearings.rotationBetweenBearings(targetBD.bearing, TransformBearings.rotateBearing(minBearing, -90),direction:TransformBearings.CLOCKWISE) >
+            TransformBearings.rotationBetweenBearings(targetBD.bearing, TransformBearings.rotateBearing(maxBearing, 90), direction:TransformBearings.CLOCKWISE)
+        )
+        return new Action(
+          asset:asset.get("id")
+          rule:"ships.actions.move"
+          move:moveType
+          distance:0
+          direction:0
+        )
+
+      else
+        return new Action(
+          asset:asset.get("id")
+          rule:"ships.actions.move"
+          move:moveType
+          distance:0
+          direction:0
+        )
+
 
 
     calculateMoveRemaining:(asset, moveType)->

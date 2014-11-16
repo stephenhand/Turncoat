@@ -504,11 +504,11 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
               )
 
             )
-            test("moves to first waypoint and produces relative cubic Bezier curve finishing in event position",()->
+            test("Moves to first waypoint and produces relative cubic Bezier curve finishing in event position",()->
 
               a(Formatters.pathDefinitionFromActions(action), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10$/))
             )
-            test("additional waypoints don't affect path definition",()->
+            test("Additional waypoints don't affect path definition",()->
 
               oneWP = Formatters.pathDefinitionFromActions(action);
               action.get("events").at(0).get("waypoints").add(
@@ -634,11 +634,11 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
               ])
             )
           )
-          test("generates first curve from first waypoint to position, then for each subsequent event add another curve ending in the next events position, ignoring any events not named changePosition", ()->
+          test("Generates first curve from first waypoint to position, then for each subsequent event add another curve ending in the next events position, ignoring any events not named changePosition", ()->
 
             a(Formatters.pathDefinitionFromActions(action), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5$/))
           )
-          test("ignores waypoints in subsequent changePosition events completely", ()->
+          test("Ignores waypoints in subsequent changePosition events completely", ()->
 
             noWPs = Formatters.pathDefinitionFromActions(action)
             action.get("events").at(3).set("waypoints", new Backbone.Collection([
@@ -762,10 +762,10 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           ])
         )
 
-        test("generates first curve from waypoint to position of the first event of the first, then for each subsequent event in that action, and all events in all subsequent actions add another curve ending in the next events position, ignoring any events not named changePosition", ()->
+        test("Generates first curve from waypoint to position of the first event of the first, then for each subsequent event in that action, and all events in all subsequent actions add another curve ending in the next events position, ignoring any events not named changePosition", ()->
           a(Formatters.pathDefinitionFromActions(actions), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -45 -45 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 25 25$/))
         )
-        test("ignores first changePosition event's first waypoint in subsequent actions completely", ()->
+        test("Ignores first changePosition event's first waypoint in subsequent actions completely", ()->
           noWPs = Formatters.pathDefinitionFromActions(actions)
           actions.at(2).get("events").at(0).set("waypoints", new Backbone.Collection([
             x:180

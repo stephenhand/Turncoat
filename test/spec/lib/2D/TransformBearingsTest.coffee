@@ -230,6 +230,113 @@ define(["isolate!lib/2D/TransformBearings", "matchers", "operators", "assertThat
         a(TransformBearings.rotationBetweenBearings(15, -720), -15)
         a(TransformBearings.rotationBetweenBearings(15.1, -720.2),  m.closeTo(-15.3, 0.01))
       )
+      suite("direction option set CLOCKWISE", ()->
+        opt = null
+        setup(()->
+          opt = direction:TransformBearings.CLOCKWISE
+        )
+        test("Same bearings - returns zero", ()->
+          a(TransformBearings.rotationBetweenBearings(150.5, 150.5, opt), 0)
+        )
+        test("Same bearings out of normal bearing range - returns zero", ()->
+
+          a(TransformBearings.rotationBetweenBearings(750, 750, opt), 0)
+        )
+        test("Going clockwise from under 180 to under 180 - should simply return difference", ()->
+          a(TransformBearings.rotationBetweenBearings(50, 90, opt), 40)
+          a(TransformBearings.rotationBetweenBearings(50.5, 90.2, opt), 39.7)
+        )
+        test("Going clockwise from under 180 to over 180 - should simply return difference", ()->
+          a(TransformBearings.rotationBetweenBearings(150, 240, opt), 90)
+          a(TransformBearings.rotationBetweenBearings(150.5, 240.7, opt), 90.2)
+        )
+        test("Going clockwise from over 180 to over 180 - should simply return difference", ()->
+          a(TransformBearings.rotationBetweenBearings(250, 340, opt), 90)
+          a(TransformBearings.rotationBetweenBearings(250.5, 340.7, opt), 90.2)
+        )
+        test("Going clockwise from over 180 to under 180 - should be rotation crossing over zero", ()->
+          a(TransformBearings.rotationBetweenBearings(315, 45, opt), 90)
+          a(TransformBearings.rotationBetweenBearings(315.5, 45.7, opt), 90.2)
+        )
+        test("Going clockwise over 360 degrees - should calculate minimum rotations between proper bearings", ()->
+          a(TransformBearings.rotationBetweenBearings(50, 780, opt), 10)
+          a(TransformBearings.rotationBetweenBearings(50.1, 780.2, opt), 10.1)
+        )
+        test("Going anticlockwise from under 180 to under 180 - should return rotation required to reach same bearing turning clockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(140, 50, opt), 270)
+          a(TransformBearings.rotationBetweenBearings(140.3, 50.1, opt), m.closeTo(269.8, 0.01))
+        )
+        test("Going anticlockwise from under 180 to over 180 - should return rotation required to reach same bearing turning clockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(40, 310, opt), 270)
+          a(TransformBearings.rotationBetweenBearings(40.3, 310.1, opt), m.closeTo(269.8, 0.01))
+        )
+        test("Going anticlockwise from over 180 to over 180 - should return rotation required to reach same bearing turning clockwisee", ()->
+          a(TransformBearings.rotationBetweenBearings(315, 225, opt), 270)
+          a(TransformBearings.rotationBetweenBearings(315.5, 225.3, opt), m.closeTo(269.8, 0.01))
+        )
+        test("Going anticlockwise from over 180 to under 180 - should return rotation required to reach same bearing turning clockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(215, 125, opt), 270)
+          a(TransformBearings.rotationBetweenBearings(215.1, 124.9, opt), m.closeTo(269.8, 0.01))
+        )
+        test("Going anticlockwise over 360 degrees - should calculate correct final bearing", ()->
+
+          a(TransformBearings.rotationBetweenBearings(15, -720, opt), 345)
+          a(TransformBearings.rotationBetweenBearings(15.1, -720.2, opt),  m.closeTo(344.7, 0.01))
+        )
+      )
+      suite("direction option set ANTICLOCKWISE", ()->
+        opt = null
+        setup(()->
+          opt = direction:TransformBearings.ANTICLOCKWISE
+        )
+        test("Same bearings - returns zero", ()->
+          a(TransformBearings.rotationBetweenBearings(150.5, 150.5, opt), 0)
+        )
+        test("Same bearings out of normal bearing range - returns zero", ()->
+
+          a(TransformBearings.rotationBetweenBearings(750, 750, opt), 0)
+        )
+        test("Going clockwise from under 180 to under 180 - should return rotation required to reach same bearing turning anticlockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(50, 90, opt), -320)
+          a(TransformBearings.rotationBetweenBearings(50.5, 90.2, opt), -320.3)
+        )
+        test("Going clockwise from under 180 to over 180 - should return rotation required to reach same bearing turning anticlockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(150, 240, opt), -270)
+          a(TransformBearings.rotationBetweenBearings(150.5, 240.7, opt), -269.8)
+        )
+        test("Going clockwise from over 180 to over 180 - should return rotation required to reach same bearing turning anticlockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(250, 340, opt), -270)
+          a(TransformBearings.rotationBetweenBearings(250.5, 340.7, opt), -269.8)
+        )
+        test("Going clockwise from over 180 to under 180 - should return rotation required to reach same bearing turning anticlockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(315, 45, opt), -270)
+          a(TransformBearings.rotationBetweenBearings(315.5, 45.7, opt), -269.8)
+        )
+        test("Going clockwise over 360 degrees - should return rotation required to reach same bearing turning anticlockwise", ()->
+          a(TransformBearings.rotationBetweenBearings(50, 780, opt), -350)
+          a(TransformBearings.rotationBetweenBearings(50.1, 780.2, opt), -349.9)
+        )
+        test("Going anticlockwise from under 180 to under 180 - should simply add negative rotation value", ()->
+          a(TransformBearings.rotationBetweenBearings(140, 50, opt), -90)
+          a(TransformBearings.rotationBetweenBearings(140.3, 50.1, opt), m.closeTo(-90.2, 0.01))
+        )
+        test("Going anticlockwise from under 180 to over 180 - should correct from negative bearing to one deducted from 360", ()->
+          a(TransformBearings.rotationBetweenBearings(40, 310, opt), -90)
+          a(TransformBearings.rotationBetweenBearings(40.3, 310.1, opt), m.closeTo(-90.2, 0.01))
+        )
+        test("Going anticlockwise from over 180 to over 180 - should simply add negative rotation value", ()->
+          a(TransformBearings.rotationBetweenBearings(315, 225, opt), -90)
+          a(TransformBearings.rotationBetweenBearings(315.5, 225.3, opt), m.closeTo(-90.2, 0.01))
+        )
+        test("Going anticlockwise from over 180 to under 180 - should simply add negative rotation value", ()->
+          a(TransformBearings.rotationBetweenBearings(215, 125, opt), -90)
+          a(TransformBearings.rotationBetweenBearings(215.1, 124.9, opt), m.closeTo(-90.2, 0.01))
+        )
+        test("Going anticlockwise over 360 degrees - should calculate correct final bearing", ()->
+          a(TransformBearings.rotationBetweenBearings(15, -720, opt), -15)
+          a(TransformBearings.rotationBetweenBearings(15.1, -720.2, opt),  m.closeTo(-15.3, 0.01))
+        )
+      )
     )
     suite("intersectionVectorOf2PointsWithBearings", ()->
       test("Either point missing - throws", ()->

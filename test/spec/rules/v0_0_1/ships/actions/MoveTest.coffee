@@ -201,6 +201,143 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
           )
 
         )
+        suite("calculateStraightLineMoveRequired",()->
+          asset = null
+          setup(()->
+            rule.calculateMoveRemaining = jm.mockFunction()
+            jm.when(rule.calculateMoveRemaining)(m.anything(), m.anything()).thenReturn(5)
+            asset = new Backbone.Model(
+              position:new Backbone.Model(
+                x:5
+                y:10
+                bearing:0
+              )
+              actions:new Backbone.Collection([
+                name:"move"
+                types:new Backbone.Collection([
+                  name:"A MOVE TYPE"
+                ])
+              ])
+              id:"MOCK ASSET"
+
+            )
+
+          )
+          test("Asset not supplied - throws", ()->
+            a(()->
+              rule.calculateStraightLineMoveRequired(null, "A MOVE TYPE", 10, 10)
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("Asset position coordinates or bearing not supplied - throws", ()->
+            asset.get("position").unset("x")
+            a(()->
+              rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 10, 10)
+            ,
+              m.raisesAnything()
+            )
+            asset.get("position").set("x", 4)
+            asset.get("position").unset("y")
+            a(()->
+              rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 10, 10)
+            ,
+              m.raisesAnything()
+            )
+            asset.get("position").set("y", 7)
+            asset.get("position").unset("bearing")
+            a(()->
+              rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 10, 10)
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("Asset does not have move type specified - throws", ()->
+            a(()->
+              rule.calculateStraightLineMoveRequired(asset, "NOT A MOVE TYPE", 10, 10)
+            ,
+              m.raisesAnything()
+            )
+          )
+          suite("Valid asset, moveType and coordinates", ()->
+            test("Calls calculateMoveRemaining with asset and moveType", ()->
+              rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 0, 0)
+              jm.verify(rule.calculateMoveRemaining)(asset, "A MOVE TYPE")
+            )
+            test("Returns action object with asset id, move, distance and direction supplied, but no maneuver type.", ()->
+              ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 0, 0)
+              a(ret, m.instanceOf(mocks["lib/turncoat/Action"]))
+              a(ret.attributes, m.hasMember("rule","ships.actions.move"))
+              a(ret.attributes, m.hasMember("asset","MOCK ASSET"))
+              a(ret.get("move"),"A MOVE TYPE")
+              a(ret.attributes, m.hasMember("distance",m.number()))
+              a(ret.attributes, m.hasMember("direction",m.number()))
+              a(ret.attributes, m.not(m.hasMember("maneuver")))
+            )
+            suite("Direction bounds specified", ()->
+              suite("Coordinates within permitted direction range", ()->
+                setup(()->
+                  asset.get("actions").at(0).get("types").at(0).set("maxDirection", 300)
+                  asset.get("actions").at(0).get("types").at(0).set("minDirection", 40)
+                )
+                test("Coordinates within asset remaining move radius - creates action to move distance and in direction required to reach coordinates specified", ()->
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 4, 10)
+                  a(ret.get("distance"), m.closeTo(1, 0.1))
+                  a(ret.get("direction"), m.closeTo(270, 0.1))
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 5, 11)
+                  a(ret.get("distance"), m.closeTo(1, 0.1))
+                  a(ret.get("direction"), m.closeTo(180, 0.1))
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 6, 9)
+                  a(ret.get("distance"), m.closeTo(Math.sqrt(2), 0.1))
+                  a(ret.get("direction"), m.closeTo(45, 0.1))
+                )
+                test("Coordinates outside asset remaining move radius - creates action to remaining move distance and in direction required to move directly toward coords", ()->
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", -400, 10)
+                  a(ret.get("distance"), 5)
+                  a(ret.get("direction"), m.closeTo(270, 0.1))
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 5, 600)
+                  a(ret.get("distance"), 5)
+                  a(ret.get("direction"), m.closeTo(180, 0.1))
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 600, 605)
+                  a(ret.get("distance"), 5)
+                  a(ret.get("direction"), m.closeTo(135, 0.1))
+                )
+              )
+              suite("Coordinates less than 90 degrees outside permitted direction range", ()->
+                setup(()->
+                  asset.get("actions").at(0).get("types").at(0).set("maxDirection", 90)
+                  asset.get("actions").at(0).get("types").at(0).set("minDirection", 0)
+                )
+                test("Coordinates within asset remaining move radius - creates action to move in closest permitted direction to that required and distance required to reach point perpendicular to coordinates in that direction", ()->
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 6, 9)
+                  a(ret.get("distance"), m.closeTo(1, 0.1))
+                  a(ret.get("direction"), 90)
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 4, 11)
+                  a(ret.get("distance"), m.closeTo(1, 0.1))
+                  a(ret.get("direction"), 180)
+                )
+                test("Coordinates outside asset remaining move radius - creates action to move in closest permitted direction to that required and full remaining distance", ()->
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 600, -400)
+                  a(ret.get("distance"), m.closeTo(1, 0.1))
+                  a(ret.get("direction"), 90)
+                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", -400, 600)
+                  a(ret.get("distance"), m.closeTo(1, 0.1))
+                  a(ret.get("direction"), 180)
+                )
+              )
+            )
+            suite("No direction bounds specified", ()->
+              test("Assumes that only permitted direction is straight ahead (0)", ()->
+                ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 600, -400)
+                a(ret.get("distance"), m.closeTo(1, 0.1))
+                a(ret.get("direction"), m.closeTo(90, 0.1))
+                ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", -400, 600)
+                a(ret.get("distance"), m.closeTo(1, 0.1))
+                a(ret.get("direction"), m.closeTo(180, 0.1))
+              )
+            )
+          )
+        )
         suite("resolveAction",()->
           action = null
           asset = null
