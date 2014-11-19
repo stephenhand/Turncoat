@@ -84,13 +84,18 @@ define(["fmod"], (fmod)->
         y:(pointB.y - pointA.y)/2
     else
       sideC = betweenAB.distance
+      vectorBearing = null
+
       angleA = Math.abs(rotationBetweenBearings(pointA.bearing, betweenAB.bearing))
-      angleB = Math.abs(rotationBetweenBearings(pointB.bearing, rotateBearing(betweenAB.bearing, 180)))
       vectorBearing = pointA.bearing
-      if (angleA+angleB)>180
+      if angleA > 90
         angleA = Math.abs(rotationBetweenBearings(pointA.bearing, rotateBearing(betweenAB.bearing, 180)))
-        angleB = Math.abs(rotationBetweenBearings(pointB.bearing, betweenAB.bearing))
         vectorBearing = rotateBearing(pointA.bearing, 180)
+
+      angleB = Math.abs(rotationBetweenBearings(pointB.bearing, rotateBearing(betweenAB.bearing, 180)))
+      if angleB > 90
+        angleB = Math.abs(rotationBetweenBearings(pointB.bearing, betweenAB.bearing))
+
       angleC = 180 - angleA - angleB
       sideB = (sideC/Math.sin(angleC*DEGREES_TO_RADIANS))*Math.sin(angleB*DEGREES_TO_RADIANS)
       bearingAndDistanceToVector(vectorBearing, sideB)

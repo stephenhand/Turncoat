@@ -53,19 +53,36 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
           rule:"ships.actions.move"
           move:moveType
           distance:Math.min(targetBD.distance, maxDistance)
-          direction:targetBD.bearing
+          direction:TransformBearings.rotateBearing(targetBD.bearing,-position.get("bearing"))
         )
       else if TransformBearings.rotationBetweenBearings(minBearing, maxBearing, direction:TransformBearings.CLOCKWISE)>180 ||
         (
             TransformBearings.rotationBetweenBearings(targetBD.bearing, TransformBearings.rotateBearing(minBearing, -90),direction:TransformBearings.CLOCKWISE) >
             TransformBearings.rotationBetweenBearings(targetBD.bearing, TransformBearings.rotateBearing(maxBearing, 90), direction:TransformBearings.CLOCKWISE)
         )
+        referenceBearing = null
+        if Math.abs(TransformBearings.rotationBetweenBearings(targetBD.bearing, minBearing))<Math.abs(TransformBearings.rotationBetweenBearings(targetBD.bearing, maxBearing))
+          referenceBearing=minBearing
+        else
+          referenceBearing=maxBearing
+        closestBD = TransformBearings.vectorToBearingAndDistance(
+          TransformBearings.intersectionVectorOf2PointsWithBearings(
+            x:x
+            y:y
+            bearing:referenceBearing
+          ,
+            x:position.get("x")
+            y:position.get("y")
+            bearing:TransformBearings.rotateBearing(referenceBearing, 90)
+          )
+        )
+
         return new Action(
           asset:asset.get("id")
           rule:"ships.actions.move"
           move:moveType
-          distance:0
-          direction:0
+          distance:Math.min(closestBD.distance, maxDistance)
+          direction:TransformBearings.rotateBearing(TransformBearings.rotateBearing(closestBD.bearing,180),-position.get("bearing"))
         )
 
       else

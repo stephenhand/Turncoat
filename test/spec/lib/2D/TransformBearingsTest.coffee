@@ -569,6 +569,58 @@ define(["isolate!lib/2D/TransformBearings", "matchers", "operators", "assertThat
         a(p.x, m.closeTo(3.854, 0.1))
         a(p.y, m.closeTo(-2.699, 0.1))
       )
+      test("If paths cross when one goes back and the other goes forward, use that point", ()->
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:3
+          y:3
+          bearing:135
+        ,
+          x:3
+          y:5
+          bearing:225
+        )
+        a(p.x, m.closeTo(1, 0.1))
+        a(p.y, m.closeTo(1, 0.1))
+      )
+      test("If point A is pointing directly at point B, return vector from point A to point B (or close to))", ()->
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:3
+          y:3
+          bearing:180
+        ,
+          x:3
+          y:5
+          bearing:225
+        )
+        a(p.x, m.closeTo(0, 0.1))
+        a(p.y, m.closeTo(2, 0.1))
+      )
+      test("If point B is pointing directly at point A, return zero zero vector (or close to))", ()->
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:3
+          y:3
+          bearing:45
+        ,
+          x:3
+          y:5
+          bearing:0
+        )
+        a(p.x, m.closeTo(0, 0.1))
+        a(p.y, m.closeTo(0, 0.1))
+      )
+      test("If point B is pointing directly at point A and point B is at right angles to point B, return zero zero vector (or close to))", ()->
+        p = TransformBearings.intersectionVectorOf2PointsWithBearings(
+          x:3
+          y:3
+          bearing:315
+        ,
+          x:1
+          y:5
+          bearing:45
+        )
+        a(p.x, m.closeTo(0, 0.1))
+        a(p.y, m.closeTo(0, 0.1))
+      )
       test("Finds halfway point between 2 head on colliding paths", ()->
         p = TransformBearings.intersectionVectorOf2PointsWithBearings(
           x:3
