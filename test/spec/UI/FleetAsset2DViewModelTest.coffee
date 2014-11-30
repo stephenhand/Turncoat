@@ -270,10 +270,23 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
 
                 fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 314.5, 20)
                 jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 314.5)
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 319, 35)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 125, 319)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123, 319, 35)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 123, 319)
                 fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 120, 325, 35)
                 jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 120, 325)
+              )
+              test("logic unaffected by min/max direction range crossing over zero absolute bearing on ships current bearing", ()->
+
+                moveType.set("minDirection", 345)
+                moveType.set("maxDirection", 15)
+                model.get("position").attributes.bearing=0
+
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123, 314.5, 20)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 123, 314.5)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 121, 319, 35)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 121, 319)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 122, 330, 35)
+                jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 122, 330)
               )
             )
           )
