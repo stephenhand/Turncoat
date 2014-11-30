@@ -177,6 +177,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
           mockRule =
             calculateManeuverRequired:jm.mockFunction()
             resolveAction:jm.mockFunction()
+            calculateStraightLineMoveRequired:jm.mockFunction()
           mockRuleBook =
             lookUp:jm.mockFunction()
 
@@ -198,6 +199,11 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               )
             ])
           )
+          model.set("position", new Backbone.Model(
+            x:123
+            y:321
+            bearing:45
+          ))
           modelRoot =
             getRuleBook:()->
               mockRuleBook
@@ -227,7 +233,51 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
             jm.verify(mockRuleEntry.getActionRules)(modelRoot)
           )
-          suite("Model has single maneuver defined", ()->
+          suite("moveType has minDirection and maxDirection set", ()->
+            maneuver = null
+            setup(()->
+              maneuver = new Backbone.Model()
+              moveType.get("maneuvers").reset([maneuver])
+              moveType.set("minDirection", 30)
+              moveType.set("maxDirection", 60)
+            )
+            suite("called with margin", ()->
+              test("coordinates supplied are within min/max direction range - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 321.5)
+              )
+              test("coordinates supplied are clockwise of min/max direction range but not by more degrees than specified margin - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 323, 35)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 125, 323)
+              )
+              test("coordinates supplied are anticlockwise of min/max direction range but not by more degrees than specified margin - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 319, 35)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 125, 319)
+              )
+              test("coordinates supplied are outside direction range and margin - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 120, 319, 35)
+                jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 120, 319)
+              )
+              test("logic unaffected by min/max direction range crossing over zero", ()->
+
+                moveType.set("minDirection", 345)
+                moveType.set("maxDirection", 15)
+
+
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 314.5, 20)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 314.5)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 319, 35)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 125, 319)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 120, 325, 35)
+                jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 120, 325)
+              )
+            )
+          )
+          suite("Is using manuever and model has single maneuver defined", ()->
             maneuver = null
             setup(()->
               maneuver = new Backbone.Model()

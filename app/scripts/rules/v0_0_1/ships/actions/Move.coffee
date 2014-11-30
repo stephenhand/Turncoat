@@ -97,6 +97,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
 
 
     calculateMoveRemaining:(asset, moveType)->
+      6
 
     resolveAction:(action, resolveNonDeterministic)->
       action.reset()
