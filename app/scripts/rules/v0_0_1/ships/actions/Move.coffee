@@ -108,12 +108,13 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       if assets.length is 0 then throw new Error("Asset not found")
       asset = assets[0]
       move = asset.get("actions").findWhere(name:"move").get("types").findWhere(name:action.get("move"))
+      if !move? then throw new Error ("Specified move not found")
       pos = asset.get("position")
       x = pos.get("x")
       y = pos.get("y")
       bearing = pos.get("bearing")
+      waypoints = new Backbone.Collection([pos])
       if action.get("maneuver")?
-        waypoints = new Backbone.Collection([pos])
         maneuver = move.get("maneuvers").findWhere(name:action.get("maneuver"))
 
         for step in maneuver.get("sequence").models
@@ -128,20 +129,21 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
               )
             when "rotate"
               bearing = TransformBearings.rotateBearing(bearing, action.get(step.get("rotationAttribute")))
-
-        action.get("events").push(new Event(
-          rule:"ships.actions.move"
-          name:"changePosition"
-          position:new Backbone.Model(
-            x:x
-            y:y
-            bearing:bearing
-          )
-          waypoints:waypoints
-        ))
       else
-        v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (action.get("direction") ? 0)), action.get("distance"))
-        move.get("distance")
+        v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (action.get("direction") ? 0)), action.get("distance") ? 0)
+        x+=v.x
+        y+=v.y
+      action.get("events").push(new Event(
+        rule:"ships.actions.move"
+        name:"changePosition"
+        position:new Backbone.Model(
+          x:x
+          y:y
+          bearing:bearing
+        )
+        waypoints:waypoints
+      ))
+      action
 
 
 

@@ -773,6 +773,69 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(waypoints.at(3).get("bearing"), m.nil())
               )
             )
+            suite("No maneuver specified in action", ()->
+              setup(()->
+                asset.set("position", new Backbone.Model(
+                  x:3
+                  y:5
+                  bearing:180
+                ))
+                action.unset("maneuver")
+              )
+              test("Adds single changePosition event", ()->
+                action.set("direction", -45)
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 1)
+                event = action.get("events").at(0)
+                a(event.get("name"), "changePosition")
+                a(event,  m.instanceOf(mocks["lib/turncoat/Event"]))
+                a(event.get("rule"), "ships.actions.move")
+                a(event.get("position"), m.instanceOf(Backbone.Model))
+
+              )
+              test("ChangePosition event specifies the new coordinates and an unchanged bearing", ()->
+                action.set("direction", -90)
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                event = action.get("events").at(0)
+                a(event.get("position").get("x"), 9)
+                a(event.get("position").get("y"), 5)
+                a(event.get("position").get("bearing"), 180)
+
+              )
+              test("Adds single waypoint to event specifying start position & bearing", ()->
+                action.set("direction", -90)
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                waypoints = action.get("events").at(0).get("waypoints")
+                a(waypoints.length, 1)
+                a(waypoints.at(0).get("x"), 3)
+                a(waypoints.at(0).get("y"), 5)
+                a(waypoints.at(0).get("bearing"), 180)
+
+              )
+              test("Assumes direction straight ahead if not specified", ()->
+                action.unset("direction")
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                event = action.get("events").at(0)
+                a(event.get("position").get("x"), 3)
+                a(event.get("position").get("y"), 11)
+                a(event.get("position").get("bearing"), 180)
+
+              )
+              test("Assumes zero distance not specified", ()->
+                action.set("direction", -90)
+                action.unset("distance")
+                rule.resolveAction(action, false)
+                event = action.get("events").at(0)
+                a(event.get("position").get("x"), 3)
+                a(event.get("position").get("y"), 5)
+                a(event.get("position").get("bearing"), 180)
+
+              )
+            )
           )
 
         )

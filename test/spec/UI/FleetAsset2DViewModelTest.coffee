@@ -410,7 +410,6 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             )
           )
         )
-
       )
     )
   )
