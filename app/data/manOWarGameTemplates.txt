@@ -71,8 +71,8 @@
 															"distance":4,
 															"modifiers":[
 																{
-																	"condition":"NO_TURN",
-																	"modifier":2
+																	"condition":"NO_MANEUVER",
+																	"adjustment":2
 																}
 															],
 
@@ -148,8 +148,8 @@
 															"distance":4,
 															"modifiers":[
 																{
-																	"condition":"NO_TURN",
-																	"modifier":2
+																	"condition":"NO_MANEUVER",
+																	"adjustment":2
 																}
 															],
 															"maneuvers":[

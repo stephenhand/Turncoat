@@ -1,10 +1,16 @@
 define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/RuleBookEntry", "lib/turncoat/Action", "lib/turncoat/Event"], (_, Backbone, TransformBearings, RuleBookEntry, Action, Event)->
 
+  findMoveDefinition = (asset, moveType)->
+    moveDefinition = asset.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType)
+    if !moveDefinition? then throw new Error("Specified move type not found for this asset")
+    moveDefinition
+
   move = new RuleBookEntry()
   move.getActionRules = (game)->
     if !game? then throw new Error('A game must be supplied to retrieve rules')
 
     calculateManeuverRequired:(asset, moveType, maneuver, x, y)->
+      if !@hasEnoughMoveForManeuver(asset, moveType, maneuver) then return
       currentPos = asset.get("position")
       rotateX = currentPos.get("x")
       rotateY = currentPos.get("y")
@@ -35,8 +41,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
           return ret
 
     calculateStraightLineMoveRequired:(asset, moveType, x, y)->
-      moveDefinition = asset.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType)
-      if !moveDefinition? then throw new Error("Specified move type not fouind for this asset")
+      moveDefinition = findMoveDefinition(asset, moveType)
       position = asset.get("position")
       if !position.get("x")? or !position.get("y")? or !position.get("bearing")? then throw new Error("Incomplete position information for asset.")
       minBearing = TransformBearings.rotateBearing(position.get("bearing"), moveDefinition.get("minDirection") ? 0)
@@ -94,10 +99,19 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
           direction:0
         )
 
+    calculateMoveRemaining:(asset, moveType, forManeuver)->
+      moveDefinition = findMoveDefinition(asset, moveType)
+      distance = moveDefinition.get("distance")
+      modifiers = moveDefinition.get("modifiers") ? models:[]
+      for modifier in modifiers
+        if modifier.get("condition") is "NO_MANEUVER" and !forManeuver?
+          distance += modifier.get("adjustment")
+      distance
+
+    hasEnoughMoveForManeuver:(asset, moveType, maneuver)->
+      @calculateMoveRemaining(asset, moveType, true) >= maneuver.get("cost")
 
 
-    calculateMoveRemaining:(asset, moveType)->
-      6
 
     resolveAction:(action, resolveNonDeterministic)->
       action.reset()

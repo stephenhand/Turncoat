@@ -12,8 +12,13 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/T
         .lookUp("ships.permitted-actions")
         .getActionRules()
         .getPermittedActionsForAsset(@, @getRoot())
+
+
     addContext:(context)->
       context.SHIP_LENGTH = @get("dimensions")?.get("length") ? 0
+
+    getCurrentMoveHistory:()->
+
 
 
   FleetAsset.toString=()->

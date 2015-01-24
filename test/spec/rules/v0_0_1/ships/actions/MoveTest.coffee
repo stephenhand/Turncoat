@@ -49,8 +49,18 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 y:1
                 bearing:45
               )
+              actions:new Backbone.Collection([
+                name:"move"
+                types:new Backbone.Collection([
+                  name:"MOCK MOVE TYPE"
+                ])
+              ])
             )
             asset.evaluate = jm.mockFunction()
+            rule.calculateMoveRemaining = jm.mockFunction()
+            jm.when(rule.calculateMoveRemaining)(asset, "MOCK MOVE TYPE", m.anything()).then((a,b,c)->
+              6
+            )
           )
           test("Maneuver has no sequence - returns nothing", ()->
             a(rule.calculateManeuverRequired(asset, "MOCK MOVE TYPE", new Backbone.Model(
