@@ -156,6 +156,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
           bearing:bearing
         )
         waypoints:waypoints
+        asset:asset.get("id")
       ))
       action
 

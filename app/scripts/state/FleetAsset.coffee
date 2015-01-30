@@ -19,7 +19,7 @@ define(["underscore", "backbone", "lib/turncoat/GameStateModel", "lib/turncoat/T
       for move in playerMoves
         for action in move.get("actions")?.models ? []
 
-          events.push(event) for action in action.get("events")?.model [] when event.get("asset") is @get("id")
+          events.push(event) for event in action.get("events")?.models ? [] when event.get("asset") is @get("id")
       events
 
     addContext:(context)->

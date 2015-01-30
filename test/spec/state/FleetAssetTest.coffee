@@ -98,6 +98,7 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
       fa = null
       setup(()->
         fa = new FleetAsset()
+        fa.set("id","THIS ASSET")
         fa.getRoot = jm.mockFunction()
       )
       test("No owning game - throws", ()->
@@ -152,6 +153,120 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
             ]
           )
           a(fa.getCurrentTurnEvents(), m.empty())
+        )
+        test("Game has current moves with actions and missing or empty events - returns empty array", ()->
+          jm.when(g.getCurrentTurnMoves)().then(()->
+            [
+              new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model(
+                    events:new Backbone.Collection()
+                  ),
+                  new Backbone.Model()
+                ])
+              )
+            ,
+              new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model(),
+                  new Backbone.Model()
+                ])
+              )
+            ,
+              new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model(
+                    events:new Backbone.Collection()
+                  )
+                ])
+              )
+            ]
+          )
+          a(fa.getCurrentTurnEvents(), m.empty())
+        )
+        test("Game has current moves with actions and events not applicable to any asset, or a different asset - returns empty array", ()->
+          jm.when(g.getCurrentTurnMoves)().then(()->
+            [
+              new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model(
+                    events:new Backbone.Collection([
+                      asset:"SOMEONE ELSE"
+                    ,
+                      {}
+                    ])
+                  ),
+                  new Backbone.Model()
+                ])
+              )
+            ,
+              new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model()
+                ])
+              )
+            ,
+              new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model(
+                    events:new Backbone.Collection([
+                      asset:"ALSSO SOMEONE ELSE"
+                    ])
+                  )
+                ])
+              )
+            ]
+          )
+          a(fa.getCurrentTurnEvents(), m.empty())
+        )
+        test("Game has current moves with actions and events applicable to this asset - returns array of matching events in order", ()->
+          current = [
+            new Backbone.Model(
+              actions:new Backbone.Collection([
+                new Backbone.Model(
+                  events:new Backbone.Collection([
+                    asset:"SOMEONE ELSE"
+                  ,
+                    {}
+                  ])
+                ),
+                new Backbone.Model()
+              ])
+            )
+          ,
+            new Backbone.Model(
+              actions:new Backbone.Collection([
+                new Backbone.Model(
+                  events:new Backbone.Collection([
+                    asset:"THIS ASSET"
+                  ,
+                    {}
+                  ])
+                )
+              ])
+            )
+          ,
+            new Backbone.Model(
+              actions:new Backbone.Collection([
+                new Backbone.Model(
+                  events:new Backbone.Collection([
+                    asset:"ALSO SOMEONE ELSE"
+                  ,
+
+                    asset:"THIS ASSET"
+                  ])
+                )
+              ])
+            )
+          ]
+          jm.when(g.getCurrentTurnMoves)().then(
+            ()->
+              current
+          )
+          ret = fa.getCurrentTurnEvents()
+          a(ret.length, 2)
+          a(ret[0], current[1].get("actions").at(0).get("events").at(0))
+          a(ret[1], current[2].get("actions").at(0).get("events").at(1) )
         )
       )
 

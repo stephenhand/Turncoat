@@ -538,6 +538,9 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
             )
           )
           suite("Asset has move action with matching type", ()->
+            setup(()->
+              asset.set("id","THE ID")
+            )
             suite("Maneuver specified in action", ()->
               maneuver = null
               setup(()->
@@ -603,6 +606,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("rule"), "ships.actions.move")
                 a(event.get("name"), "changePosition")
                 a(event.get("position"), m.instanceOf(Backbone.Model))
+                a(event.get("asset"), "THE ID")
 
               )
               test("maneuver sequence has single rotation step - adds single changePosition event that rotates asset on the spot", ()->
@@ -802,6 +806,13 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event,  m.instanceOf(mocks["lib/turncoat/Event"]))
                 a(event.get("rule"), "ships.actions.move")
                 a(event.get("position"), m.instanceOf(Backbone.Model))
+
+              )
+              test("Sets event asset to asset id", ()->
+                action.set("direction", -45)
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                a(action.get("events").at(0).get("asset"), "THE ID")
 
               )
               test("ChangePosition event specifies the new coordinates and an unchanged bearing", ()->
