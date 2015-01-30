@@ -94,6 +94,68 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
         a(fa.getAvailableActions, m.raisesAnything())
       )
     )
+    suite("getCurrentTurnEvents", ()->
+      fa = null
+      setup(()->
+        fa = new FleetAsset()
+        fa.getRoot = jm.mockFunction()
+      )
+      test("No owning game - throws", ()->
+        a(
+          ()->
+            fa.getCurrentTurnEvents()
+        ,
+          m.raisesAnything()
+        )
+      )
+      suite("Has owning game", ()->
+        g = null
+        setup(()->
+          g =
+            getCurrentTurnMoves:jm.mockFunction()
+          jm.when(fa.getRoot)().then(()->
+            g
+          )
+        )
+        test("Game has no current turn moves - returns empty array", ()->
+          jm.when(g.getCurrentTurnMoves)().then(()->
+            []
+          )
+          a(fa.getCurrentTurnEvents(), m.empty())
+        )
+        test("Game has current moves but no actions - returns empty array", ()->
+          jm.when(g.getCurrentTurnMoves)().then(()->
+            [
+              new Backbone.Model()
+            ,
+              new Backbone.Model()
+            ,
+              new Backbone.Model()
+            ]
+          )
+          a(fa.getCurrentTurnEvents(), m.empty())
+        )
+        test("Game has current moves but empty actions - returns empty array", ()->
+          jm.when(g.getCurrentTurnMoves)().then(()->
+            [
+              new Backbone.Model(
+                actions:new Backbone.Collection()
+              )
+            ,
+              new Backbone.Model(
+                actions:new Backbone.Collection()
+              )
+            ,
+              new Backbone.Model(
+                actions:new Backbone.Collection()
+              )
+            ]
+          )
+          a(fa.getCurrentTurnEvents(), m.empty())
+        )
+      )
+
+    )
     suite("addContext", ()->
       fa = null
       setup(()->

@@ -6,7 +6,7 @@ require(["isolate", "isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!state/ManOWarGameState", "matchers", "operators", "assertThat", "jsMockito", "verifiers"], (ManOWarGameState, m, o, a, jm, v)->
+define(["isolate!state/ManOWarGameState", "matchers", "operators", "assertThat", "jsMockito", "verifiers", "lib/turncoat/Constants"], (ManOWarGameState, m, o, a, jm, v, Constants)->
   mocks = window.mockLibrary["state/ManOWarGameState"]
   suite("ManOWarGameState", ()->
     suite("getCurrentControllingPlayer", ()->
@@ -135,6 +135,49 @@ define(["isolate!state/ManOWarGameState", "matchers", "operators", "assertThat",
         a(
           ()->mowgs.getCurrentControllingUser()
         ,m.raisesAnything())
+      )
+    )
+    suite("getCurrentTurnMoves", ()->
+      mowgs = null
+      setup(()->
+        mowgs = new ManOWarGameState()
+      )
+      test("Game has no move log - returns empty array", ()->
+        a(mowgs.getCurrentTurnMoves(), m.empty())
+      )
+      test("Game has empty move log - returns empty array", ()->
+        mowgs.set("moveLog", new Backbone.Collection([]))
+        a(mowgs.getCurrentTurnMoves(), m.empty())
+      )
+      test("Game has move log with moves and no new turn move - returns all moves", ()->
+        mowgs.set("moveLog", new Backbone.Collection([
+          userId:"NOT_MOCK_USER"
+        ,
+          userId:"ALSO_NOT_MOCK_USER"
+        ]))
+        ret = mowgs.getCurrentTurnMoves()
+        a(ret.length, 2)
+        a(ret[0], mowgs.get("moveLog").at(0))
+        a(ret[1], mowgs.get("moveLog").at(1))
+      )
+      test("Game has move log with moves with new turn move - returns moves after new turn move", ()->
+        mowgs.set("moveLog", new Backbone.Collection([
+          userId:"NOT_MOCK_USER"
+        ,
+          userId:"ALSO_NOT_MOCK_USER"
+        ,
+          type:Constants.MoveTypes.NEW_TURN
+        ,
+          userId:"MOCK_USER"
+        ,
+          userId:"NOT_MOCK_USER"
+        ,
+          userId:"MOCK_USER"
+        ]))
+        ret = mowgs.getCurrentTurnMoves()
+        a(ret.length, 2)
+        a(ret[0], mowgs.get("moveLog").at(0))
+        a(ret[1], mowgs.get("moveLog").at(1))
       )
     )
   )

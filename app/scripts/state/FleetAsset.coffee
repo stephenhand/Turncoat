@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/TypeRegistry', 'state/AssetPosition'], (_, Backbone, GameStateModel, TypeRegistry, AssetPosition)->
+define(["underscore", "backbone", "lib/turncoat/GameStateModel", "lib/turncoat/TypeRegistry", "state/AssetPosition"], (_, Backbone, GameStateModel, TypeRegistry, AssetPosition)->
   class FleetAsset extends GameStateModel
     defaults:
       position:null
@@ -13,12 +13,17 @@ define(['underscore', 'backbone', 'lib/turncoat/GameStateModel', 'lib/turncoat/T
         .getActionRules()
         .getPermittedActionsForAsset(@, @getRoot())
 
+    getCurrentTurnEvents:()->
+      playerMoves = @getRoot().getCurrentTurnMoves()
+      events = []
+      for move in playerMoves
+        for action in move.get("actions")?.models ? []
+
+          events.push(event) for action in action.get("events")?.model [] when event.get("asset") is @get("id")
+      events
 
     addContext:(context)->
       context.SHIP_LENGTH = @get("dimensions")?.get("length") ? 0
-
-    getCurrentMoveHistory:()->
-
 
 
   FleetAsset.toString=()->

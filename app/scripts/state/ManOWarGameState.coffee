@@ -18,7 +18,12 @@ define(["underscore", "backbone", "lib/turncoat/GameStateModel", "lib/turncoat/C
 
     getCurrentTurnPlayer:()->
 
-
+    getCurrentTurnMoves:()->
+      moves = []
+      for m in @get("moveLog")?.models ? []
+        if m.get("type") is Constants.MoveTypes.NEW_TURN then break
+        moves.push(m)
+      moves
 
 
     getRuleBook:()->
