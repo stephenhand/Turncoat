@@ -539,7 +539,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
           )
           suite("Asset has move action with matching type", ()->
             setup(()->
-              asset.set("id","THE ID")
+              asset.set("id","MOCK ASSET ID")
             )
             suite("Maneuver specified in action", ()->
               maneuver = null
@@ -588,9 +588,17 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(()->
                   rule.resolveAction(action, false)
                 ,
+                  m.raisesAnything())
+              )
+              test("move type has no cost specified - throws", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).unset("cost")
+                a(()->
+                  rule.resolveAction(action, false)
+                ,
                   m.raisesAnything()
                 )
               )
+
               test("move type has matching maneuver but no sequence - throws", ()->
                 asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).unset("sequence")
                 a(()->
@@ -599,19 +607,17 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   m.raisesAnything()
                 )
               )
-              test("maneuver sequence has at least one step - returns event with rule as ships.actions.move, name changePosition and a position model", ()->
+              test("maneuver sequence has at least one step - returns event with rule as ships.events.changePosition and a position model", ()->
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
                 a(event,  m.instanceOf(mocks["lib/turncoat/Event"]))
-                a(event.get("rule"), "ships.actions.move")
-                a(event.get("name"), "changePosition")
+                a(event.get("rule"), "ships.events.changePosition")
                 a(event.get("position"), m.instanceOf(Backbone.Model))
-                a(event.get("asset"), "THE ID")
+                a(event.get("asset"), "MOCK ASSET ID")
 
               )
               test("maneuver sequence has single rotation step - adds single changePosition event that rotates asset on the spot", ()->
                 rule.resolveAction(action, false)
-                a(action.get("events").length, 1)
                 event = action.get("events").at(0)
                 a(event.get("position").get("x"), 3)
                 a(event.get("position").get("y"), 5)
@@ -648,7 +654,6 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 ])
                 maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
-                a(action.get("events").length, 1)
                 event = action.get("events").at(0)
                 a(event.get("position").get("x"), 3)
                 a(event.get("position").get("y"), 6)
@@ -683,7 +688,6 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 ])
                 maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
-                a(action.get("events").length, 1)
                 event = action.get("events").at(0)
                 a(event.get("position").get("x"), 3)
                 a(event.get("position").get("y"), 4)
@@ -738,7 +742,6 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(2).evaluate = (x)->@get(x)
                 maneuver.get("sequence").at(4).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
-                a(action.get("events").length, 1)
                 event = action.get("events").at(0)
                 a(event.get("position").get("x"), 8)
                 a(event.get("position").get("y"), 9)
@@ -786,6 +789,27 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(waypoints.at(3).get("y"), 9)
                 a(waypoints.at(3).get("bearing"), m.nil())
               )
+              test("maneuver has zero cost - only creates single event", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).set("cost", 0)
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 1)
+              )
+              test("maneuver has positive cost cost - creates changePosition event and second expendMove event with asset id and cost value", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).set("cost", 3)
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 2)
+                a(action.get("events").at(0).get("rule"), "ships.events.changePosition")
+                a(action.get("events").at(1).get("rule"), "ships.events.expendMove")
+                a(action.get("events").at(1).get("asset"), "MOCK ASSET ID")
+                a(action.get("events").at(1).get("spent"), 3)
+              )
+              test("Maneuver has negative cost cost - still creates event with cost value", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).set("cost", -3)
+                rule.resolveAction(action, false)
+
+                a(action.get("events").length, 2)
+                a(action.get("events").at(1).get("spent"), -3)
+              )
             )
             suite("No maneuver specified in action", ()->
               setup(()->
@@ -796,15 +820,13 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 ))
                 action.unset("maneuver")
               )
-              test("Adds single changePosition event", ()->
+              test("Adds changePosition event", ()->
                 action.set("direction", -45)
                 action.set("distance", 6)
                 rule.resolveAction(action, false)
-                a(action.get("events").length, 1)
                 event = action.get("events").at(0)
-                a(event.get("name"), "changePosition")
                 a(event,  m.instanceOf(mocks["lib/turncoat/Event"]))
-                a(event.get("rule"), "ships.actions.move")
+                a(event.get("rule"), "ships.events.changePosition")
                 a(event.get("position"), m.instanceOf(Backbone.Model))
 
               )
@@ -812,10 +834,10 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 action.set("direction", -45)
                 action.set("distance", 6)
                 rule.resolveAction(action, false)
-                a(action.get("events").at(0).get("asset"), "THE ID")
+                a(action.get("events").at(0).get("asset"), "MOCK ASSET ID")
 
               )
-              test("ChangePosition event specifies the new coordinates and an unchanged bearing", ()->
+              test("changePosition event specifies the new coordinates and an unchanged bearing", ()->
                 action.set("direction", -90)
                 action.set("distance", 6)
                 rule.resolveAction(action, false)
@@ -836,7 +858,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(waypoints.at(0).get("bearing"), 180)
 
               )
-              test("Assumes direction straight ahead if not specified", ()->
+              test("Direction not specified - assumes straight ahead", ()->
                 action.unset("direction")
                 action.set("distance", 6)
                 rule.resolveAction(action, false)
@@ -846,7 +868,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("bearing"), 180)
 
               )
-              test("Assumes zero distance not specified", ()->
+              test("Distance not specified - Assumes zero ", ()->
                 action.set("direction", -90)
                 action.unset("distance")
                 rule.resolveAction(action, false)
@@ -854,6 +876,24 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(event.get("position").get("x"), 3)
                 a(event.get("position").get("y"), 5)
                 a(event.get("position").get("bearing"), 180)
+
+              )
+              test("Distance over zero - Move spend event generated for asset with cost equal to distance", ()->
+                action.set("direction", -90)
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 2)
+                event = action.get("events").at(1)
+
+                a(event.get("asset"), "MOCK ASSET ID")
+                a(event.get("spent"), 6)
+
+              )
+              test("Distance zero - No move spend event generated", ()->
+                action.set("direction", -90)
+                action.unset("distance")
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 1)
 
               )
             )

@@ -128,6 +128,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       y = pos.get("y")
       bearing = pos.get("bearing")
       waypoints = new Backbone.Collection([pos])
+      cost = 0
       if action.get("maneuver")?
         maneuver = move.get("maneuvers").findWhere(name:action.get("maneuver"))
 
@@ -143,13 +144,15 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
               )
             when "rotate"
               bearing = TransformBearings.rotateBearing(bearing, action.get(step.get("rotationAttribute")))
+        cost = maneuver.get("cost")
+        if typeof cost isnt "number" then throw new Error("Invalid cost specified for maneuver")
       else
         v = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(bearing, (action.get("direction") ? 0)), action.get("distance") ? 0)
         x+=v.x
         y+=v.y
+        cost=action.get("distance") ? 0
       action.get("events").push(new Event(
-        rule:"ships.actions.move"
-        name:"changePosition"
+        rule:"ships.events.changePosition"
         position:new Backbone.Model(
           x:x
           y:y
@@ -158,11 +161,13 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
         waypoints:waypoints
         asset:asset.get("id")
       ))
+      if cost isnt 0 then action.get("events").push(new Event(
+        rule:"ships.events.expendMove"
+        spent:cost
+        asset:asset.get("id")
+      ))
       action
 
-
-
-  move.getEventRules=(game)->
 
 
 
