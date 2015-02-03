@@ -9,6 +9,20 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
   move.getActionRules = (game)->
     if !game? then throw new Error('A game must be supplied to retrieve rules')
 
+
+    calculateMoveRemaining:(asset, moveType, forManeuver)->
+      moveDefinition = findMoveDefinition(asset, moveType)
+      distance = moveDefinition.get("distance")
+      modifiers = moveDefinition.get("modifiers")?.models ? []
+      for modifier in modifiers
+        if (modifier.get("condition") is "NO_MANEUVER") and !forManeuver
+          distance += modifier.get("adjustment")
+      if isNaN(distance) then throw new Error("Error calculating move remaining, got NaN")
+      distance
+
+    hasEnoughMoveForManeuver:(asset, moveType, maneuver)->
+      @calculateMoveRemaining(asset, moveType, true) >= maneuver.get("cost")
+
     calculateManeuverRequired:(asset, moveType, maneuver, x, y)->
       if !@hasEnoughMoveForManeuver(asset, moveType, maneuver) then return
       currentPos = asset.get("position")
@@ -99,20 +113,6 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
           direction:0
         )
 
-    calculateMoveRemaining:(asset, moveType, forManeuver)->
-      moveDefinition = findMoveDefinition(asset, moveType)
-      distance = moveDefinition.get("distance")
-      modifiers = moveDefinition.get("modifiers") ? models:[]
-      for modifier in modifiers
-        if modifier.get("condition") is "NO_MANEUVER" and !forManeuver?
-          distance += modifier.get("adjustment")
-      distance
-
-    hasEnoughMoveForManeuver:(asset, moveType, maneuver)->
-      @calculateMoveRemaining(asset, moveType, true) >= maneuver.get("cost")
-
-
-
     resolveAction:(action, resolveNonDeterministic)->
       action.reset()
       assets = game.searchGameStateModels((gsm)->
@@ -168,10 +168,6 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
         isManeuver:action.get("maneuver")?
       ))
       action
-
-
-
-
 
   move
 
