@@ -165,6 +165,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
         rule:"ships.events.expendMove"
         spent:cost
         asset:asset.get("id")
+        isManeuver:action.get("maneuver")?
       ))
       action
 

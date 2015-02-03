@@ -794,7 +794,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 rule.resolveAction(action, false)
                 a(action.get("events").length, 1)
               )
-              test("maneuver has positive cost cost - creates changePosition event and second expendMove event with asset id and cost value", ()->
+              test("maneuver has positive cost - creates changePosition event and second expendMove event with asset id and cost value", ()->
                 asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).set("cost", 3)
                 rule.resolveAction(action, false)
                 a(action.get("events").length, 2)
@@ -803,12 +803,19 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 a(action.get("events").at(1).get("asset"), "MOCK ASSET ID")
                 a(action.get("events").at(1).get("spent"), 3)
               )
-              test("Maneuver has negative cost cost - still creates event with cost value", ()->
+              test("Maneuver has negative cost - still creates event with cost value", ()->
                 asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).set("cost", -3)
                 rule.resolveAction(action, false)
 
                 a(action.get("events").length, 2)
                 a(action.get("events").at(1).get("spent"), -3)
+              )
+              test("Maneuver has cost - spend event has 'isManeuver flag set to true", ()->
+                asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).set("cost", 3)
+                rule.resolveAction(action, false)
+
+                a(action.get("events").length, 2)
+                a(action.get("events").at(1).get("isManeuver"), true)
               )
             )
             suite("No maneuver specified in action", ()->
@@ -887,6 +894,18 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
 
                 a(event.get("asset"), "MOCK ASSET ID")
                 a(event.get("spent"), 6)
+
+              )
+              test("Distance over zero - Move spend event has 'isManeuver' flag set to false", ()->
+                action.set("direction", -90)
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                a(action.get("events").length, 2)
+                event = action.get("events").at(1)
+
+                a(event.get("asset"), "MOCK ASSET ID")
+                a(event.get("spent"), 6)
+                a(event.get("isManeuver"), false)
 
               )
               test("Distance zero - No move spend event generated", ()->
