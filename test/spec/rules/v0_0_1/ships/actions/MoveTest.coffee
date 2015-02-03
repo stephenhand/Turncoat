@@ -189,6 +189,34 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
             )
           )
         )
+        suite("hasEnoughMoveForManeuver", ()->
+          setup(()->
+            rule.calculateMoveRemaining = jm.mockFunction()
+            jm.when(rule.calculateMoveRemaining)(m.anything(), m.anything(), true).thenReturn(10)
+          )
+          test("Calls calculateMoveRemaining with asset moveType and forManeuver flag set to true", ()->
+            asset = {}
+            rule.hasEnoughMoveForManeuver(asset, "A MOVE OF SORTS", new Backbone.Model(cost:7))
+            jm.verify(rule.calculateMoveRemaining)(asset, "A MOVE OF SORTS", true)
+          )
+          test("Maneuver specified is invalid backbone model - throws", ()->
+            a(
+              ()->
+                rule.hasEnoughMoveForManeuver({}, "A MOVE OF SORTS", {})
+            ,
+              m.raisesAnything()
+            )
+          )
+          test("Maneuver has higher cost than move remaining - returns false", ()->
+            a(rule.hasEnoughMoveForManeuver(null, null, new Backbone.Model(cost:17)), false)
+          )
+          test("Maneuver has lower cost than move remaining - returns true", ()->
+            a(rule.hasEnoughMoveForManeuver(null, null, new Backbone.Model(cost:7)), true)
+          )
+          test("Maneuver has no cost set - returns false", ()->
+            a(rule.hasEnoughMoveForManeuver(null, null, new Backbone.Model()), false)
+          )
+        )
         suite("calculateManeuverRequired", ()->
           asset = null
           maneuver = null
