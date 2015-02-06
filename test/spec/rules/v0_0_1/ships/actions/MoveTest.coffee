@@ -77,7 +77,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               m.raisesAnything()
             )
           )
-          test("No distance defined but applcable modifier defined on move type - throws", ()->
+          test("No distance defined but applicable modifier defined on move type - throws", ()->
             asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
               condition:"NO_MANEUVER"
               modifier:3
@@ -92,22 +92,21 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
           suite("Distance specified", ()->
             setup(()->
               asset.get("actions").at(0).get("types").at(0).set("distance", 13)
+              asset.getCurrentTurnEvents=jm.mockFunction()
             )
             suite("getCurrentTurnEvents for asset returns empty", ()->
               setup(()->
-                asset.getCurrentTurnEvents=jm.mockFunction()
                 jm.when(asset.getCurrentTurnEvents)().thenReturn([])
               )
               test("No modifier collection - returns distance", ()->
                 a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 13)
-
               )
               test("Empty modifier collection - returns distance", ()->
                 asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([ ]))
                 a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 13)
 
               )
-              test("Modifier collection populated with events other than NO_MANUEVER - returns distance", ()->
+              test("Modifier collection populated with events other than NO_MANEUVER - returns distance", ()->
                 asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
                   condition:"NO NO_MANEUVER"
                   modifier:3
@@ -187,7 +186,99 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
 
               )
             )
+
+            test("getCurrentTurnEvents for asset returns nothing - no effect on result", ()->
+              jm.when(asset.getCurrentTurnEvents)().thenReturn(null)
+              a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 13)
+              asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
+                condition:"NO_MANEUVER"
+                adjustment:3
+              ,
+                condition:"NOT NO_MANEUVER"
+                adjustment:3
+              ,
+                condition:"NO_MANEUVER"
+                adjustment:-0.5
+
+              ]))
+              a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 15.5)
+
+            )
+            test("getCurrentTurnEvents for asset returns array with no expendMove events - no effect on result", ()->
+              jm.when(asset.getCurrentTurnEvents)().thenReturn([
+                new Backbone.Model(
+                  rule:"NOT EXPENDMOVE"
+                  spend:45
+                )
+              ,
+                new Backbone.Model(
+                  rule:"ALSO NOT EXPENDMOVE"
+                  spend:-4
+                )
+              ])
+              a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 13)
+              asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
+                condition:"NO_MANEUVER"
+                adjustment:3
+              ,
+                condition:"NOT NO_MANEUVER"
+                adjustment:3
+              ,
+                condition:"NO_MANEUVER"
+                adjustment:-0.5
+
+              ]))
+              a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 15.5)
+
+            )
+            suite("getCurrentTurnEvents for asset returns array with expendMove events", ()->
+              setup(()->
+                asset.getCurrentTurnEvents=jm.mockFunction()
+                jm.when(asset.getCurrentTurnEvents)().thenReturn([
+                  new Backbone.Model(
+                    rule:"NOT EXPENDMOVE"
+                    spend:45
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ships.events.expendMove"
+                    spend:5
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ALSO NOT EXPENDMOVE"
+                    spend:-4
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ships.events.expendMove"
+                    spend:-2
+                  )
+                ])
+              )
+              test("No modifiers - returns distance with total spend of all spend values of expendMove events subtracted", ()->
+                asset.get("actions").at(0).get("types").at(0).unset("modifiers")
+                a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 10)
+
+              )
+              test("Valid modifiers present on asset move - returns distance with total spend of all spend values of expendMove events subtracted and all modifiers added", ()->
+                asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
+                  condition:"NO_MANEUVER"
+                  adjustment:3
+                ,
+                  condition:"NOT NO_MANEUVER"
+                  adjustment:3
+                ,
+                  condition:"NO_MANEUVER"
+                  adjustment:-0.5
+
+                ]))
+                a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 12.5)
+
+              )
+            )
           )
+
         )
         suite("hasEnoughMoveForManeuver", ()->
           setup(()->

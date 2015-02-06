@@ -14,9 +14,10 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       moveDefinition = findMoveDefinition(asset, moveType)
       distance = moveDefinition.get("distance")
       modifiers = moveDefinition.get("modifiers")?.models ? []
-      for modifier in modifiers
-        if (modifier.get("condition") is "NO_MANEUVER") and !forManeuver
-          distance += modifier.get("adjustment")
+      for modifier in modifiers when (modifier.get("condition") is "NO_MANEUVER") and !forManeuver
+        distance += modifier.get("adjustment")
+      for event in asset.getCurrentTurnEvents() ? [] when event.get("rule") is "ships.events.expendMove"
+        distance -= event.get("spend")
       if isNaN(distance) then throw new Error("Error calculating move remaining, got NaN")
       distance
 
