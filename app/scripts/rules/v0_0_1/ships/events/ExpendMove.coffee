@@ -1,5 +1,11 @@
 define(["underscore", "backbone", "lib/turncoat/RuleBookEntry"], (_, Backbone, RuleBookEntry)->
-  expendMove = new RuleBookEntry()
+  class ExpendMove extends RuleBookEntry
 
-  expendMove
+    getRules:(game)->
+      super(game)
+      apply:()->
+
+      revert:()->
+
+  new ExpendMove()
 )

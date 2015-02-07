@@ -29,24 +29,28 @@ define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_, spri
         for action in actions.models when action.get("events")
           for event in action.get("events").models when event.get("rule") is "ships.events.changePosition"
             if !currentPosition?
-              currentPosition=event.get("waypoints")?.at(0)
+              currentPosition=event.get("startingPoint")
               if currentPosition?
                 pathSpec = sprintf("m %s %s", currentPosition.get("x"), currentPosition.get("y"))
               else
                 return pathSpec
-            if !event.get("position").get("x")? or !event.get("position").get("y")? or !event.get("position").get("bearing")? then throw new Error("Invalid position data in changePosition event: "+JSON.stringify(event))
+            if !event.get("vector").get("x")? or !event.get("vector").get("y")? or !event.get("vector").get("rotation")? then throw new Error("Invalid position data in changePosition event: "+JSON.stringify(event))
             dist = TransformBearings.vectorToBearingAndDistance(
-                x:event.get("position").get("x")-currentPosition.get("x")
-                y:event.get("position").get("y")-currentPosition.get("y")
+                x:event.get("vector").get("x")
+                y:event.get("vector").get("y")
             ).distance/2.5
             cubicControl1 = TransformBearings.bearingAndDistanceToVector(currentPosition.get("bearing"), dist)
-            cubicControl2 = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(event.get("position").get("bearing"), 180), dist)
+            cubicControl2 = TransformBearings.bearingAndDistanceToVector(TransformBearings.rotateBearing(currentPosition.get("bearing"),event.get("vector").get("rotation")+180), dist)
             pathSpec += sprintf(" c %s %s, %s %s, %s %s",
               cubicControl1.x, cubicControl1.y,
-              (event.get("position").get("x")+cubicControl2.x) - currentPosition.get("x"), (event.get("position").get("y")+cubicControl2.y) - currentPosition.get("y"),
-              event.get("position").get("x")-currentPosition.get("x"),event.get("position").get("y")-currentPosition.get("y")
+              (event.get("vector").get("x")+cubicControl2.x), (event.get("vector").get("y")+cubicControl2.y),
+              event.get("vector").get("x"),event.get("vector").get("y")
             )
-            currentPosition = event.get("position")
+            oldPosition = currentPosition
+            currentPosition = new Backbone.Model()
+            currentPosition.set("x", oldPosition.get("x")+event.get("vector").get("x"))
+            currentPosition.set("y", oldPosition.get("y")+event.get("vector").get("y"))
+            currentPosition.set("bearing", TransformBearings.rotateBearing(oldPosition.get("bearing"),event.get("vector").get("rotation")))
       pathSpec
 
     calc:(input, mask)->

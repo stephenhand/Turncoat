@@ -850,7 +850,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   m.raisesAnything()
                 )
               )
-              test("move type has maneuvers but none match the name specified in the action - throws", ()->
+              test("Move type has maneuvers but none match the name specified in the action - throws", ()->
                 asset.get("actions").at(0).get("types").at(0).get("maneuvers").reset([
                   new Backbone.Model(
                     name:"NOT MOCK TURN TYPE"
@@ -866,7 +866,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 ,
                   m.raisesAnything())
               )
-              test("move type has no cost specified - throws", ()->
+              test("Move type has no cost specified - throws", ()->
                 asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).unset("cost")
                 a(()->
                   rule.resolveAction(action, false)
@@ -875,7 +875,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 )
               )
 
-              test("move type has matching maneuver but no sequence - throws", ()->
+              test("Move type has matching maneuver but no sequence - throws", ()->
                 asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).unset("sequence")
                 a(()->
                   rule.resolveAction(action, false)
@@ -883,33 +883,37 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   m.raisesAnything()
                 )
               )
-              test("maneuver sequence has at least one step - returns event with rule as ships.events.changePosition and a position model", ()->
+              test("Maneuver sequence has at least one step - returns event with rule as ships.events.changePosition and a vector model", ()->
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
                 a(event,  m.instanceOf(mocks["lib/turncoat/Event"]))
                 a(event.get("rule"), "ships.events.changePosition")
-                a(event.get("position"), m.instanceOf(Backbone.Model))
+                a(event.get("vector"), m.instanceOf(Backbone.Model))
                 a(event.get("asset"), "MOCK ASSET ID")
 
               )
-              test("maneuver sequence has single rotation step - adds single changePosition event that rotates asset on the spot", ()->
+              test("Maneuver sequence has single rotation step - adds single changePosition event that rotates asset on the spot", ()->
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
-                a(event.get("position").get("x"), 3)
-                a(event.get("position").get("y"), 5)
-                a(event.get("position").get("bearing"), 135)
+                a(event.get("vector").get("x"), 0)
+                a(event.get("vector").get("y"), 0)
+                a(event.get("vector").get("rotation"), -45)
 
               )
-              test("maneuver sequence has single rotation step - sets single waypoint marking start position", ()->
+              test("maneuver sequence has single rotation step - sets startPosition attribute marking start position", ()->
                 rule.resolveAction(action, false)
-                waypoints = action.get("events").at(0).get("waypoints")
-                a(waypoints.length, 1)
-                a(waypoints.at(0).get("x"), 3)
-                a(waypoints.at(0).get("y"), 5)
-                a(waypoints.at(0).get("bearing"), 180)
+                sp = action.get("events").at(0).get("startingPoint")
+                a(sp.get("x"), 3)
+                a(sp.get("y"), 5)
+                a(sp.get("bearing"), 180)
 
               )
-              test("maneuver sequence has single rotation step but action doesn't have rotationAttribute specified in move - throws", ()->
+              test("maneuver sequence has single rotation step - sets no waypoints", ()->
+                rule.resolveAction(action, false)
+                a(action.get("events").at(0).get("waypoints").length, 0)
+
+              )
+              test("Maneuver sequence has single rotation step but action doesn't have rotationAttribute specified in move - throws", ()->
                 action.unset("mockRotationValue")
                 a(()->
                   rule.resolveAction(action, false)
@@ -918,7 +922,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 )
 
               )
-              test("maneuver sequence has single move without direction followed by single rotation step - adds single changePosition event that moves asset forwards by distance specified and rotates it.", ()->
+              test("Maneuver sequence has single move without direction followed by single rotation step - adds single changePosition event that moves asset forwards by distance specified and rotates it.", ()->
                 maneuver.get("sequence").reset([
                   type:"move"
                   distance:1
@@ -931,12 +935,12 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
-                a(event.get("position").get("x"), 3)
-                a(event.get("position").get("y"), 6)
-                a(event.get("position").get("bearing"), 135)
+                a(event.get("vector").get("x"), 0)
+                a(event.get("vector").get("y"), 1)
+                a(event.get("vector").get("rotation"), -45)
 
               )
-              test("moves in sequence are evaluated rather than got.", ()->
+              test("Moves in sequence are evaluated rather than got.", ()->
                 maneuver.get("sequence").reset([
                   type:"move"
                   distance:1
@@ -951,7 +955,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 jm.verify(maneuver.get("sequence").at(0).evaluate)("distance")
 
               )
-              test("maneuver sequence has single move with direction followed by single rotation step - adds single changePosition event that moves asset in direction specified by distance specified and rotates it.", ()->
+              test("Maneuver sequence has single move with direction followed by single rotation step - adds single changePosition event that moves asset in direction specified by distance specified and rotates it.", ()->
                 maneuver.get("sequence").reset([
                   type:"move"
                   distance:1
@@ -965,12 +969,12 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
-                a(event.get("position").get("x"), 3)
-                a(event.get("position").get("y"), 4)
-                a(event.get("position").get("bearing"), 135)
+                a(event.get("vector").get("x"), 0)
+                a(event.get("vector").get("y"), -1)
+                a(event.get("vector").get("rotation"), -45)
 
               )
-              test("maneuver sequence has single move followed by single rotation step - sets two waypoints with bearing on start.", ()->
+              test("Maneuver sequence has single move followed by single rotation step - sets a waypoint for second position.", ()->
                 maneuver.get("sequence").reset([
                   type:"move"
                   distance:1
@@ -984,15 +988,12 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(0).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 waypoints = action.get("events").at(0).get("waypoints")
-                a(waypoints.length, 2)
-                a(waypoints.at(0).get("x"), 3)
-                a(waypoints.at(0).get("y"), 5)
-                a(waypoints.at(0).get("bearing"), 180)
-                a(waypoints.at(1).get("x"), 3)
-                a(waypoints.at(1).get("y"), 4)
-                a(waypoints.at(1).get("bearing"), m.nil())
+                a(waypoints.length, 1)
+                a(waypoints.at(0).get("x"), 0)
+                a(waypoints.at(0).get("y"), -1)
+                a(waypoints.at(0).get("bearing"), m.nil())
               )
-              test("maneuver sequence has several moves and rotations - applies them all to final new position", ()->
+              test("Maneuver sequence has several moves and rotations - applies them all to final new position", ()->
                 action.set("mockRotationValue2", 45)
                 maneuver.get("sequence").reset([
                   type:"move"
@@ -1019,12 +1020,12 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(4).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
-                a(event.get("position").get("x"), 8)
-                a(event.get("position").get("y"), 9)
-                a(event.get("position").get("bearing"), 180)
+                a(event.get("vector").get("x"), 5)
+                a(event.get("vector").get("y"), 4)
+                a(event.get("vector").get("rotation"), 0)
 
               )
-              test("maneuver sequence has several moves and rotations - sets correct waypoints on event, only specifying bearing at start", ()->
+              test("maneuver sequence has several moves and rotations - sets correct waypoints on event", ()->
                 action.set("mockRotationValue2", 45)
                 maneuver.get("sequence").reset([
                   type:"move"
@@ -1051,19 +1052,16 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 maneuver.get("sequence").at(4).evaluate = (x)->@get(x)
                 rule.resolveAction(action, false)
                 waypoints = action.get("events").at(0).get("waypoints")
-                a(waypoints.length, 4)
+                a(waypoints.length, 3)
                 a(waypoints.at(0).get("x"), 3)
-                a(waypoints.at(0).get("y"), 5)
-                a(waypoints.at(0).get("bearing"), 180)
-                a(waypoints.at(1).get("x"), 6)
-                a(waypoints.at(1).get("y"), 5)
+                a(waypoints.at(0).get("y"), 0)
+                a(waypoints.at(0).get("bearing"), m.nil())
+                a(waypoints.at(1).get("x"), 5)
+                a(waypoints.at(1).get("y"), 0)
                 a(waypoints.at(1).get("bearing"), m.nil())
-                a(waypoints.at(2).get("x"), 8)
-                a(waypoints.at(2).get("y"), 5)
+                a(waypoints.at(2).get("x"), 5)
+                a(waypoints.at(2).get("y"), 4)
                 a(waypoints.at(2).get("bearing"), m.nil())
-                a(waypoints.at(3).get("x"), 8)
-                a(waypoints.at(3).get("y"), 9)
-                a(waypoints.at(3).get("bearing"), m.nil())
               )
               test("maneuver has zero cost - only creates single event", ()->
                 asset.get("actions").at(0).get("types").at(0).get("maneuvers").at(0).set("cost", 0)
@@ -1110,7 +1108,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 event = action.get("events").at(0)
                 a(event,  m.instanceOf(mocks["lib/turncoat/Event"]))
                 a(event.get("rule"), "ships.events.changePosition")
-                a(event.get("position"), m.instanceOf(Backbone.Model))
+                a(event.get("vector"), m.instanceOf(Backbone.Model))
 
               )
               test("Sets event asset to asset id", ()->
@@ -1125,20 +1123,27 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 action.set("distance", 6)
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
-                a(event.get("position").get("x"), 9)
-                a(event.get("position").get("y"), 5)
-                a(event.get("position").get("bearing"), 180)
+                a(event.get("vector").get("x"), 6)
+                a(event.get("vector").get("y"), 0)
+                a(event.get("vector").get("rotation"), 0)
 
               )
-              test("Adds single waypoint to event specifying start position & bearing", ()->
+              test("Adds no waypoints to event", ()->
                 action.set("direction", -90)
                 action.set("distance", 6)
                 rule.resolveAction(action, false)
                 waypoints = action.get("events").at(0).get("waypoints")
-                a(waypoints.length, 1)
-                a(waypoints.at(0).get("x"), 3)
-                a(waypoints.at(0).get("y"), 5)
-                a(waypoints.at(0).get("bearing"), 180)
+                a(action.get("events").at(0).get("waypoints").length, 0)
+
+              )
+              test("Adds startingPoint attribute to event specifying start position & bearing", ()->
+                action.set("direction", -90)
+                action.set("distance", 6)
+                rule.resolveAction(action, false)
+                sp = action.get("events").at(0).get("startingPoint")
+                a(sp.get("x"), 3)
+                a(sp.get("y"), 5)
+                a(sp.get("bearing"), 180)
 
               )
               test("Direction not specified - assumes straight ahead", ()->
@@ -1146,9 +1151,9 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 action.set("distance", 6)
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
-                a(event.get("position").get("x"), 3)
-                a(event.get("position").get("y"), 11)
-                a(event.get("position").get("bearing"), 180)
+                a(event.get("vector").get("x"), 0)
+                a(event.get("vector").get("y"), 6)
+                a(event.get("vector").get("rotation"), 0)
 
               )
               test("Distance not specified - Assumes zero ", ()->
@@ -1156,9 +1161,9 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 action.unset("distance")
                 rule.resolveAction(action, false)
                 event = action.get("events").at(0)
-                a(event.get("position").get("x"), 3)
-                a(event.get("position").get("y"), 5)
-                a(event.get("position").get("bearing"), 180)
+                a(event.get("vector").get("x"), 0)
+                a(event.get("vector").get("y"), 0)
+                a(event.get("vector").get("rotation"), 0)
 
               )
               test("Distance over zero - Move spend event generated for asset with cost equal to distance", ()->

@@ -4,10 +4,8 @@ define(["underscore", "backbone"], (_, RuleBookEntry)->
       @subEntries = subEntries ? {}
     getDescription:()->
       throw new Error("RuleBook entries must implement getDescription")
-    getEventRules:()->
-      throw new Error("RuleBook entries must implement getEventRules")
-    getActionRules:()->
-      throw new Error("RuleBook entries must implement getEventRules")
+    getRules:(game)->
+      if !game? then throw new Error('A game must be supplied to retrieve rules')
 
     lookUp:(rulePath)->
       dotPos = rulePath.indexOf(".")

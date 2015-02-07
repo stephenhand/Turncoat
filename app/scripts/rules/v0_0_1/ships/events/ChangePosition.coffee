@@ -1,6 +1,12 @@
 define(["underscore", "backbone", "lib/turncoat/RuleBookEntry"], (_, Backbone, RuleBookEntry)->
-  changePosition = RuleBookEntry()
+  class ChangePosition extends RuleBookEntry
 
-  changePosition
+    getRules:(game)->
+      super(game)
+      apply:()->
+
+      revert:()->
+
+  new ChangePosition()
 )
 

@@ -3,8 +3,8 @@
     <g rv-each-nominated=".nominatedAssets">
         <circle class="asset-selection-highlight"
                 rv-r="nominated.length | multiplier 0.8" rv-cx="nominated.xpx" rv-cy="nominated.ypx"
-                rv-class="nominated.classList" rv-asset-id="nominated.UUID" fill="transparent" stroke="red" stroke-width="0.1"/>
-        <path rv-d=".queriedAction | pathDefinitionFromActions" stroke="blue" fill="transparent" stroke-width="0.1"/>
+                rv-class="nominated.classList" rv-asset-id="nominated.UUID"  fill="url(#underlight-red)"/>
+        <path rv-d=".queriedAction | pathDefinitionFromActions" stroke="black" stroke-dasharray="0.1, 0.2" fill="transparent" stroke-width="0.1"/>
     </g>
     <rect id="navigationHotspot" width="100%" height="100%" fill="transparent" stroke="transparent"></rect>
 </g>

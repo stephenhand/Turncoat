@@ -484,22 +484,23 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
               ])
             ), "m 0 0")
           )
-          suite("Any waypoints", ()->
+          suite("Has starting point", ()->
             action = null
             setup(()->
               action = new Backbone.Model(
                 events:new Backbone.Collection([
                   rule:"ships.events.changePosition"
-                  waypoints:new Backbone.Collection([
+                  startingPoint:new Backbone.Model(
                     x:50
                     y:40
                     bearing:100
-                  ])
-                  position:new Backbone.Model(
-                    x:40
-                    y:50
-                    bearing:160
                   )
+                  vector:new Backbone.Model(
+                    x:-10
+                    y:10
+                    rotation:60
+                  )
+                  waypoints:new Backbone.Collection([])
                 ])
               )
 
@@ -508,7 +509,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
 
               a(Formatters.pathDefinitionFromActions(action), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10$/))
             )
-            test("Additional waypoints don't affect path definition",()->
+            test("Adding waypoints doesn't affect path definition",()->
 
               oneWP = Formatters.pathDefinitionFromActions(action);
               action.get("events").at(0).get("waypoints").add(
@@ -525,7 +526,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
               a(oneWP, Formatters.pathDefinitionFromActions(action))
             )
             test("Missing position - throws",()->
-              action.get("events").at(0).unset("position")
+              action.get("events").at(0).unset("vector")
               a(()->
                 Formatters.pathDefinitionFromActions(action)
               ,
@@ -533,7 +534,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
               )
             )
             test("Missing X position data - throws", ()->
-              action.get("events").at(0).get("position").unset("x")
+              action.get("events").at(0).get("vector").unset("x")
               a(()->
                 Formatters.pathDefinitionFromActions(action)
               ,
@@ -541,7 +542,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
               )
             )
             test("Missing Y position data - throws", ()->
-              action.get("events").at(0).get("position").unset("y")
+              action.get("events").at(0).get("vector").unset("y")
               a(()->
                 Formatters.pathDefinitionFromActions(action)
               ,
@@ -549,7 +550,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
               )
             )
             test("Missing bearing position data - throws", ()->
-              action.get("events").at(0).get("position").unset("bearing")
+              action.get("events").at(0).get("vector").unset("rotation")
               a(()->
                 Formatters.pathDefinitionFromActions(action)
               ,
@@ -562,15 +563,15 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           a(Formatters.pathDefinitionFromActions(
             events:new Backbone.Collection([
               rule:"not changePosition"
-              waypoints:new Backbone.Collection([
+              startingPoint:new Backbone.Model(
                 x:50
                 y:40
                 bearing:100
-              ])
-              position:new Backbone.Model(
-                x:40
-                y:50
-                bearing:160
+              )
+              vector:new Backbone.Model(
+                x:0
+                y:0
+                rotation:60
               )
             ])
           ), "m 0 0")
@@ -581,55 +582,55 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
             action = new Backbone.Model(
               events:new Backbone.Collection([
                 rule:"not changePosition"
-                waypoints:new Backbone.Collection([
+                startingPoint:new Backbone.Model(
                   x:30
                   y:20
                   bearing:32
-                ])
-                position:new Backbone.Model(
+                )
+                vector:new Backbone.Model(
                   x:20
                   y:30
-                  bearing:48
+                  rotation:48
                 )
               ,
                 rule:"ships.events.changePosition"
-                waypoints:new Backbone.Collection([
+                startingPoint:new Backbone.Model(
                   x:50
                   y:40
                   bearing:100
-                ])
-                position:new Backbone.Model(
-                  x:40
-                  y:50
-                  bearing:160
+                )
+                vector:new Backbone.Model(
+                  x:-10
+                  y:10
+                  rotation:60
                 )
               ,
                 rule:"not changePosition"
-                position:new Backbone.Model(
+                vector:new Backbone.Model(
                   x:160
                   y:170
                   bearing:123
                 )
               ,
                 rule:"ships.events.changePosition"
-                position:new Backbone.Model(
-                  x:60
-                  y:70
-                  bearing:1
+                vector:new Backbone.Model(
+                  x:20
+                  y:20
+                  rotation:-99
                 )
               ,
                 rule:"not changePosition"
-                position:new Backbone.Model(
+                vector:new Backbone.Model(
                   x:61
                   y:71
-                  bearing:2
+                  rotation:2
                 )
               ,
                 rule:"ships.events.changePosition"
-                position:new Backbone.Model(
-                  x:65
-                  y:75
-                  bearing:15
+                vector:new Backbone.Model(
+                  x:5
+                  y:5
+                  rotation:14
                 )
               ])
             )
@@ -662,101 +663,101 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           actions = new Backbone.Collection([
             events:new Backbone.Collection([
               rule:"not changePosition"
-              waypoints:new Backbone.Collection([
+              startingPoint:new Backbone.Model(
                 x:30
                 y:20
                 bearing:32
-              ])
-              position:new Backbone.Model(
-                x:20
-                y:30
-                bearing:48
+              )
+              vector:new Backbone.Model(
+                x:-10
+                y:10
+                rotation:16
               )
             ,
               rule:"ships.events.changePosition"
-              waypoints:new Backbone.Collection([
+              startingPoint:new Backbone.Model(
                 x:50
                 y:40
                 bearing:100
-              ])
-              position:new Backbone.Model(
-                x:40
-                y:50
-                bearing:160
+              )
+              vector:new Backbone.Model(
+                x:-10
+                y:10
+                rotation:60
               )
             ,
               rule:"not changePosition"
-              position:new Backbone.Model(
+              vector:new Backbone.Model(
                 x:160
                 y:170
-                bearing:123
+                rotation:123
               )
             ,
               rule:"ships.events.changePosition"
-              position:new Backbone.Model(
-                x:60
-                y:70
-                bearing:1
+              vector:new Backbone.Model(
+                x:20
+                y:20
+                rotation:-99
               )
             ,
               rule:"not changePosition"
-              position:new Backbone.Model(
+              vector:new Backbone.Model(
                 x:61
                 y:71
                 bearing:2
               )
             ,
               rule:"ships.events.changePosition"
-              position:new Backbone.Model(
-                x:65
-                y:75
-                bearing:15
+              vector:new Backbone.Model(
+                x:5
+                y:5
+                rotation:14
               )
             ])
           ,
             events:new Backbone.Collection([
               rule:"not changePosition"
-              waypoints:new Backbone.Collection([
+              startingPoint:new Backbone.Model(
                 x:30
                 y:20
                 bearing:32
-              ])
-              position:new Backbone.Model(
-                x:20
-                y:30
-                bearing:48
+              )
+              vector:new Backbone.Model(
+                x:125
+                y:-125
+                rotation:48
               )
             ])
           ,
             events:new Backbone.Collection([
               rule:"ships.events.changePosition"
-              position:new Backbone.Model(
-                x:20
-                y:30
-                bearing:48
+              vector:new Backbone.Model(
+                x:-45
+                y:-45
+                rotation:48
               )
             ])
           ,
             events:new Backbone.Collection([
               rule:"ships.events.changePosition"
-              position:new Backbone.Model(
-                x:40
-                y:50
-                bearing:160
+              vector:new Backbone.Model(
+                x:20
+                y:20
+                rotation:145
               )
             ,
               rule:"not changePosition"
-              position:new Backbone.Model(
+              vector:new Backbone.Model(
                 x:160
                 y:170
-                bearing:123
+                rotation:123
               )
             ,
               rule:"ships.events.changePosition"
-              position:new Backbone.Model(
-                x:65
-                y:75
-                bearing:1
+              vector:new Backbone.Model(
+                x:25
+                y:25
+                rotation:-144
               )
             ])
           ])
@@ -765,24 +766,24 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
         test("Generates first curve from waypoint to position of the first event of the first, then for each subsequent event in that action, and all events in all subsequent actions add another curve ending in the next events position, ignoring any events not named changePosition", ()->
           a(Formatters.pathDefinitionFromActions(actions), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -45 -45 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 25 25$/))
         )
-        test("Ignores first changePosition event's first waypoint in subsequent actions completely", ()->
+        test("Ignores first changePosition event's startingPoint in subsequent actions completely", ()->
           noWPs = Formatters.pathDefinitionFromActions(actions)
-          actions.at(2).get("events").at(0).set("waypoints", new Backbone.Collection([
+          actions.at(2).get("events").at(0).set("startingPoint", new Backbone.Model(
             x:180
             y:-20
             bearing:135
-          ]))
+          ))
           a(noWPs, Formatters.pathDefinitionFromActions(actions))
-          actions.at(3).get("events").at(0).set("waypoints", new Backbone.Collection([
+          actions.at(3).get("events").at(0).set("startingPoint", new Backbone.Model(
             x:-1802
             y:2000
             bearing:-13
-          ]))
+          ))
           a(noWPs, Formatters.pathDefinitionFromActions(actions))
         )
         test("Ignores actions with no events collection", ()->
           actions.at(2).unset("events")
-          a(Formatters.pathDefinitionFromActions(actions), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -25 -25 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 25 25$/))
+          a(Formatters.pathDefinitionFromActions(actions), m.matches(/^m 50 40 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} -10 10 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 5 5 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 20 20 c(( -?[0-9]+(\.[0-9]+)?){2}\,){2} 25 25$/))
         )
       )
     )
