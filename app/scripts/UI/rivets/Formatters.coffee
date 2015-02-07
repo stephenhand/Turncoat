@@ -27,7 +27,7 @@ define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_, spri
 
         currentPosition = null
         for action in actions.models when action.get("events")
-          for event in action.get("events").models when event.get("name") is "changePosition"
+          for event in action.get("events").models when event.get("rule") is "ships.events.changePosition"
             if !currentPosition?
               currentPosition=event.get("waypoints")?.at(0)
               if currentPosition?

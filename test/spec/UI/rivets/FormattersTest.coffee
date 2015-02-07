@@ -479,7 +479,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           test("No waypoints in first event - returns non rendering placeholder",()->
             a(Formatters.pathDefinitionFromActions(
               events:new Backbone.Collection([
-                name:"changePosition"
+                rule:"ships.events.changePosition"
                 waypoints:new Backbone.Collection([])
               ])
             ), "m 0 0")
@@ -489,7 +489,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
             setup(()->
               action = new Backbone.Model(
                 events:new Backbone.Collection([
-                  name:"changePosition"
+                  rule:"ships.events.changePosition"
                   waypoints:new Backbone.Collection([
                     x:50
                     y:40
@@ -561,7 +561,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
         test("Single event of other type - returns non rendering placeholder",()->
           a(Formatters.pathDefinitionFromActions(
             events:new Backbone.Collection([
-              name:"not changePosition"
+              rule:"not changePosition"
               waypoints:new Backbone.Collection([
                 x:50
                 y:40
@@ -580,7 +580,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
           setup(()->
             action = new Backbone.Model(
               events:new Backbone.Collection([
-                name:"not changePosition"
+                rule:"not changePosition"
                 waypoints:new Backbone.Collection([
                   x:30
                   y:20
@@ -592,7 +592,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
                   bearing:48
                 )
               ,
-                name:"changePosition"
+                rule:"ships.events.changePosition"
                 waypoints:new Backbone.Collection([
                   x:50
                   y:40
@@ -604,28 +604,28 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
                   bearing:160
                 )
               ,
-                name:"not changePosition"
+                rule:"not changePosition"
                 position:new Backbone.Model(
                   x:160
                   y:170
                   bearing:123
                 )
               ,
-                name:"changePosition"
+                rule:"ships.events.changePosition"
                 position:new Backbone.Model(
                   x:60
                   y:70
                   bearing:1
                 )
               ,
-                name:"not changePosition"
+                rule:"not changePosition"
                 position:new Backbone.Model(
                   x:61
                   y:71
                   bearing:2
                 )
               ,
-                name:"changePosition"
+                rule:"ships.events.changePosition"
                 position:new Backbone.Model(
                   x:65
                   y:75
@@ -661,7 +661,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
         setup(()->
           actions = new Backbone.Collection([
             events:new Backbone.Collection([
-              name:"not changePosition"
+              rule:"not changePosition"
               waypoints:new Backbone.Collection([
                 x:30
                 y:20
@@ -673,7 +673,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
                 bearing:48
               )
             ,
-              name:"changePosition"
+              rule:"ships.events.changePosition"
               waypoints:new Backbone.Collection([
                 x:50
                 y:40
@@ -685,28 +685,28 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
                 bearing:160
               )
             ,
-              name:"not changePosition"
+              rule:"not changePosition"
               position:new Backbone.Model(
                 x:160
                 y:170
                 bearing:123
               )
             ,
-              name:"changePosition"
+              rule:"ships.events.changePosition"
               position:new Backbone.Model(
                 x:60
                 y:70
                 bearing:1
               )
             ,
-              name:"not changePosition"
+              rule:"not changePosition"
               position:new Backbone.Model(
                 x:61
                 y:71
                 bearing:2
               )
             ,
-              name:"changePosition"
+              rule:"ships.events.changePosition"
               position:new Backbone.Model(
                 x:65
                 y:75
@@ -715,7 +715,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
             ])
           ,
             events:new Backbone.Collection([
-              name:"not changePosition"
+              rule:"not changePosition"
               waypoints:new Backbone.Collection([
                 x:30
                 y:20
@@ -729,7 +729,7 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
             ])
           ,
             events:new Backbone.Collection([
-              name:"changePosition"
+              rule:"ships.events.changePosition"
               position:new Backbone.Model(
                 x:20
                 y:30
@@ -738,21 +738,21 @@ define(["isolate!UI/rivets/Formatters", "matchers", "operators", "assertThat", "
             ])
           ,
             events:new Backbone.Collection([
-              name:"changePosition"
+              rule:"ships.events.changePosition"
               position:new Backbone.Model(
                 x:40
                 y:50
                 bearing:160
               )
             ,
-              name:"not changePosition"
+              rule:"not changePosition"
               position:new Backbone.Model(
                 x:160
                 y:170
                 bearing:123
               )
             ,
-              name:"changePosition"
+              rule:"ships.events.changePosition"
               position:new Backbone.Model(
                 x:65
                 y:75
