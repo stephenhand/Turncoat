@@ -297,6 +297,95 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
         a(ctx.SHIP_LENGTH, 0)
       )
     )
+    suite("findByID", ()->
+      game = null;
+      setup(()->
+        game =
+          searchGameStateModels:jm.mockFunction()
+        jm.when(game.searchGameStateModels)(m.func()).then(
+          ()->
+            []
+        )
+      )
+      test("No game supplied - throws", ()->
+        a(
+          ()->
+            FleetAsset.findByID(null, "AN ID")
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("No asset ID supplied - throws", ()->
+        a(
+          ()->
+            FleetAsset.findByID(game)
+        ,
+          m.raisesAnything()
+        )
+      )
+      test("Game does not implement searchGameStateModels - throws", ()->
+        a(
+          ()->
+            FleetAsset.findByID({}, "AN ID")
+        ,
+          m.raisesAnything()
+        )
+      )
+      suite("Valid game and asset ID supplied", ()->
+        test("Calls searchGameStateModels on game", ()->
+          FleetAsset.findByID(game, "AN ID")
+          jm.verify(game.searchGameStateModels)(m.func())
+        )
+        suite("searchGameStateModels filter function", ()->
+          filter = null
+          setup(()->
+            jm.when(game.searchGameStateModels)(m.func()).then(
+              (f)->
+                filter = f
+                []
+            )
+            FleetAsset.findByID(game, "AN ID")
+          )
+          test("Passed a model that is not a FleetAsset - returns false", ()->
+            a(filter(new Backbone.Model(id:"AN ID")), false)
+          )
+          test("Passed a model that is a FleetAsset but with a different ID to that being sought - returns false", ()->
+            a(filter(new FleetAsset(id:"A DIFFERENT ID")), false)
+          )
+          test("Passed a model that is a FleetAsset with ID to that being sought - returns true", ()->
+            a(filter(new FleetAsset(id:"AN ID")), true)
+          )
+        )
+        test("searchGameStateModels returns empty array - returns nothing", ()->
+          jm.when(game.searchGameStateModels)(m.func()).then(
+            (f)->
+              []
+          )
+          a(FleetAsset.findByID(game, "AN ID"), m.nil())
+        )
+        test("searchGameStateModels returns array with single item - returns that item", ()->
+          val = {}
+          jm.when(game.searchGameStateModels)(m.func()).then(
+            (f)->
+              [val]
+          )
+          a(FleetAsset.findByID(game, "AN ID"), val)
+        )
+        test("searchGameStateModels returns array with 2 or more items - throws", ()->
+          jm.when(game.searchGameStateModels)(m.func()).then(
+            (f)->
+              [{},{}]
+          )
+          a(
+            ()->
+              FleetAsset.findByID(game, "AN ID")
+          ,
+            m.raisesAnything()
+          )
+        )
+
+      )
+    )
   )
 
 
