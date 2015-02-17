@@ -6,13 +6,18 @@ define(["underscore", "backbone", "lib/backboneTools/ModelProcessor", "lib/turnc
       super(attributes, options)
 
       toggled = null
-      @activate = (ownerId)->
+
+      @activate = (ownerId, opts)->
+        opts?={}
         if (!ownerId?) then throw new Error("Games must be activated with a user id")
         persister = Factory.buildPersister()
         transport = Factory.buildTransport(
+          opts.transportKey
+        ,
           userId:ownerId
           gameId:@id
         )
+        persister = Factory.buildPersister()
         transport.startListening()
         @listenTo(transport, "eventReceived",
           (event)->
@@ -57,6 +62,11 @@ define(["underscore", "backbone", "lib/backboneTools/ModelProcessor", "lib/turnc
           if (recipients.length)
             transport.broadcastGameEvent(recipients,event)
 
+      @submitMove = (move)->
+        if !move? then throw new Error("Move required.")
+        if !(@get("users")?.length) then throw new Error("Game must have users before a move can be submitted.")
+        recipients = (user.get("id") for user in @get("users").models)
+        transport.broadcastGameEvent(recipients, @generateEvent(Constants.LogEvents.MOVE, move))
 
     activate:()->
     deactivate:()->

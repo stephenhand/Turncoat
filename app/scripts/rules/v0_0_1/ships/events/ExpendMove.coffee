@@ -6,6 +6,7 @@ define(["underscore", "backbone", "lib/turncoat/RuleBookEntry"], (_, Backbone, R
       apply:()->
 
       revert:()->
+        throw new Error("Not implemented")
 
   new ExpendMove()
 )

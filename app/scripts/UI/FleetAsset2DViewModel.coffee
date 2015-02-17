@@ -40,16 +40,21 @@ define(['underscore', 'backbone', 'crypto', 'lib/2D/TransformBearings', 'UI/comp
           y:y-pos.get("y")
         )
         maneuvers = moveDefinition.get("maneuvers")
-        rules = model.getRoot().getRuleBook().lookUp("ships.actions.move").getActionRules(model.getRoot())
+        rules = model.getRoot().ghost().getRuleBook().lookUp("ships.actions.move").getActionRules(model.getRoot())
         console.log("targetBD.bearing: "+targetBD.bearing)
         console.log("minBearing: "+minBearing)
         console.log("maxBearing: "+maxBearing)
-        if (TransformBearings.rotationBetweenBearings(targetBD.bearing, minBearing) < margin) and (TransformBearings.rotationBetweenBearings(maxBearing, targetBD.bearing) < margin)
-          act = rules.calculateStraightLineMoveRequired(model, moveType, x, y)
-        else
-          act = rules.calculateManeuverRequired(model, moveType, maneuvers.at(0), x, y)?.action
-        if act? then rules.resolveAction(act, false)
-        act
+        act = {}
+        acts = []
+        while act?
+          if (TransformBearings.rotationBetweenBearings(targetBD.bearing, minBearing) < margin) and (TransformBearings.rotationBetweenBearings(maxBearing, targetBD.bearing) < margin)
+            act = rules.calculateStraightLineMoveRequired(model, moveType, x, y)
+          else
+            act = rules.calculateManeuverRequired(model, moveType, maneuvers.at(0), x, y)?.action
+          if act?
+            rules.resolveAction(act, false)
+            acts.push(act)
+        acts
 
 
 

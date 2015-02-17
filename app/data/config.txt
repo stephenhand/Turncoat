@@ -12,6 +12,15 @@
             "persister":"LocalStoragePersister",
             "transport":"LocalStorageTransport",
             "userIdentifierTitle":"Player ID"
+        },
+        {
+            "id":"dummy",
+            "label":"Dummy",
+            "description":"Faked out communication, used for simulation purposes",
+            "marshaller":"JSONMarshaller",
+            "persister":"LocalStoragePersister",
+            "transport":"DummyTransport",
+            "userIdentifierTitle":"Player ID"
         }
     ]
 }
