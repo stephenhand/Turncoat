@@ -54,6 +54,7 @@ define(['underscore', 'backbone', 'crypto', 'lib/2D/TransformBearings', 'UI/comp
           if act?
             rules.resolveAction(act, false)
             acts.push(act)
+          act = null
         acts
 
 

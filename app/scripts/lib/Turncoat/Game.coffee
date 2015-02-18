@@ -17,7 +17,6 @@ define(["underscore", "backbone", "lib/backboneTools/ModelProcessor", "lib/turnc
           userId:ownerId
           gameId:@id
         )
-        persister = Factory.buildPersister()
         transport.startListening()
         @listenTo(transport, "eventReceived",
           (event)->

@@ -149,8 +149,8 @@ define(["isolate!lib/turncoat/Game", "matchers", "operators", "assertThat", "jsM
         game.activate("A USER ID")
         game.activate("ANOTHER USER ID")
         jm.verify(transport.startListening, v.once())()
-        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(m.hasMember("userId","A USER ID"))
-        jm.verify(mocks["lib/turncoat/Factory"].buildTransport, v.never())(m.hasMember("userId","ANOTHER USER ID"))
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(m.nil(), m.hasMember("userId","A USER ID"))
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport, v.never())(m.nil(), m.hasMember("userId","ANOTHER USER ID"))
       )
       suite("eventReceived handler", ()->
         handler = null
@@ -374,7 +374,7 @@ define(["isolate!lib/turncoat/Game", "matchers", "operators", "assertThat", "jsM
         game.deactivate()
         game.activate("ANOTHER USER ID")
         game.deactivate()
-        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(m.hasMember("userId","ANOTHER USER ID"))
+        jm.verify(mocks["lib/turncoat/Factory"].buildTransport)(m.nil(), m.hasMember("userId","ANOTHER USER ID"))
 
       )
     )
