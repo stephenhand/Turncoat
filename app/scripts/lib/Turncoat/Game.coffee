@@ -28,6 +28,14 @@ define(["underscore", "backbone", "lib/backboneTools/ModelProcessor", "lib/turnc
                   if (user?)
                     user.set("status",event.get("data").get("status"))
                     persister.saveGameState(ownerId, @)
+              when Constants.LogEvents.MOVE
+                for act in event.get("data")?.get("actions")?.models ? []
+                  for loggedEvent in act.get("events")?.models ? []
+                    ruleEntry = @getRuleBook().lookUp(loggedEvent.get("rule"))
+                    if !ruleEntry? then throw new Error("Rules for logged event not found in the edition of the rulebook being used in this game. Move rejected")
+                for act in event.get("data")?.get("actions")?.models ? []
+                  for loggedEvent in act.get("events")?.models ? []
+                    @getRuleBook().lookUp(loggedEvent.get("rule")).getRules(@).apply()
         )
         @listenTo(persister, "gameUpdated",
           (event)->

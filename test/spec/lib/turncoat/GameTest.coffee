@@ -228,6 +228,22 @@ define(["isolate!lib/turncoat/Game", "matchers", "operators", "assertThat", "jsM
             jm.verify(persister.saveGameState)("A USER ID", game)
           )
         )
+        suite("Event is MOVE", ()->
+          setup(()->
+            event.set("name", Constants.LogEvents.MOVE)
+          )
+          test("Data missing - does not throw", ()->
+            a(
+              ()->
+                handler.call(game,event)
+              ,
+                m.not(m.raisesAnything())
+            )
+          )
+          test("tests not finished", ()->
+            a()
+          )
+        )
       )
 
       test("Listens to persister's 'gameUpdated' handler", ()->
