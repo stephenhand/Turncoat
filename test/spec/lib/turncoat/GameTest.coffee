@@ -240,8 +240,134 @@ define(["isolate!lib/turncoat/Game", "matchers", "operators", "assertThat", "jsM
                 m.not(m.raisesAnything())
             )
           )
-          test("tests not finished", ()->
-            a()
+          test("Data has no actions - does not throw", ()->
+            event.set("data", new Backbone.Model())
+            a(
+              ()->
+                handler.call(game,event)
+            ,
+              m.not(m.raisesAnything())
+            )
+          )
+          test("Data has empty actions - does not throw", ()->
+            event.set("data", new Backbone.Model(
+              actions:new Backbone.Collection([])
+            ))
+            a(
+              ()->
+                handler.call(game,event)
+            ,
+              m.not(m.raisesAnything())
+            )
+          )
+          test("Data has actions with no events collections or empty ones - does not throw", ()->
+            event.set("data", new Backbone.Model(
+              actions:new Backbone.Collection([
+                new Backbone.Model(
+                  events:new Backbone.Collection([])
+                ),
+                new Backbone.Model(),
+                new Backbone.Model(
+                  events:new Backbone.Collection([])
+                ),
+                new Backbone.Model()
+              ])
+            ))
+            a(
+              ()->
+                handler.call(game,event)
+            ,
+              m.not(m.raisesAnything())
+            )
+          )
+          suite("Data has actions with events", ()->
+            mockRuleBook = null
+            mockEventRuleEntry1 = null
+            mockEventRuleEntry2 = null
+            mockEventRuleEntry3 = null
+            mockEventRule1 = null
+            mockEventRule2 = null
+            mockEventRule3 = null
+            setup(()->
+              mockEventRule1 =
+                apply:jm.mockFunction()
+              mockEventRule2 =
+                apply:jm.mockFunction()
+              mockEventRule3 =
+                apply:jm.mockFunction()
+              mockEventRuleEntry1 =
+                getRules:jm.mockFunction()
+              jm.when(mockEventRuleEntry1.getRules)(game).thenReturn(mockEventRule1)
+              mockEventRuleEntry2 =
+                getRules:jm.mockFunction()
+              jm.when(mockEventRuleEntry2.getRules)(game).thenReturn(mockEventRule2)
+              mockEventRuleEntry3 =
+                getRules:jm.mockFunction()
+              jm.when(mockEventRuleEntry3.getRules)(game).thenReturn(mockEventRule3)
+              mockRuleBook =
+                lookUp:jm.mockFunction()
+              jm.when(mockRuleBook.lookUp)(m.anything()).then((r)->
+                switch r
+                  when "VALID RULE 1" then mockEventRuleEntry1
+                  when "VALID RULE 2" then mockEventRuleEntry2
+                  when "VALID RULE 3" then mockEventRuleEntry3
+              )
+              game.getRuleBook = ()->
+                mockRuleBook
+              event.set("data", new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model(
+                    events:new Backbone.Collection([
+                      rule:"VALID RULE 1"
+                    ,
+                      rule:"VALID RULE 2"
+                    ])
+                  ),
+                  new Backbone.Model(
+                    events:new Backbone.Collection([
+                      rule:"VALID RULE 3"
+                    ])
+                  )
+                ])
+              ))
+            )
+            test("Looks up rules for all events, specified in 'rule' attribute, using current game to generatew rules", ()->
+
+              handler.call(game,event)
+              jm.verify(mockRuleBook.lookUp)("VALID RULE 1")
+              jm.verify(mockEventRuleEntry1.getRules)(game)
+              jm.verify(mockRuleBook.lookUp)("VALID RULE 2")
+              jm.verify(mockEventRuleEntry2.getRules)(game)
+              jm.verify(mockRuleBook.lookUp)("VALID RULE 3")
+              jm.verify(mockEventRuleEntry3.getRules)(game)
+            )
+            test("Any event's rule entry cannot be looked up - throws", ()->
+              event.get("data").get("actions").at(0).get("events").at(1).set("rule", "NOT VALID RULE")
+
+              a(
+                ()->
+                  handler.call(game,event)
+              ,
+                m.raisesAnything()
+              )
+            )
+            test("Any event's rule entry does not return rules object - throws", ()->
+              jm.when(mockEventRuleEntry3.getRules)(game).thenReturn(null)
+              a(
+                ()->
+                  handler.call(game,event)
+              ,
+                m.raisesAnything()
+              )
+            )
+            test("Applies rules using event data.", ()->
+
+              handler.call(game,event)
+              jm.verify(mockEventRule1.apply)(event.get("data").get("actions").at(0).get("events").at(0))
+              jm.verify(mockEventRule2.apply)(event.get("data").get("actions").at(0).get("events").at(1))
+              jm.verify(mockEventRule3.apply)(event.get("data").get("actions").at(1).get("events").at(0))
+            )
+
           )
         )
       )
