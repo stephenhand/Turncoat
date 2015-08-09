@@ -75,7 +75,7 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
   )
 )
 
-define(["isolate!lib/persisters/LocalStoragePersister", "underscore","backbone"], (LocalStoragePersister, underscore, Backbone)->
+define(["isolate!lib/persisters/LocalStoragePersister", "matchers", "operators", "assertThat", "jsMockito", "verifiers", "underscore", "backbone"], (LocalStoragePersister, m, o, a, jm, v, _, Backbone)->
   mocks = window.mockLibrary["lib/persisters/LocalStoragePersister"]
 
   suite("LocalStorage Persister", ()->

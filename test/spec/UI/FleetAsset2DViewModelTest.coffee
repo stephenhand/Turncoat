@@ -174,6 +174,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
         model = null
         modelRoot = null
         modelRootGhost = null
+        modelGhost = null
         setup(()->
           mockRule =
             calculateManeuverRequired:jm.mockFunction()
@@ -205,12 +206,36 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             y:321
             bearing:45
           ))
+          modelGhost = new Backbone.Model(
+            position:new Backbone.Model()
+            dimensions:new Backbone.Model()
+            actions:new Backbone.Collection([
+              new Backbone.Model(
+                name:"move"
+
+              )
+            ])
+          )
+          modelGhost.set("position", new Backbone.Model(
+            x:123
+            y:321
+            bearing:45
+          ))
           modelRootGhost =
             getRuleBook:()->
               mockRuleBook
+            searchGameStateModels:jm.mockFunction()
+            activate:jm.mockFunction()
+          jm.when(modelRootGhost.searchGameStateModels)(m.anything()).then(
+            ()->
+              [modelGhost]
+          )
           modelRoot=
-            ghost:()->
+            ghost:jm.mockFunction()
+          jm.when(modelRoot.ghost)().then(
+            ()->
               modelRootGhost
+          )
           model.getRoot=()->
             modelRoot
           fa2dvm = new FleetAsset2DViewModel(null, model:model)
@@ -231,13 +256,21 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               moveType
             ]))
           )
+          test("Ghosts current game", ()->
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, 1, ()->)
+            jm.verify(modelRoot.ghost)()
+          )
           test("Looks up move rules in rulebook",()->
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, 1, ()->)
             jm.verify(mockRuleBook.lookUp)("ships.actions.move")
           )
           test("Gets rule from entry providing current game (retrieved from ship model)",()->
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
-            jm.verify(mockRuleEntry.getActionRules)(modelRoot)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, 1, ()->)
+            jm.verify(mockRuleEntry.getActionRules)(modelRootGhost)
+          )
+          test("Activates ghost game with placeholder data",()->
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, 1, ()->)
+            jm.verify(modelRootGhost.activate)(m.string(),m.hasMember("transportKey", m.string()))
           )
           suite("moveType has minDirection and maxDirection set", ()->
             setup(()->
@@ -246,55 +279,55 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               moveType.set("maxDirection", 60)
             )
             suite("called with margin", ()->
-              test("coordinates supplied are within min/max direction range - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+              test("coordinates supplied are within min/max direction range - calls calculateStraightline move with ghost ship, moveType selected and coordinates", ()->
 
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 321.5)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, ()->)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 130, 321.5)
               )
-              test("coordinates supplied are clockwise of min/max direction range but not by more degrees than specified margin - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+              test("coordinates supplied are clockwise of min/max direction range but not by more degrees than specified margin - calls calculateStraightline move with ghost ship, moveType selected and coordinates", ()->
 
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 323, 35)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 125, 323)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 323, 35, ()->)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 125, 323)
               )
-              test("coordinates supplied are anticlockwise of min/max direction range but not by more degrees than specified margin - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+              test("coordinates supplied are anticlockwise of min/max direction range but not by more degrees than specified margin - calls calculateStraightline move with ghost ship, moveType selected and coordinates", ()->
 
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 319, 35)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 125, 319)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 319, 35, ()->)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 125, 319)
               )
-              test("coordinates supplied are outside direction range and margin - calls calculateStraightline move with ship, moveType selected and coordinates", ()->
+              test("coordinates supplied are outside direction range and margin - calls calculateStraightline move with ghost ship, moveType selected and coordinates", ()->
 
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 120, 319, 35)
-                jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 120, 319)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 120, 319, 35, ()->)
+                jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 120, 319)
               )
               test("logic unaffected by min/max direction range crossing over zero", ()->
                 moveType.set("minDirection", 345)
                 moveType.set("maxDirection", 15)
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 314.5, 20)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 314.5)
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123, 319, 35)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 123, 319)
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 120, 325, 35)
-                jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 120, 325)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 314.5, 20, ()->)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 130, 314.5)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123, 319, 35, ()->)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 123, 319)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 120, 325, 35, ()->)
+                jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 120, 325)
               )
-              test("logic unaffected by min/max direction range crossing over zero absolute bearing on ships current bearing", ()->
+              test("logic unaffected by min/max direction range crossing over zero absolute bearing on ghost ships current bearing", ()->
 
                 moveType.set("minDirection", 345)
                 moveType.set("maxDirection", 15)
                 model.get("position").attributes.bearing=0
 
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123, 314.5, 20)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 123, 314.5)
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 121, 319, 35)
-                jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 121, 319)
-                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 122, 330, 35)
-                jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 122, 330)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123, 314.5, 20, ()->)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 123, 314.5)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 121, 319, 35, ()->)
+                jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 121, 319)
+                fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 122, 330, 35, ()->)
+                jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 122, 330)
               )
             )
             test("Called without margin - margin assumed to be zero", ()->
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5)
-              jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 321.5)
+              jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 130, 321.5)
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 323)
-              jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 125, 323)
+              jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 125, 323)
             )
           )
           test("minDirection not set - assumed to be zero", ()->
@@ -302,34 +335,34 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             moveType.get("maneuvers").reset([maneuver])
             moveType.unset("minDirection")
             moveType.set("maxDirection", 60)
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321, 20.5)
-            jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 321)
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 320.5, 20)
-            jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 130, 320.5)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321, 20.5, ()->)
+            jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost, "MOCK MOVE TYPE", 130, 321)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 320.5, 20, ()->)
+            jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 130, 320.5)
           )
           test("maxDirection not set - assumed to be zero", ()->
             model.get("position").attributes.bearing=70
             moveType.get("maneuvers").reset([maneuver])
             moveType.set("minDirection", 300)
             moveType.unset("maxDirection")
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321, 20.5)
-            jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 321)
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20)
-            jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 130, 321.5)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321, 20.5, ()->)
+            jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 130, 321)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, ()->)
+            jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 130, 321.5)
           )
           test("min and max direction not set - assumed that only permitted straightline bearing is zero", ()->
             model.get("position").attributes.bearing=45
             moveType.get("maneuvers").reset([maneuver])
             moveType.unset("minDirection")
             moveType.unset("maxDirection")
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 320.5, 45)
-            jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 130, 320.5)
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 45)
-            jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 130, 321.5)
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123.5, 310, 45)
-            jm.verify(mockRule.calculateStraightLineMoveRequired)(model,"MOCK MOVE TYPE", 123.5, 310)
-            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 122.5, 310, 45)
-            jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 122.5, 310)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 320.5, 45, ()->)
+            jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 130, 320.5)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 45, ()->)
+            jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 130, 321.5)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 123.5, 310, 45, ()->)
+            jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 123.5, 310)
+            fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 122.5, 310, 45, ()->)
+            jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 122.5, 310)
           )
 
           suite("Is using straightline move", ()->
@@ -356,19 +389,21 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             )
             test("calculateManeuverRequired returns action - returns that single action", ()->
               action = {}
+              onComplete = jm.mockFunction()
               jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
                 action
               )
-              a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20), m.equivalentArray([action]))
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
+              jm.verify(onComplete)(m.equivalentArray([action]))
             )
           )
-          suite("Is using manuever and model has single maneuver defined", ()->
+          suite("Is using maneuver and model has single maneuver defined", ()->
             maneuver = null
             setup(()->
               maneuver = new Backbone.Model()
               moveType.get("maneuvers").reset([maneuver])
             )
-            test("Queries rulebook's calculateManeuverRequired method with ship, moveType selected, maneuver and coordinates",()->
+            test("Queries rulebook's calculateManeuverRequired method with ghost ship, moveType selected, maneuver and coordinates",()->
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
               jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 1337, 666)
             )

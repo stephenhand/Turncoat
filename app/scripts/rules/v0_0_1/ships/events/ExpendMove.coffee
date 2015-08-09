@@ -1,9 +1,14 @@
-define(["underscore", "backbone", "lib/turncoat/RuleBookEntry"], (_, Backbone, RuleBookEntry)->
+define(["underscore", "lib/logging/LoggerFactory", "backbone", "lib/turncoat/RuleBookEntry"], (_, LoggerFactory, Backbone, RuleBookEntry)->
+
+  log = LoggerFactory.getLogger()
+
   class ExpendMove extends RuleBookEntry
 
     getRules:(game)->
       super(game)
-      apply:()->
+      apply:(event)->
+        log.trace("MOVE EXPENDED")
+
 
       revert:()->
         throw new Error("Not implemented")

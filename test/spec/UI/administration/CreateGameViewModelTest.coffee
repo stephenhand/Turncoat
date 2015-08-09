@@ -70,6 +70,13 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
       mockObservingViewModelCollection
     )
   )
+  Isolate.mapAsFactory("state/Player","UI/administration/CreateGameViewModel", (actual, modulePath, requestingModulePath)->
+    Helper.mapAndRecord(actual, modulePath, requestingModulePath, ()->
+      mockPlayer = (data)->
+        new Backbone.Model(data)
+      mockPlayer
+    )
+  )
 )
 
 

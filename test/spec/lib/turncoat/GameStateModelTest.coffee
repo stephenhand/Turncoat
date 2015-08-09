@@ -108,6 +108,9 @@ define(["isolate!lib/turncoat/GameStateModel", "matchers", "operators", "assertT
         gsm.toString = ()->
           "SOMETHING"
       )
+      teardown(()->
+        jm.when(mockMarshaller.marshalState)(m.anything()).then((input)->)
+      )
       test("calls marshalState on input", ()->
         gsm.ghost()
         jm.verify(mockMarshaller.marshalState)(gsm)

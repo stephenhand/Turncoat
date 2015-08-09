@@ -92,7 +92,7 @@ define(["uuid","underscore", "jquery", "backbone","moment", "lib/turncoat/Factor
         merge:true
       )
       setLocalStorageItem(CURRENT_GAMES+"::"+user,@marshaller.marshalState(list))
-      setLocalStorageItem(CURRENT_GAMES+"::"+user+"::"+state.get("id"), state.toString())
+      setLocalStorageItem(CURRENT_GAMES+"::"+user+"::"+state.get("id"), @marshaller.marshalState(state))
 
     loadPendingGamesList:(user, filter)->
       if (!user?) then throw new Error("User must be specified")

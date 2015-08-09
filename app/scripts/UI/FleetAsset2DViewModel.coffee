@@ -1,4 +1,6 @@
-define(['underscore', 'backbone', 'crypto', 'lib/2D/TransformBearings', 'UI/component/ObservingViewModelItem'], (_, Backbone, Crypto, TransformBearings, ObservingViewModelItem)->
+define(["underscore", "lib/logging/LoggerFactory", "backbone", "crypto", "lib/2D/TransformBearings", "UI/component/ObservingViewModelItem"], (_, LoggerFactory, Backbone, Crypto, TransformBearings, ObservingViewModelItem)->
+  log = LoggerFactory.getLogger()
+
   class FleetAsset2DViewModel extends ObservingViewModelItem
     initialize:(m, options)->
       super(m, options)
@@ -30,7 +32,7 @@ define(['underscore', 'backbone', 'crypto', 'lib/2D/TransformBearings', 'UI/comp
       @set("xpx",pos.get("x"))
       @set("ypx",pos.get("y"))
       @set("transformDegrees",pos.get("bearing"))
-      @calculateClosestMoveAction=(moveType, x, y, margin)->
+      @calculateClosestMoveAction=(moveType, x, y, margin, onComplete)->
         margin ?=0
         moveDefinition = model.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType)
         minBearing = TransformBearings.rotateBearing(pos.get("bearing"), moveDefinition.get("minDirection") ? 0)
@@ -40,22 +42,29 @@ define(['underscore', 'backbone', 'crypto', 'lib/2D/TransformBearings', 'UI/comp
           y:y-pos.get("y")
         )
         maneuvers = moveDefinition.get("maneuvers")
-        rules = model.getRoot().ghost().getRuleBook().lookUp("ships.actions.move").getActionRules(model.getRoot())
-        console.log("targetBD.bearing: "+targetBD.bearing)
-        console.log("minBearing: "+minBearing)
-        console.log("maxBearing: "+maxBearing)
-        act = {}
+        ghostGame = model.getRoot().ghost()
+        ghostModel = ghostGame.searchGameStateModels((m)->m.get("id") is model.get("id"))[0]
+        if (!ghostModel?) then throw new Error("Model not found in ghosted game, the ghosted game is inconsistent")
+        rules = ghostGame.getRuleBook().lookUp("ships.actions.move").getActionRules(ghostGame)
+        ghostGame.activate("CASPER", transportKey:"DummyTransport")
+        log.debug("targetBD.bearing: "+targetBD.bearing+"\r\nminBearing: "+minBearing+ "\r\nmaxBearing: "+maxBearing)
         acts = []
-        while act?
+        runMove = ()->
           if (TransformBearings.rotationBetweenBearings(targetBD.bearing, minBearing) < margin) and (TransformBearings.rotationBetweenBearings(maxBearing, targetBD.bearing) < margin)
-            act = rules.calculateStraightLineMoveRequired(model, moveType, x, y)
+            act = rules.calculateStraightLineMoveRequired(ghostModel, moveType, x, y)
           else
-            act = rules.calculateManeuverRequired(model, moveType, maneuvers.at(0), x, y)?.action
+            act = rules.calculateManeuverRequired(ghostModel, moveType, maneuvers.at(0), x, y)?.action
           if act?
             rules.resolveAction(act, false)
             acts.push(act)
-          act = null
-        acts
+          else
+            onComplete(acts)
+            ghostModel.off(runMove)
+
+        ghostModel.get("position").on("change:x change:y change:bearing", runMove)
+        runMove()
+
+
 
 
 
