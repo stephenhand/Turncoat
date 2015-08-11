@@ -913,7 +913,6 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             jm.verify(reset, v.never())()
           )
           test("Models missing in update are removed from existing colection and fire remove events", ()->
-            uie = new Backbone.Model(id:"E")
             u = new Backbone.Collection([
               ia
             ,
@@ -955,7 +954,7 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             jm.verify(remove)()
             jm.verify(reset, v.never())()
           )
-          test("No comparator on model - order not preserved", ()->
+          test("No comparator on model - order reflects order of updated collection", ()->
             uie = new Backbone.Model(id:"E")
             uif = new Backbone.Model(id:"F")
             u = new Backbone.Collection([
@@ -971,9 +970,9 @@ define(["isolate!lib/backboneTools/ModelProcessor", "jsMockito", "jsHamcrest", "
             ])
             ModelProcessor.deepUpdate(t, u)
             a.equal(t.at(0), ia)
-            a.equal(t.at(1), ic)
-            a.equal(t.at(2), id)
-            a.equal(t.at(3), uie)
+            a.equal(t.at(1), uie)
+            a.equal(t.at(2), ic)
+            a.equal(t.at(3), id)
             a.equal(t.at(4), uif)
             a.equal(t.length, 5)
             jm.verify(add, v.times(2))()
