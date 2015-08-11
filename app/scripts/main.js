@@ -7,7 +7,7 @@ require.config({
     jquery: "vendor/jquery-1.10.2",
     jqModal: "vendor/jqModal",
     underscore: "vendor/underscore",
-    backbone: "vendor/backbone",
+    backbone: "vendor/Backbone-1.0.0",
     rivets: "vendor/rivets-0.6.10",
     text: "vendor/text",
     uuid:"vendor/uuid",

@@ -32,6 +32,7 @@ define(["underscore", "backbone", "AppState"], (_, Backbone, AppState)->
         when AppState.get("currentUser").get("games").length then @get("tabs").findWhere(name:"reviewChallenges")
         else  @get("tabs").findWhere(name:"createGame")
   )
+  AdministrationDialogueViewModel
 )
 
 
