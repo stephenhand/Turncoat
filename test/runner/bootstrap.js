@@ -28,7 +28,7 @@ require.config({
 
         jqModal: "vendor/jqModal",
         underscore: "vendor/underscore",
-        backbone: "vendor/backbone",
+        backbone: "vendor/backbone-1.1.2",
         rivets: "vendor/rivets-0.5.13",
         uuid:"vendor/uuid",
         moment:"vendor/moment",

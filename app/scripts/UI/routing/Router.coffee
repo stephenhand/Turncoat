@@ -1,8 +1,9 @@
 define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
   globalRouter = new Backbone.Router(
     routes:
-      "":"navigate"
-      "*user":"navigate"
+      "":"anywhere"
+      "*user":"anywhere"
+    noop:->true
   )
 
   Router =
@@ -33,7 +34,9 @@ define(["underscore", "backbone", "UI/routing/Route"], (_, Backbone, Route)->
       globalRouter.navigate(route.toString(),trigger:true)
 
   _.extend(Router, Backbone.Events)
-  globalRouter.on("route:navigate", (path)->
+  globalRouter.on("route:anywhere", (path, qstr)->
+    if !path? then throw ("Path required.")
+    if qstr then path += "?" +qstr
     Router.trigger("navigate", new Route(path))
   )
 

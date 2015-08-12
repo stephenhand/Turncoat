@@ -1,5 +1,9 @@
 mockBackboneRouter = {}
 mockBackboneRouter.on = JsMockito.mockFunction()
+mbrHandler = null
+JsMockito.when(mockBackboneRouter.on)(JsHamcrest.Matchers.anything(), JsHamcrest.Matchers.func()).then((name, handler)->
+  mbrHandler=handler
+)
 mockRoute = {}
 require(["isolate","isolateHelper"], (Isolate, Helper)->
   Isolate.mapAsFactory("backbone", 'UI/routing/Router', (actual, modulePath, requestingModulePath)->
@@ -19,10 +23,9 @@ require(["isolate","isolateHelper"], (Isolate, Helper)->
     )
   )
 )
-define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "chai"], (Router, jm, h, c)->
+define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "assertThat"], (Router, jm, h, a)->
   mocks=window.mockLibrary['UI/routing/Router']     
   m = h.Matchers
-  a = c.assert
   v = jm.Verifiers
   suite("Router", ()->
     setup(()->
@@ -44,22 +47,53 @@ define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "chai"], (Router
     )
 
     suite("construction", ()->
-      test("Binds to globalRouter navigate event with Route built from path", ()->
+      test("Binds to globalRouter 'anywhere' event with Route built from path", ()->
 
-        jm.verify(mockBackboneRouter.on)("route:navigate", new h.SimpleMatcher(
-          matches:(h)->
-            t = Router.trigger
-            try
-              Router.trigger = jm.mockFunction()
-              h("NEW_ROUTE")
-              jm.verify(Router.trigger)("navigate",m.hasMember("builtWithPath","NEW_ROUTE"))
-              true
-            catch e
-              false
-            finally
-              Router.trigger = t
+        jm.verify(mockBackboneRouter.on)("route:anywhere", m.func())
+      )
+      suite("Route handler", ()->
+        t = null
+        setup(()->
+          t = Router.trigger
+          Router.trigger = jm.mockFunction()
+        )
+        test("Called with path - triggers Router navigate event with route built with path", ()->
 
-        ))
+          mbrHandler("NEW_ROUTE")
+          jm.verify(Router.trigger)("navigate",m.hasMember("builtWithPath","NEW_ROUTE"))
+        )
+        test("Called with nothing - throws", ()->
+
+          a(
+            ()->mbrHandler()
+          ,
+            m.raisesAnything()
+          )
+        )
+        test("Called with just qstring - throws", ()->
+
+          a(
+            ()->mbrHandler(null, "NEW_QSTRING")
+          ,
+            m.raisesAnything()
+          )
+
+        )
+        test("Called with path and qstring - triggers Router navigate event with route built with path and qstring with separating ?", ()->
+
+
+          mbrHandler("NEW_ROUTE", "NEW_QSTRING")
+          jm.verify(Router.trigger)("navigate",m.hasMember("builtWithPath","NEW_ROUTE?NEW_QSTRING"))
+        )
+        test("Called with path and qstring - preserves existing ? characters on either side", ()->
+
+
+          mbrHandler("NEW?_RO?UTE?", "?NEW_?QSTRING?")
+          jm.verify(Router.trigger)("navigate",m.hasMember("builtWithPath","NEW?_RO?UTE???NEW_?QSTRING?"))
+        )
+        teardown(()->
+          Router.trigger = t
+        )
       )
     )
     test("Activate starts backbone history", ()->
@@ -71,7 +105,7 @@ define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "chai"], (Router
       test("Returns route created with current fragment", ()->
 
         ret = Router.getCurrentRoute()
-        chai.assert.equal(ret.builtWithPath, "CURRENT_ROUTE_FRAGMENT")
+        a(ret.builtWithPath, "CURRENT_ROUTE_FRAGMENT")
       )
 
     )
@@ -107,7 +141,7 @@ define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "chai"], (Router
           )
           ret
         )
-        chai.assert.equal(Router.getSubRoute("MOCK_SUBROUTE_NAME"), "MOCK_SUBROUTE_VALUE")
+        a(Router.getSubRoute("MOCK_SUBROUTE_NAME"), "MOCK_SUBROUTE_VALUE")
       )
       test("Has subroute object but no route with specified name - returns undefined", ()->
         jm.when(mocks["UI/routing/Route"].func)(m.string()).then((s)->
@@ -121,7 +155,7 @@ define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "chai"], (Router
           )
           ret
         )
-        chai.assert.isUndefined(Router.getSubRoute("MOCK_SUBROUTE_NAME"))
+        a(Router.getSubRoute("MOCK_SUBROUTE_NAME"), m.nil())
       )
       test("Has no subroute object - returns undefined", ()->
         jm.when(mocks["UI/routing/Route"].func)(m.string()).then((s)->
@@ -134,7 +168,7 @@ define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "chai"], (Router
           )
           ret
         )
-        chai.assert.isUndefined(Router.getSubRoute("MOCK_SUBROUTE_NAME"))
+        a(Router.getSubRoute("MOCK_SUBROUTE_NAME"), m.nil())
       )
     )
     suite("setSubRoute",()->
@@ -274,7 +308,11 @@ define(["isolate!UI/routing/Router", "jsMockito", "jsHamcrest", "chai"], (Router
         )
       )
       test("No route name throws", ()->
-        chai.assert.throw(()->Router.setSubRoute(null, "A_PATH_FRAGMENT"))
+        a(
+          ()->Router.setSubRoute(null, "A_PATH_FRAGMENT")
+        ,
+          m.raisesAnything()
+        )
       )
     )
   )
