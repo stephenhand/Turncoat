@@ -324,9 +324,9 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               )
             )
             test("Called without margin - margin assumed to be zero", ()->
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5)
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, undefined ,()->)
               jm.verify(mockRule.calculateStraightLineMoveRequired)(modelGhost,"MOCK MOVE TYPE", 130, 321.5)
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 323)
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 125, 323, undefined ,()->)
               jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 125, 323)
             )
           )
@@ -364,37 +364,80 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
             fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 122.5, 310, 45, ()->)
             jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 122.5, 310)
           )
+          test("OnComplete callback not set - throws", ()->
+            a(()->
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, 1)
+            ,
+              m.raisesAnything()
+            )
+          )
 
           suite("Is using straightline move", ()->
+            onComplete = null
             setup(()->
               moveType.set("minDirection", 30)
               moveType.set("maxDirection", 60)
             )
-            test("calculateManeuverRequired returns nothing - returns empty", ()->
+            test("calculateStraightLineMoveRequired returns nothing - calls onComplete with empty", ()->
+              onComplete = jm.mockFunction()
               jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
-              a(fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20), m.empty())
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
+              jm.verify(onComplete)(m.empty())
             )
-            test("calculateManeuverRequired returns nothing - doesnt attempt to resolve any action", ()->
+            test("calculateStraightLineMoveRequired returns nothing - doesnt attempt to resolve any action", ()->
               jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20)
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, ()->)
               jm.verify(mockRule.resolveAction, v.never())(m.anything(), m.anything())
             )
-            test("calculateManeuverRequired returns action - resolves action without resolving non deterministic events", ()->
+            test("calculateStraightLineMoveRequired returns action - resolves action without resolving non deterministic events", ()->
               action = {}
               jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
                 action
               )
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20)
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, ()->)
               jm.verify(mockRule.resolveAction)(action, false)
             )
-            test("calculateManeuverRequired returns action - returns that single action", ()->
-              action = {}
+            test("calculateStraightLineMoveRequired returns object with action property - does not call onComplete yet.", ()->
               onComplete = jm.mockFunction()
+              res=null
+              jm.when(onComplete)(m.anything()).then((r)->
+                res=r
+              )
               jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
-                action
+                "MOCK ACTION"
               )
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
-              jm.verify(onComplete)(m.equivalentArray([action]))
+              jm.verify(onComplete, v.never())(m.anything())
+            )
+            test("calculateStraightLineMoveRequired returns object with action property then ghostModelPosition changes - calls calculateStraightLineMoveRequired again.", ()->
+              onComplete = jm.mockFunction()
+              res=null
+              jm.when(onComplete)(m.anything()).then((r)->
+                res=r
+              )
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                "MOCK ACTION"
+              )
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
+              modelGhost.get("position").set("x", 100)
+              jm.verify(mockRule.calculateStraightLineMoveRequired, v.times(2))(m.anything(),m.anything(),m.anything(),m.anything())
+            )
+            test("calculateStraightLineMoveRequired returns object with action property then ghostModelPosition changes, this time no action returned - calls onComplete with that action", ()->
+              onComplete = jm.mockFunction()
+              res=null
+              jm.when(onComplete)(m.anything()).then((r)->
+                res=r
+              )
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                "MOCK ACTION"
+              )
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
+
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
+              modelGhost.get("position").set("x", 100)
+              jm.verify(onComplete)(m.anything())
+              a(res.length, 1)
+              a(res[0], "MOCK ACTION")
             )
           )
           suite("Is using maneuver and model has single maneuver defined", ()->
@@ -404,8 +447,8 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               moveType.get("maneuvers").reset([maneuver])
             )
             test("Queries rulebook's calculateManeuverRequired method with ghost ship, moveType selected, maneuver and coordinates",()->
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
-              jm.verify(mockRule.calculateManeuverRequired)(model,"MOCK MOVE TYPE", maneuver, 1337, 666)
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, undefined, ()->)
+              jm.verify(mockRule.calculateManeuverRequired)(modelGhost,"MOCK MOVE TYPE", maneuver, 1337, 666)
             )
             test("calculateManeuverRequired returns nothing - returns empty", ()->
               jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
@@ -421,7 +464,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything(),m.anything()).then(()->
                 {}
               )
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, undefined, ()->)
               jm.verify(mockRule.resolveAction, v.never())(m.anything(), m.anything())
             )
             test("calculateManeuverRequired returns action - resolves action without resolving non deterministic events", ()->
@@ -429,7 +472,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything(),m.anything()).then(()->
                 action:action
               )
-              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666)
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, ()->)
               jm.verify(mockRule.resolveAction)(action, false)
             )
             test("Returns action with no shortfall - returns single action", ()->
