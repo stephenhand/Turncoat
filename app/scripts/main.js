@@ -63,8 +63,9 @@ require([
     'lib/marshallers/JSONMarshaller',
     'lib/persisters/LocalStoragePersister',
     'lib/transports/LocalStorageTransport',
+		'lib/transports/DummyTransport',
     'text!data/config.txt'
-], function(log4JavaScript, Factory, jsonMarshaller, persister, transport, configText){
+], function(log4JavaScript, Factory, jsonMarshaller, persister, transport, dummyTransport, configText){
   config = JSON.parse(configText)
   Factory.setDefaultMarshaller(config.defaultMarshaller);
   Factory.setDefaultPersister(config.defaultPersister);

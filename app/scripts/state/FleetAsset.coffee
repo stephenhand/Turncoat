@@ -17,7 +17,7 @@ define(["underscore", "backbone", "lib/turncoat/GameStateModel", "lib/turncoat/T
       playerMoves = @getRoot().getCurrentTurnMoves()
       events = []
       for move in playerMoves
-        for action in move.get("actions")?.models ? []
+        for action in move.get("data").get("actions")?.models ? []
 
           events.push(event) for event in action.get("events")?.models ? [] when event.get("asset") is @get("id")
       events

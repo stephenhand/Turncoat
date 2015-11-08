@@ -1,4 +1,4 @@
-define(["underscore", "lib/logging/LoggerFactory", "backbone", "crypto", "lib/2D/TransformBearings", "UI/component/ObservingViewModelItem"], (_, LoggerFactory, Backbone, Crypto, TransformBearings, ObservingViewModelItem)->
+define(["underscore", "lib/logging/LoggerFactory", "backbone", "crypto", "lib/2D/TransformBearings", "lib/turncoat/Move", "UI/component/ObservingViewModelItem"], (_, LoggerFactory, Backbone, Crypto, TransformBearings, Move, ObservingViewModelItem)->
   log = LoggerFactory.getLogger()
 
   class FleetAsset2DViewModel extends ObservingViewModelItem
@@ -59,11 +59,14 @@ define(["underscore", "lib/logging/LoggerFactory", "backbone", "crypto", "lib/2D
           if act?
             rules.resolveAction(act, false)
             acts.push(act)
+            mv=new Move()
+            mv.set("actions", new Backbone.Collection(acts))
+            ghostGame.submitMove(mv)
           else
-            onComplete(acts)
-            ghostModel.off(runMove)
+            ghostModel.off("change", runMove)
+            onComplete(new Backbone.Collection(acts))
 
-        ghostModel.get("position").on("change:x change:y change:bearing", runMove)
+        ghostModel.get("position").on("change", runMove)
         runMove()
 
 

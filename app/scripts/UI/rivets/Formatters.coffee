@@ -23,7 +23,9 @@ define(["underscore", "sprintf", "rivets", "lib/2D/TransformBearings"], (_, spri
     pathDefinitionFromActions:(actions)->
       pathSpec = "m 0 0"
       if actions?
-        if not (actions instanceof Backbone.Collection) then actions = new Backbone.Collection([actions])
+        if not (actions instanceof Backbone.Collection)
+          if !_.isArray(actions) then actions = [actions]
+          actions = new Backbone.Collection(actions)
 
         currentPosition = null
         for action in actions.models when action.get("events")

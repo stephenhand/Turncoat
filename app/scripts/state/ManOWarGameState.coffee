@@ -20,7 +20,7 @@ define(["underscore", "backbone", "lib/turncoat/GameStateModel", "lib/turncoat/C
 
     getCurrentTurnMoves:()->
       moves = []
-      for m in @get("moveLog")?.models ? []
+      for m in @get("_eventLog")?.models ? [] when m.get("name") is Constants.LogEvents.MOVE
         if m.get("type") is Constants.MoveTypes.NEW_TURN then break
         moves.push(m)
       moves

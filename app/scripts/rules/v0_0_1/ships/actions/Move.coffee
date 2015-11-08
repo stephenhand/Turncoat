@@ -17,7 +17,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
       for modifier in modifiers when (modifier.get("condition") is "NO_MANEUVER") and !forManeuver
         distance += modifier.get("adjustment")
       for event in asset.getCurrentTurnEvents() ? [] when event.get("rule") is "ships.events.expendMove"
-        distance -= event.get("spend")
+        distance -= event.get("spent")
       if isNaN(distance) then throw new Error("Error calculating move remaining, got NaN")
       distance
 
@@ -66,7 +66,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
         x:x-position.get("x")
         y:y-position.get("y")
       )
-
+      if (maxDistance<=0) then return
       if TransformBearings.rotationBetweenBearings(targetBD.bearing, minBearing, direction:TransformBearings.CLOCKWISE)>TransformBearings.rotationBetweenBearings(targetBD.bearing, maxBearing, direction:TransformBearings.CLOCKWISE)
         return new Action(
           asset:asset.get("id")
@@ -105,14 +105,7 @@ define(["underscore", "backbone", "lib/2D/TransformBearings", "lib/turncoat/Rule
           direction:TransformBearings.rotateBearing(TransformBearings.rotateBearing(closestBD.bearing,180),-position.get("bearing"))
         )
 
-      else
-        return new Action(
-          asset:asset.get("id")
-          rule:"ships.actions.move"
-          move:moveType
-          distance:0
-          direction:0
-        )
+
 
     resolveAction:(action, resolveNonDeterministic)->
       action.reset()

@@ -1,4 +1,4 @@
-define(["underscore", "backbone"], (_, Backbone)->
+define(["underscore", "backbone", "lib/turncoat/Factory"], (_, Backbone, Factory)->
   class DummyTransport
     constructor:(opt)->
       _.extend(@, Backbone.Events)
