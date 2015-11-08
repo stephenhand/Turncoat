@@ -35,21 +35,23 @@ define(["underscore", "lib/logging/LoggerFactory", "backbone", "crypto", "lib/2D
       @calculateClosestMoveAction=(moveType, x, y, margin, onComplete)->
         margin ?=0
         moveDefinition = model.get("actions").findWhere(name:"move").get("types").findWhere(name:moveType)
-        minBearing = TransformBearings.rotateBearing(pos.get("bearing"), moveDefinition.get("minDirection") ? 0)
-        maxBearing = TransformBearings.rotateBearing(pos.get("bearing"), moveDefinition.get("maxDirection") ? 0)
-        targetBD = TransformBearings.vectorToBearingAndDistance(
-          x:x-pos.get("x")
-          y:y-pos.get("y")
-        )
+
         maneuvers = moveDefinition.get("maneuvers")
         ghostGame = model.getRoot().ghost()
         ghostModel = ghostGame.searchGameStateModels((m)->m.get("id") is model.get("id"))[0]
         if (!ghostModel?) then throw new Error("Model not found in ghosted game, the ghosted game is inconsistent")
         rules = ghostGame.getRuleBook().lookUp("ships.actions.move").getActionRules(ghostGame)
         ghostGame.activate("CASPER", transportKey:"DummyTransport")
-        log.debug("targetBD.bearing: "+targetBD.bearing+"\r\nminBearing: "+minBearing+ "\r\nmaxBearing: "+maxBearing)
         acts = []
         runMove = ()->
+          ghostPos = ghostModel.get("position")
+          minBearing = TransformBearings.rotateBearing(ghostPos.get("bearing"), moveDefinition.get("minDirection") ? 0)
+          maxBearing = TransformBearings.rotateBearing(ghostPos.get("bearing"), moveDefinition.get("maxDirection") ? 0)
+          targetBD = TransformBearings.vectorToBearingAndDistance(
+            x:x-ghostPos.get("x")
+            y:y-ghostPos.get("y")
+          )
+          log.debug("targetBD.bearing: "+targetBD.bearing+"\r\nminBearing: "+minBearing+ "\r\nmaxBearing: "+maxBearing)
           if (TransformBearings.rotationBetweenBearings(targetBD.bearing, minBearing) < margin) and (TransformBearings.rotationBetweenBearings(maxBearing, targetBD.bearing) < margin)
             act = rules.calculateStraightLineMoveRequired(ghostModel, moveType, x, y)
           else
