@@ -690,13 +690,11 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   asset.get("actions").at(0).get("types").at(0).set("maxDirection", 180)
                   asset.get("actions").at(0).get("types").at(0).set("minDirection", 90)
                 )
-                test("Coordinates within asset remaining move radius - creates zero distance action", ()->
-                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 4, 9)
-                  a(ret.get("distance"), 0)
+                test("Coordinates within asset remaining move radius - returns nothing", ()->
+                  a(rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 4, 9), m.nil())
                 )
-                test("Coordinates outside asset remaining move radius - creates zero distance action", ()->
-                  ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", -600, -400)
-                  a(ret.get("distance"), 0)
+                test("Coordinates outside asset remaining move radius - returns nothing", ()->
+                  a(rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", -600, -400), m.nil())
                 )
               )
               test("Coordinates match position - returns nothing", ()->
@@ -736,7 +734,7 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 asset.get("actions").at(0).get("types").at(0).set("maxDirection", 180)
                 asset.get("actions").at(0).get("types").at(0).set("minDirection", 90)
                 ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 4, 9)
-                a(ret.get("distance"), 0)
+                a(ret, m.nil())
               )
             )
           )

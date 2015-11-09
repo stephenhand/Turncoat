@@ -60,7 +60,7 @@ define(["underscore", "lib/logging/LoggerFactory", "backbone", "crypto", "lib/2D
             rules.resolveAction(act, false)
             acts.push(act)
             mv=new Move()
-            mv.set("actions", new Backbone.Collection(acts))
+            mv.set("actions", new Backbone.Collection([act]))
             ghostGame.submitMove(mv)
           else
             ghostModel.off("change", runMove)

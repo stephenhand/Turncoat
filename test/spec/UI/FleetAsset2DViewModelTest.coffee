@@ -221,6 +221,7 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               mockRuleBook
             searchGameStateModels:jm.mockFunction()
             activate:jm.mockFunction()
+            submitMove:jm.mockFunction()
           jm.when(modelRootGhost.searchGameStateModels)(m.anything()).then(
             ()->
               [modelGhost]
@@ -396,6 +397,20 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, ()->)
               jm.verify(mockRule.resolveAction)(action, false)
             )
+            test("calculateStraightLineMoveRequired returns action - submits action to ghosted game as move", ()->
+              action = new Backbone.Model()
+              move = null
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                action
+              )
+              jm.when(modelRootGhost.submitMove)(m.anything()).then((m)->
+                move=m
+              )
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, ()->)
+              jm.verify(modelRootGhost.submitMove)(m.anything())
+              a(move.get("actions").length, 1)
+              a(move.get("actions").at(0), action)
+            )
             test("calculateStraightLineMoveRequired returns object with action property - does not call onComplete yet.", ()->
               res=null
               jm.when(onComplete)(m.anything()).then((r)->
@@ -435,13 +450,25 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               jm.verify(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything())
               jm.verify(mockRule.calculateManeuverRequired)(m.anything(),m.anything(), m.anything(),m.anything(), m.anything())
             )
-            test("calculateStraightLineMoveRequired returns object with action property then ghostModelPosition changes, this time no action returned - calls onComplete with that action", ()->
+            test("calculateStraightLineMoveRequired returns object with action property then ghostModelPosition changes, this time no action returned - no move submitted to ghost game", ()->
+
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                "MOCK ACTION"
+              )
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
+              jm.verify(modelRootGhost.submitMove)(m.anything())
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
+              modelGhost.get("position").set("x", 100)
+              jm.verify(modelRootGhost.submitMove)(m.anything())
+
+            )
+            test("calculateStraightLineMoveRequired returns object with action property then ghostModelPosition changes, this time no action returned - calls onComplete with collection containing first action", ()->
               res=null
               jm.when(onComplete)(m.anything()).then((r)->
                 res=r
               )
               jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
-                "MOCK ACTION"
+                prop:"MOCK ACTION"
               )
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
 
@@ -449,7 +476,73 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               modelGhost.get("position").set("x", 100)
               jm.verify(onComplete)(m.anything())
               a(res.length, 1)
-              a(res[0], "MOCK ACTION")
+              a(res.at(0).get("prop"), "MOCK ACTION")
+            )
+            test("calculateStraightLineMoveRequired returns several actions in succession - calls onComplete with collection containing all action", ()->
+              res=null
+              jm.when(onComplete)(m.anything()).then((r)->
+                res=r
+              )
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                prop:"MOCK ACTION_1"
+              )
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                prop:"MOCK ACTION_2"
+              )
+              modelGhost.get("position").set("x", 100.1)
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                prop:"MOCK ACTION_3"
+              )
+              modelGhost.get("position").set("x", 100.2)
+
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
+              modelGhost.get("position").set("x", 100)
+              jm.verify(onComplete)(m.anything())
+              a(res.length, 3)
+              a(res.at(0).get("prop"), "MOCK ACTION_1")
+              a(res.at(1).get("prop"), "MOCK ACTION_2")
+              a(res.at(2).get("prop"), "MOCK ACTION_3")
+            )
+            test("calculateStraightLineMoveRequired returns several actions in succession - submists each move to game once", ()->
+              move1 = null
+              move2 = null
+              move3 = null
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                prop:"MOCK ACTION_1"
+              )
+              jm.when(modelRootGhost.submitMove)(m.anything()).then((m)->
+                move1=m
+              )
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 130, 321.5, 20, onComplete)
+              jm.verify(modelRootGhost.submitMove)(m.anything())
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                prop:"MOCK ACTION_2"
+              )
+              jm.when(modelRootGhost.submitMove)(m.anything()).then((m)->
+                move2=m
+              )
+              modelGhost.get("position").set("x", 100.1)
+              jm.verify(modelRootGhost.submitMove, v.times(2))(m.anything())
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                prop:"MOCK ACTION_3"
+              )
+              jm.when(modelRootGhost.submitMove)(m.anything()).then((m)->
+                move3=m
+              )
+              modelGhost.get("position").set("x", 100.2)
+              jm.verify(modelRootGhost.submitMove, v.times(3))(m.anything())
+
+              jm.when(mockRule.calculateStraightLineMoveRequired)(m.anything(),m.anything(),m.anything(),m.anything()).then(()->)
+              modelGhost.get("position").set("x", 100)
+              jm.verify(modelRootGhost.submitMove, v.times(3))(m.anything())
+
+              a(move1.get("actions").length, 1)
+              a(move1.get("actions").at(0).get("prop"), "MOCK ACTION_1")
+              a(move2.get("actions").length, 1)
+              a(move2.get("actions").at(0).get("prop"), "MOCK ACTION_2")
+              a(move3.get("actions").length, 1)
+              a(move3.get("actions").at(0).get("prop"), "MOCK ACTION_3")
             )
           )
           suite("Is using maneuver and model has single maneuver defined", ()->
@@ -490,6 +583,20 @@ define(["isolate!UI/FleetAsset2DViewModel", "matchers", "operators", "assertThat
               )
               fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, undefined, ()->)
               jm.verify(mockRule.resolveAction)(action, false)
+            )
+            test("calculateManeuverRequired returns action - submits action to ghosted game", ()->
+              action = new Backbone.Model()
+              move = null
+              jm.when(mockRule.calculateManeuverRequired)(m.anything(),m.anything(),m.anything(),m.anything(),m.anything()).then(()->
+                action:action
+              )
+              jm.when(modelRootGhost.submitMove)(m.anything()).then((m)->
+                move=m
+              )
+              fa2dvm.calculateClosestMoveAction("MOCK MOVE TYPE", 1337, 666, undefined, ()->)
+              jm.verify(modelRootGhost.submitMove)(m.anything())
+              a(move.get("actions").length, 1)
+              a(move.get("actions").at(0), action)
             )
             test("calculateManeuverRequired returns action - does nothing immediately", ()->
               action = {}
