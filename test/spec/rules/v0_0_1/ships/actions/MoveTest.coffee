@@ -208,12 +208,12 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
               jm.when(asset.getCurrentTurnEvents)().thenReturn([
                 new Backbone.Model(
                   rule:"NOT EXPENDMOVE"
-                  spend:45
+                  spent:45
                 )
               ,
                 new Backbone.Model(
                   rule:"ALSO NOT EXPENDMOVE"
-                  spend:-4
+                  spent:-4
                 )
               ])
               a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 13)
@@ -237,31 +237,31 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                 jm.when(asset.getCurrentTurnEvents)().thenReturn([
                   new Backbone.Model(
                     rule:"NOT EXPENDMOVE"
-                    spend:45
+                    spent:45
                   )
                 ,
                   new Backbone.Model(
                     rule:"ships.events.expendMove"
-                    spend:5
+                    spent:5
                   )
                 ,
                   new Backbone.Model(
                     rule:"ALSO NOT EXPENDMOVE"
-                    spend:-4
+                    spent:-4
                   )
                 ,
                   new Backbone.Model(
                     rule:"ships.events.expendMove"
-                    spend:-2
+                    spent:-2
                   )
                 ])
               )
-              test("No modifiers - returns distance with total spend of all spend values of expendMove events subtracted", ()->
+              test("No modifiers - returns distance with total of all spent values of expendMove events subtracted", ()->
                 asset.get("actions").at(0).get("types").at(0).unset("modifiers")
                 a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 10)
 
               )
-              test("Valid modifiers present on asset move - returns distance with total spend of all spend values of expendMove events subtracted and all modifiers added", ()->
+              test("Valid modifiers present on asset move - returns distance with total of all spent values of expendMove events subtracted and all modifiers added", ()->
                 asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
                   condition:"NO_MANEUVER"
                   adjustment:3
@@ -273,6 +273,80 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   adjustment:-0.5
 
                 ]))
+                a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 12.5)
+
+              )
+              test("No manuever adjustment present and expendMove events present marked as 'isManeuver' - no maneuver adjustment ignored", ()->
+                asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
+                  condition:"NO_MANEUVER"
+                  adjustment:3
+                ,
+                  condition:"NOT NO_MANEUVER"
+                  adjustment:3
+                ,
+                  condition:"NO_MANEUVER"
+                  adjustment:-0.5
+
+                ]))
+                jm.when(asset.getCurrentTurnEvents)().thenReturn([
+                  new Backbone.Model(
+                    rule:"NOT EXPENDMOVE"
+                    spent:45
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ships.events.expendMove"
+                    spent:5
+                    isManeuver:true
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ALSO NOT EXPENDMOVE"
+                    spent:-4
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ships.events.expendMove"
+                    spent:-2
+                  )
+                ])
+                a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 10)
+
+              )
+              test("Other events present marked as 'isManeuver' - 'no maneuver' adjustment is still applied", ()->
+                asset.get("actions").at(0).get("types").at(0).set("modifiers", new Backbone.Collection([
+                  condition:"NO_MANEUVER"
+                  adjustment:3
+                ,
+                  condition:"NOT NO_MANEUVER"
+                  adjustment:3
+                ,
+                  condition:"NO_MANEUVER"
+                  adjustment:-0.5
+
+                ]))
+                jm.when(asset.getCurrentTurnEvents)().thenReturn([
+                  new Backbone.Model(
+                    rule:"NOT EXPENDMOVE"
+                    spent:45
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ships.events.expendMove"
+                    spent:5
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ALSO NOT EXPENDMOVE"
+                    spent:-4
+                    isManeuver:true
+                  )
+                ,
+                  new Backbone.Model(
+                    rule:"ships.events.expendMove"
+                    spent:-2
+                  )
+                ])
                 a(rule.calculateMoveRemaining(asset, "MOCK MOVE TYPE", false), 12.5)
 
               )
@@ -625,17 +699,15 @@ define(["isolate!rules/v0_0_1/ships/actions/Move", "matchers", "operators", "ass
                   a(ret.get("distance"), 0)
                 )
               )
-              test("Coordinates match position  - creates zero distance action", ()->
+              test("Coordinates match position - returns nothing", ()->
                 asset.get("actions").at(0).get("types").at(0).set("maxDirection", 180)
                 asset.get("actions").at(0).get("types").at(0).set("minDirection", 90)
-                ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 5, 10)
-                a(ret.get("distance"), 0)
+                a(rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 5, 10), m.nil())
               )
-              test("Coordinates exactly 90 degrees outside permitted direction range - creates zero distance action", ()->
+              test("Coordinates exactly 90 degrees outside permitted direction range - returns nothing", ()->
                 asset.get("actions").at(0).get("types").at(0).set("maxDirection", 180)
                 asset.get("actions").at(0).get("types").at(0).set("minDirection", 90)
-                ret = rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 5, 10)
-                a(ret.get("distance"), 0)
+                a(rule.calculateStraightLineMoveRequired(asset, "A MOVE TYPE", 5, 10), m.nil())
               )
             )
             suite("No direction bounds specified", ()->
