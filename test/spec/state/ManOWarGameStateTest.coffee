@@ -146,38 +146,76 @@ define(["isolate!state/ManOWarGameState", "matchers", "operators", "assertThat",
         a(mowgs.getCurrentTurnMoves(), m.empty())
       )
       test("Game has empty move log - returns empty array", ()->
-        mowgs.set("moveLog", new Backbone.Collection([]))
+        mowgs.set("_eventLog", new Backbone.Collection([]))
         a(mowgs.getCurrentTurnMoves(), m.empty())
       )
-      test("Game has move log with moves and no new turn move - returns all moves", ()->
-        mowgs.set("moveLog", new Backbone.Collection([
+      test("Game has event log with moves and no new turn move - returns all moves", ()->
+        mowgs.set("_eventLog", new Backbone.Collection([
           userId:"NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
         ,
           userId:"ALSO_NOT_MOCK_USER"
+        ,
+          userId:"ALSO_ALSO_NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
         ]))
         ret = mowgs.getCurrentTurnMoves()
         a(ret.length, 2)
-        a(ret[0], mowgs.get("moveLog").at(0))
-        a(ret[1], mowgs.get("moveLog").at(1))
+        a(ret[0], mowgs.get("_eventLog").at(0))
+        a(ret[1], mowgs.get("_eventLog").at(2))
       )
-      test("Game has move log with moves with new turn move - returns moves after new turn move", ()->
-        mowgs.set("moveLog", new Backbone.Collection([
+      test("Game has event log with moves with new turn move - returns moves after new turn move", ()->
+        mowgs.set("_eventLog", new Backbone.Collection([
           userId:"NOT_MOCK_USER"
         ,
           userId:"ALSO_NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
+        ,
+          userId:"ALSO_NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
+        ,
+          type:Constants.MoveTypes.NEW_TURN
+          name:Constants.LogEvents.MOVE
+        ,
+          userId:"MOCK_USER"
+        ,
+          userId:"NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
+        ,
+          userId:"MOCK_USER"
+          name:Constants.LogEvents.MOVE
+        ]))
+        ret = mowgs.getCurrentTurnMoves()
+        a(ret.length, 2)
+        a(ret[0], mowgs.get("_eventLog").at(1))
+        a(ret[1], mowgs.get("_eventLog").at(2))
+      )
+      test("New turn is not marked as move - new turn event ignored", ()->
+        mowgs.set("_eventLog", new Backbone.Collection([
+          userId:"NOT_MOCK_USER"
+        ,
+          userId:"ALSO_NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
+        ,
+          userId:"ALSO_NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
         ,
           type:Constants.MoveTypes.NEW_TURN
         ,
           userId:"MOCK_USER"
         ,
           userId:"NOT_MOCK_USER"
+          name:Constants.LogEvents.MOVE
         ,
           userId:"MOCK_USER"
+          name:Constants.LogEvents.MOVE
         ]))
         ret = mowgs.getCurrentTurnMoves()
-        a(ret.length, 2)
-        a(ret[0], mowgs.get("moveLog").at(0))
-        a(ret[1], mowgs.get("moveLog").at(1))
+        a(ret.length, 4)
+        a(ret[0], mowgs.get("_eventLog").at(1))
+        a(ret[1], mowgs.get("_eventLog").at(2))
+        a(ret[2], mowgs.get("_eventLog").at(5))
+        a(ret[3], mowgs.get("_eventLog").at(6))
       )
     )
   )

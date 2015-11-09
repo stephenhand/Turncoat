@@ -124,7 +124,7 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
           )
           a(fa.getCurrentTurnEvents(), m.empty())
         )
-        test("Game has current moves but no actions - returns empty array", ()->
+        test("Game has current moves but no data member - throws", ()->
           jm.when(g.getCurrentTurnMoves)().then(()->
             [
               new Backbone.Model()
@@ -134,21 +134,44 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
               new Backbone.Model()
             ]
           )
+          a(
+            ()->
+              fa.getCurrentTurnEvents()
+          ,
+            m.raisesAnything()
+          )
+        )
+        test("Game has current moves with data but no actions - returns empty array", ()->
+          jm.when(g.getCurrentTurnMoves)().then(()->
+            [
+              new Backbone.Model(data:new Backbone.Model())
+            ,
+              new Backbone.Model(data:new Backbone.Model())
+            ,
+              new Backbone.Model(data:new Backbone.Model())
+            ]
+          )
           a(fa.getCurrentTurnEvents(), m.empty())
         )
         test("Game has current moves but empty actions - returns empty array", ()->
           jm.when(g.getCurrentTurnMoves)().then(()->
             [
               new Backbone.Model(
-                actions:new Backbone.Collection()
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection()
+                )
               )
             ,
               new Backbone.Model(
-                actions:new Backbone.Collection()
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection()
+                )
               )
             ,
               new Backbone.Model(
-                actions:new Backbone.Collection()
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection()
+                )
               )
             ]
           )
@@ -158,27 +181,33 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
           jm.when(g.getCurrentTurnMoves)().then(()->
             [
               new Backbone.Model(
-                actions:new Backbone.Collection([
-                  new Backbone.Model(
-                    events:new Backbone.Collection()
-                  ),
-                  new Backbone.Model()
-                ])
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection([
+                    new Backbone.Model(
+                      events:new Backbone.Collection()
+                    ),
+                    new Backbone.Model()
+                  ])
+                )
               )
             ,
               new Backbone.Model(
-                actions:new Backbone.Collection([
-                  new Backbone.Model(),
-                  new Backbone.Model()
-                ])
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection([
+                    new Backbone.Model(),
+                    new Backbone.Model()
+                  ])
+                )
               )
             ,
               new Backbone.Model(
-                actions:new Backbone.Collection([
-                  new Backbone.Model(
-                    events:new Backbone.Collection()
-                  )
-                ])
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection([
+                    new Backbone.Model(
+                      events:new Backbone.Collection()
+                    )
+                  ])
+                )
               )
             ]
           )
@@ -188,6 +217,50 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
           jm.when(g.getCurrentTurnMoves)().then(()->
             [
               new Backbone.Model(
+
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection([
+                    new Backbone.Model(
+                      events:new Backbone.Collection([
+                        asset:"SOMEONE ELSE"
+                      ,
+                        {}
+                      ])
+                    ),
+                    new Backbone.Model()
+                  ])
+                )
+              )
+            ,
+              new Backbone.Model(
+
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection([
+                    new Backbone.Model()
+                  ])
+                )
+              )
+            ,
+              new Backbone.Model(
+
+                data:new Backbone.Model(
+                  actions:new Backbone.Collection([
+                    new Backbone.Model(
+                      events:new Backbone.Collection([
+                        asset:"ALSSO SOMEONE ELSE"
+                      ])
+                    )
+                  ])
+                )
+              )
+            ]
+          )
+          a(fa.getCurrentTurnEvents(), m.empty())
+        )
+        test("Game has current moves with actions and events applicable to this asset - returns array of matching events in order", ()->
+          current = [
+            new Backbone.Model(
+              data:new Backbone.Model(
                 actions:new Backbone.Collection([
                   new Backbone.Model(
                     events:new Backbone.Collection([
@@ -199,64 +272,36 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
                   new Backbone.Model()
                 ])
               )
-            ,
-              new Backbone.Model(
-                actions:new Backbone.Collection([
-                  new Backbone.Model()
-                ])
-              )
-            ,
-              new Backbone.Model(
+            )
+          ,
+            new Backbone.Model(
+
+              data:new Backbone.Model(
                 actions:new Backbone.Collection([
                   new Backbone.Model(
                     events:new Backbone.Collection([
-                      asset:"ALSSO SOMEONE ELSE"
+                      asset:"THIS ASSET"
+                    ,
+                      {}
                     ])
                   )
                 ])
               )
-            ]
-          )
-          a(fa.getCurrentTurnEvents(), m.empty())
-        )
-        test("Game has current moves with actions and events applicable to this asset - returns array of matching events in order", ()->
-          current = [
-            new Backbone.Model(
-              actions:new Backbone.Collection([
-                new Backbone.Model(
-                  events:new Backbone.Collection([
-                    asset:"SOMEONE ELSE"
-                  ,
-                    {}
-                  ])
-                ),
-                new Backbone.Model()
-              ])
             )
           ,
             new Backbone.Model(
-              actions:new Backbone.Collection([
-                new Backbone.Model(
-                  events:new Backbone.Collection([
-                    asset:"THIS ASSET"
-                  ,
-                    {}
-                  ])
-                )
-              ])
-            )
-          ,
-            new Backbone.Model(
-              actions:new Backbone.Collection([
-                new Backbone.Model(
-                  events:new Backbone.Collection([
-                    asset:"ALSO SOMEONE ELSE"
-                  ,
+              data:new Backbone.Model(
+                actions:new Backbone.Collection([
+                  new Backbone.Model(
+                    events:new Backbone.Collection([
+                      asset:"ALSO SOMEONE ELSE"
+                    ,
 
-                    asset:"THIS ASSET"
-                  ])
-                )
-              ])
+                      asset:"THIS ASSET"
+                    ])
+                  )
+                ])
+              )
             )
           ]
           jm.when(g.getCurrentTurnMoves)().then(
@@ -265,8 +310,8 @@ define(["isolate!state/FleetAsset", "matchers", "operators", "assertThat", "jsMo
           )
           ret = fa.getCurrentTurnEvents()
           a(ret.length, 2)
-          a(ret[0], current[1].get("actions").at(0).get("events").at(0))
-          a(ret[1], current[2].get("actions").at(0).get("events").at(1) )
+          a(ret[0], current[1].get("data").get("actions").at(0).get("events").at(0))
+          a(ret[1], current[2].get("data").get("actions").at(0).get("events").at(1) )
         )
       )
 
